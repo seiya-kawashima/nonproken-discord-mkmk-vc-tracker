@@ -1,34 +1,31 @@
 """
-simple_loggerの簡単なテスト
+標準loggingの簡単なテスト
 """
 
 import pytest  # テストフレームワーク
 import logging  # 標準logging
-import sys  # システム操作
-from pathlib import Path  # パス操作
-
-# srcディレクトリをパスに追加
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
-from simple_logger import setup_logger  # テスト対象
+import os  # 環境変数
 
 
-class TestSimpleLogger:
-    """シンプルロガーのテスト"""
+class TestStandardLogging:
+    """標準loggingのテスト"""
     
     def test_logger_creation(self):
         """ロガー作成のテスト"""
-        logger = setup_logger("test")  # ロガー作成
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger("test")  # ロガー作成
         assert logger is not None  # ロガーが作成されたか確認
         assert logger.name == "test"  # 名前が正しいか確認
     
     def test_log_levels(self):
         """ログレベルのテスト"""
-        logger = setup_logger("test", level="DEBUG")  # DEBUGレベルで作成
-        assert logger.level <= logging.DEBUG  # DEBUGレベル以下か確認
+        logging.basicConfig(level=logging.DEBUG, force=True)
+        logger = logging.getLogger("test_debug")  # DEBUGレベルで作成
+        assert logging.getLogger().level == logging.DEBUG  # DEBUGレベルか確認
         
-        logger = setup_logger("test2", level="ERROR")  # ERRORレベルで作成
-        assert logger.level <= logging.ERROR  # ERRORレベル以下か確認
+        logging.basicConfig(level=logging.ERROR, force=True)
+        logger = logging.getLogger("test_error")  # ERRORレベルで作成
+        assert logging.getLogger().level == logging.ERROR  # ERRORレベルか確認
     
     def test_info_logging(self):
         """INFOログのテスト（出力があることを確認）"""
