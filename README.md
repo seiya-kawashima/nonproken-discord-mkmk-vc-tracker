@@ -284,11 +284,15 @@ python -m venv .venv
 # 仮想環境有効化（Mac/Linux）
 source .venv/bin/activate
 
-# 依存関係インストール
+# 依存関係インストール（用途別）
+# 本番環境
 pip install -r requirements.txt
 
-# 開発用依存関係（オプション）
-pip install black flake8 pytest
+# 開発環境（全部入り：本番+テスト+開発ツール）
+pip install -r requirements-dev.txt
+
+# テスト環境のみ
+pip install -r requirements.txt -r requirements-test.txt
 ```
 
 ### .env ファイル例（ローカル開発用）
