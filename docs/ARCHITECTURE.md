@@ -13,23 +13,23 @@ flowchart TD
     CheckEnv -->|NG| Error1[エラー終了]
     CheckEnv -->|OK| CreateDiscord[DiscordVCPoller<br/>インスタンス作成]
     
-    CreateDiscord --> GetMembers[VCメンバー取得<br/>get_vc_members()]
+    CreateDiscord --> GetMembers[VCメンバー取得<br/>get_vc_members]
     GetMembers --> CheckMembers{メンバー<br/>存在?}
     CheckMembers -->|なし| EndNoMembers[処理終了<br/>メンバーなし]
     CheckMembers -->|あり| CreateSheets[SheetsClient<br/>インスタンス作成]
     
-    CreateSheets --> ConnectSheets[Google Sheets接続<br/>connect()]
-    ConnectSheets --> UpsertData[出席データ記録<br/>upsert_presence()]
+    CreateSheets --> ConnectSheets[Google Sheets接続<br/>connect]
+    ConnectSheets --> UpsertData[出席データ記録<br/>upsert_presence]
     UpsertData --> CheckSlack{Slack設定<br/>あり?}
     
     CheckSlack -->|なし| EndSuccess[処理成功終了]
     CheckSlack -->|あり| CreateSlack[SlackNotifier<br/>インスタンス作成]
     CreateSlack --> LoopMembers[メンバーごとに処理]
     
-    LoopMembers --> GetDays[通算日数取得<br/>get_total_days()]
+    LoopMembers --> GetDays[通算日数取得<br/>get_total_days]
     GetDays --> CheckNew{新規<br/>メンバー?}
     CheckNew -->|いいえ| NextMember{次の<br/>メンバー?}
-    CheckNew -->|はい| SendNotif[Slack通知送信<br/>send_login_notification()]
+    CheckNew -->|はい| SendNotif[Slack通知送信<br/>send_login_notification]
     SendNotif --> NextMember
     NextMember -->|あり| GetDays
     NextMember -->|なし| EndSuccess
