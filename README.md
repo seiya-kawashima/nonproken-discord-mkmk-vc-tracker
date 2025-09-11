@@ -184,3 +184,236 @@ jobs:
 * **Google Sheets** でログイン履歴を保持
 * **Slack通知** で日次報告＋節目祝い
 * 継続参加を促進するシンプルな仕組み
+
+---
+
+## 開発環境
+
+### 言語・ライブラリ
+* **Python 3.11+**
+* 主要ライブラリ:
+  - `discord.py` - Discord Bot開発
+  - `gspread` - Google Sheetsアクセス
+  - `slack-sdk` - Slack通知
+  - `python-dotenv` - 環境変数管理
+
+### VSCode推奨設定
+
+#### 拡張機能
+* **Python** (ms-python.python)
+* **Pylance** (ms-python.vscode-pylance)
+* **Python Debugger** (ms-python.debugpy)
+* **GitHub Actions** (github.vscode-github-actions)
+* **YAML** (redhat.vscode-yaml)
+
+#### .vscode/settings.json
+```json
+{
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": true,
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.rulers": [88],
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  }
+}
+```
+
+#### .vscode/launch.json
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Poll Once",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/poll_once.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
+```
+
+### 開発環境セットアップ
+
+```bash
+# 仮想環境作成
+python -m venv .venv
+
+# 仮想環境有効化（Windows）
+.venv\Scripts\activate
+
+# 仮想環境有効化（Mac/Linux）
+source .venv/bin/activate
+
+# 依存関係インストール
+pip install -r requirements.txt
+
+# 開発用依存関係（オプション）
+pip install black flake8 pytest
+```
+
+### .env ファイル例（ローカル開発用）
+```env
+DISCORD_BOT_TOKEN=your_discord_bot_token
+GOOGLE_SERVICE_ACCOUNT_JSON=service_account.json
+GOOGLE_SHEET_NAME=your_sheet_name
+ALLOWED_VOICE_CHANNEL_IDS=111111111111111111,222222222222222222
+SLACK_BOT_TOKEN=xoxb-your-slack-token
+SLACK_CHANNEL_ID=C1234567890
+```
+
+---
+
+## 詳細仕様書
+
+### システム構成
+
+#### 1. Discord Bot モジュール (`discord_client.py`)
+
+**責務**: Discord接続とVCメンバー取得
+
+```python
+class DiscordVCPoller:
+    def __init__(self, token: str, allowed_channel_ids: list[str])
+    async def get_vc_members(self) -> list[VCMember]
+```
+
+**VCMember データ構造**:
+```python
+@dataclass
+class VCMember:
+    guild_id: str
+    channel_id: str
+    user_id: str
+    user_name: str
+    timestamp: datetime
+```
+
+#### 2. Google Sheets モジュール (`sheets_client.py`)
+
+**責務**: スプレッドシート操作
+
+```python
+class SheetsClient:
+    def __init__(self, credentials_path: str, sheet_name: str)
+    def upsert_presence(self, date_jst: str, members: list[VCMember])
+    def get_total_days(self, user_id: str) -> int
+```
+
+**データ操作仕様**:
+- Upsert: `(date_jst, guild_id, user_id)` をキーとして存在確認
+- 存在する場合: スキップ（すでにTRUEなので更新不要）
+- 存在しない場合: 新規行追加（present=TRUE）
+
+#### 3. Slack通知モジュール (`slack_notifier.py`)
+
+**責務**: Slack通知送信
+
+```python
+class SlackNotifier:
+    def __init__(self, token: str, channel_id: str)
+    def send_login_notification(self, user_name: str, total_days: int)
+```
+
+**通知ロジック**:
+- 通常: `🎤 {user_name} さんがログインしました！（通算 {total_days} 日目）`
+- 100日刻み: `🎉` アイコンと「おめでとう！」メッセージ追加
+
+#### 4. メインスクリプト (`poll_once.py`)
+
+**処理フロー**:
+1. 環境変数読み込み
+2. Discord接続 → VCメンバー取得
+3. Google Sheets更新
+4. 通算日数計算
+5. Slack通知送信
+6. 終了
+
+### エラーハンドリング
+
+#### Discord接続エラー
+- リトライ: 3回まで（指数バックオフ）
+- 最終失敗時: エラーログ出力、処理継続（次回実行に期待）
+
+#### Google Sheets API エラー
+- Rate Limit: 60秒待機後リトライ
+- 認証エラー: 即座に終了（設定ミス）
+
+#### Slack API エラー
+- 通知失敗: エラーログのみ（メイン処理は継続）
+
+### パフォーマンス考慮事項
+
+#### バッチ処理
+- Sheets API: `batch_update` で複数行を一括更新
+- Slack API: 複数ユーザーを1メッセージにまとめる
+
+#### キャッシュ
+- 通算日数: 実行中はメモリにキャッシュ（同一ユーザーの重複計算回避）
+
+### セキュリティ
+
+#### トークン管理
+- 環境変数または GitHub Secrets で管理
+- ログ出力時はマスキング
+- コミットに含めない（.gitignore）
+
+#### 権限最小化
+- Discord Bot: 必要最小限のIntents
+- Google Sheets: 特定シートのみ編集権限
+- Slack Bot: `chat:write` のみ
+
+### テスト戦略
+
+#### ユニットテスト
+```bash
+pytest tests/
+```
+
+#### モック対象
+- Discord API レスポンス
+- Google Sheets API
+- Slack API
+- 日時（固定値でテスト）
+
+#### CI/CD
+- GitHub Actions でテスト自動実行
+- Pull Request時に必須チェック
+
+### 監視・アラート
+
+#### ログ出力
+```python
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+```
+
+#### メトリクス
+- 実行時間
+- 検出ユーザー数
+- API呼び出し回数
+- エラー率
+
+### 将来の拡張性
+
+#### 機能追加案
+1. **滞在時間記録**: 入室・退室時刻を記録
+2. **週次レポート**: 週間アクティビティサマリー
+3. **ランキング**: 月間ログイン日数ランキング
+4. **カスタムメッセージ**: ユーザーごとの通知カスタマイズ
+
+#### スケーラビリティ
+- 複数サーバー対応: guild_id ごとに処理
+- 並列処理: asyncio で複数VCを同時監視
+- データベース移行: Sheets → PostgreSQL（大規模化時）
