@@ -104,22 +104,22 @@ class TestDiscordVCPoller:
         mock_guild.voice_channels = [mock_channel]  # VCチャンネルリスト
         
         # Discordクライアントをモック
-        with patch.object(poller.client, 'start', new_callable=AsyncMock):  # startメソッドをモック
-            with patch.object(poller.client, 'guilds', [mock_guild]):  # guildsをモック
-                # on_readyの処理を直接実行
-                for guild in [mock_guild]:  # ギルドをループ
-                    for channel in guild.voice_channels:  # VCをループ
-                        if str(channel.id) in channel_ids:  # 対象チャンネルか確認
-                            for member in channel.members:  # メンバーをループ（空なので実行されない）
-                                member_data = {  # メンバーデータ作成
-                                    "guild_id": str(guild.id),  # ギルドID
-                                    "user_id": str(member.id),  # ユーザーID
-                                    "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名
-                                }
-                                poller.members_data.append(member_data)  # データ追加
-                
-                # 結果を確認
-                assert len(poller.members_data) == 0  # メンバーがいないことを確認
+        with patch.object(poller, 'client') as mock_client:  # クライアント全体をモック
+            mock_client.start = AsyncMock()  # startメソッドをモック
+            mock_client.close = AsyncMock()  # closeメソッドをモック
+            mock_client.guilds = [mock_guild]  # guildsプロパティをモック
+            
+            # startが呼ばれても何もしない（メンバーがいないので）
+            async def mock_start_side_effect(token):
+                pass  # 何もしない
+            
+            mock_client.start.side_effect = mock_start_side_effect  # side_effectを設定
+            
+            # テスト実行
+            result = await poller.get_vc_members()  # メンバー取得
+            
+            # 結果を確認
+            assert len(result) == 0  # メンバーがいないことを確認
 
     @pytest.mark.asyncio
     async def test_get_vc_members_not_monitored_channel(self):
@@ -145,10 +145,15 @@ class TestDiscordVCPoller:
         mock_guild.voice_channels = [mock_channel]  # VCチャンネルリスト
         
         # Discordクライアントをモック
-        with patch.object(poller.client, 'start', new_callable=AsyncMock):  # startメソッドをモック
-            with patch.object(poller.client, 'guilds', [mock_guild]):  # guildsをモック
-                # on_readyの処理を直接実行
-                for guild in [mock_guild]:  # ギルドをループ
+        with patch.object(poller, 'client') as mock_client:  # クライアント全体をモック
+            mock_client.start = AsyncMock()  # startメソッドをモック
+            mock_client.close = AsyncMock()  # closeメソッドをモック
+            mock_client.guilds = [mock_guild]  # guildsプロパティをモック
+            
+            # startが呼ばれても何もしない（監視対象外なので）
+            async def mock_start_side_effect(token):
+                # on_readyの処理を直接実行するが、監視対象外なので何も追加されない
+                for guild in mock_client.guilds:  # ギルドをループ
                     for channel in guild.voice_channels:  # VCをループ
                         if str(channel.id) in channel_ids:  # 対象チャンネルか確認（falseになる）
                             for member in channel.members:  # 実行されない
@@ -158,9 +163,14 @@ class TestDiscordVCPoller:
                                     "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名
                                 }
                                 poller.members_data.append(member_data)  # データ追加
-                
-                # 結果を確認
-                assert len(poller.members_data) == 0  # 監視対象外なのでメンバーがいない
+            
+            mock_client.start.side_effect = mock_start_side_effect  # side_effectを設定
+            
+            # テスト実行
+            result = await poller.get_vc_members()  # メンバー取得
+            
+            # 結果を確認
+            assert len(result) == 0  # 監視対象外なのでメンバーがいない
 
     @pytest.mark.asyncio
     async def test_context_manager(self):
