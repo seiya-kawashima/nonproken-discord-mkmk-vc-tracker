@@ -1,345 +1,356 @@
 # メイン処理（poll_once.py）仕様書
 
-## 1. 概要
+## 📌 このドキュメントについて
 
-poll_once.pyは、Discord VCの在室状況を取得し、Google Sheetsに記録し、Slackに通知する統合処理を行うメインスクリプトです。
+このドキュメントは、**すべてのプログラムを統合して動かす司令塔（メインプログラム）**の設計書です。
+各パーツ（Discord、Google Sheets、Slack）を連携させて、自動でVC参加者を記録・通知する仕組みを、初心者の方にも分かりやすく説明します。
 
-### 1.1 目的
-- 各モジュールの統合と制御
-- 環境変数の管理
-- エラーハンドリングとログ管理
-- GitHub Actionsからの定期実行
+---
 
-### 1.2 ファイル構成
+## 1. 🎯 何をするプログラム？
+
+### このプログラムの役割
+想像してみてください。オーケストラの指揮者のように、**各楽器（プログラム）に指示を出して、美しい音楽（自動記録システム）を作り上げる**ようなものです。
+
+### 具体的にできること
+- ✅ Discord、Google Sheets、Slackの3つのサービスを連携
+- ✅ 定期的に自動実行（30分ごと）
+- ✅ エラーが起きても適切に対処
+- ✅ 実行結果をログに記録
+
+### 全体の流れ（料理のレシピのように）
+1. **材料を準備**（環境設定）
+2. **Discord から情報を取得**（誰がVCにいるか確認）
+3. **Google Sheets に記録**（出席簿に記入）
+4. **Slack に通知**（みんなにお知らせ）
+
+---
+
+## 2. 🔧 どうやって動く？
+
+### 動作の流れ（水が流れるように）
+
 ```
-/
-├── poll_once.py        # メイン処理スクリプト
-├── .env               # ローカル環境変数（開発用）
-└── src/
-    ├── discord_client.py
-    ├── sheets_client.py
-    └── slack_notifier.py
-```
-
-## 2. 処理フロー
-
-### 2.1 全体フロー
-```mermaid
-graph TD
-    A[開始] --> B[環境変数読み込み]
-    B --> C[環境変数検証]
-    C --> D[Discord VC取得]
-    D --> E{メンバー存在?}
-    E -->|Yes| F[Sheets記録]
-    E -->|No| J[終了]
-    F --> G[通算日数取得]
-    G --> H{Slack設定?}
-    H -->|Yes| I[Slack通知]
-    H -->|No| J
-    I --> J[終了]
-```
-
-### 2.2 詳細処理ステップ
-
-#### Step 1: 環境設定
-1. `.env`ファイルから環境変数を読み込み（load_dotenv）
-2. 必須環境変数の取得
-3. 環境変数の検証
-
-#### Step 2: Discord VCメンバー取得
-1. DiscordVCPollerインスタンス作成
-2. 非同期でVCメンバー情報取得
-3. メンバーリストの検証
-
-#### Step 3: Google Sheets記録
-1. SheetsClientインスタンス作成
-2. Google Sheetsへ接続
-3. 出席データのUpsert
-4. 処理結果の確認
-
-#### Step 4: Slack通知（オプション）
-1. SlackNotifierインスタンス作成
-2. 各メンバーの通算日数取得
-3. 新規ログインメンバーへの通知送信
-
-## 3. 関数設計
-
-### 3.1 main()関数
-```python
-async def main()
+スタート
+    ↓
+① 設定を読み込む（パスワードなど）
+    ↓
+② Discordで誰がVCにいるか確認
+    ↓
+③ 誰かいた？
+    ├─ はい → ④へ
+    └─ いいえ → 終了
+    ↓
+④ Google Sheetsに記録
+    ↓
+⑤ Slackの設定ある？
+    ├─ はい → ⑥へ
+    └─ いいえ → 終了
+    ↓
+⑥ Slackに通知を送る
+    ↓
+終了
 ```
 
-**責務:**
-- メイン処理の統合
-- エラーハンドリング
-- ログ出力
+### 各ステップの詳細
 
-**処理内容:**
-1. **環境変数の読み込み**
-   ```python
-   load_dotenv()
-   discord_token = os.getenv('DISCORD_BOT_TOKEN')
-   sheet_name = os.getenv('GOOGLE_SHEET_NAME')
-   # ... 他の環境変数
-   ```
+#### ステップ1: 準備（環境設定）🔧
+**何をする？**
+- 必要な設定（トークンやパスワード）を読み込む
+- 設定が正しいか確認する
 
-2. **必須環境変数の検証**
-   - DISCORD_BOT_TOKEN
-   - GOOGLE_SHEET_NAME
-   - ALLOWED_VOICE_CHANNEL_IDS
-   - サービスアカウントJSONファイルの存在確認
+**たとえば：**
+- 家の鍵（トークン）があるか確認
+- 住所（チャンネルID）が正しいか確認
 
-3. **Discord VCメンバー取得**
-   ```python
-   discord_client = DiscordVCPoller(discord_token, channel_ids)
-   vc_members = await discord_client.get_vc_members()
-   ```
+#### ステップ2: Discord確認 👀
+**何をする？**
+- DiscordのVCに接続
+- 誰がいるかリストアップ
 
-4. **Google Sheets記録**
-   ```python
-   sheets_client = SheetsClient(service_account_json, sheet_name)
-   sheets_client.connect()
-   result = sheets_client.upsert_presence(vc_members)
-   ```
+**たとえば：**
+- 会議室をのぞいて誰がいるか確認
 
-5. **Slack通知（条件付き）**
-   ```python
-   if slack_token and slack_channel:
-       slack_client = SlackNotifier(slack_token, slack_channel)
-       for member in vc_members:
-           total_days = sheets_client.get_total_days(member['user_id'])
-           if result['new'] > 0:
-               slack_client.send_login_notification(member['user_name'], total_days)
-   ```
+#### ステップ3: Sheets記録 📝
+**何をする？**
+- 今日の日付で記録
+- 新しい人は追加、既存の人は更新
 
-**エラーハンドリング:**
-- try-except で全体をラップ
-- エラー時は`sys.exit(1)`で異常終了
-- 詳細なエラーログを出力
+**たとえば：**
+- 出席簿に○をつける
 
-## 4. 環境変数
+#### ステップ4: Slack通知 📢
+**何をする？**
+- 参加者の名前と日数を通知
+- 100日目などは特別なメッセージ
 
-### 4.1 必須環境変数
-| 変数名 | 説明 | 例 |
-|---|---|---|
-| DISCORD_BOT_TOKEN | Discord Botトークン | `MTIzNDU2Nzg5...` |
-| GOOGLE_SHEET_NAME | スプレッドシート名 | `VC Attendance Log` |
-| ALLOWED_VOICE_CHANNEL_IDS | 監視対象VCのID（カンマ区切り） | `123456789,987654321` |
+**たとえば：**
+- 社内放送でお知らせ
 
-### 4.2 オプション環境変数
-| 変数名 | 説明 | デフォルト |
-|---|---|---|
-| GOOGLE_SERVICE_ACCOUNT_JSON | サービスアカウントJSONパス | `service_account.json` |
-| SLACK_BOT_TOKEN | Slack Botトークン | なし |
-| SLACK_CHANNEL_ID | Slack通知先チャンネル | なし |
+---
 
-### 4.3 環境変数の検証ロジック
-```python
-if not discord_token:
-    logger.error("DISCORD_BOT_TOKEN is not set")
-    sys.exit(1)
+## 3. ⚙️ 必要な設定
 
-if not sheet_name:
-    logger.error("GOOGLE_SHEET_NAME is not set")
-    sys.exit(1)
+### 設定項目一覧（必須とオプション）
 
-if not channel_ids or channel_ids == ['']:
-    logger.error("ALLOWED_VOICE_CHANNEL_IDS is not set")
-    sys.exit(1)
+#### 必須の設定（これがないと動きません）
 
-if not os.path.exists(service_account_json):
-    logger.error(f"Service account JSON file not found: {service_account_json}")
-    sys.exit(1)
+| 設定名 | 説明 | 例 |
+|--------|------|-----|
+| **DISCORD_BOT_TOKEN** | DiscordのBot用パスワード | MTIzNDU2Nzg5... |
+| **GOOGLE_SHEET_NAME** | 記録するスプレッドシートの名前 | VC出席記録 |
+| **ALLOWED_VOICE_CHANNEL_IDS** | 監視するVCのID（複数可） | 123456789,987654321 |
+
+#### オプションの設定（あると便利）
+
+| 設定名 | 説明 | 例 |
+|--------|------|-----|
+| **GOOGLE_SERVICE_ACCOUNT_JSON** | Googleの認証ファイルの場所 | service_account.json |
+| **SLACK_BOT_TOKEN** | SlackのBot用パスワード | xoxb-123456... |
+| **SLACK_CHANNEL_ID** | 通知を送るチャンネル | C1234567890 |
+
+### 設定方法
+
+#### 方法1: .envファイル（開発用）
+```
+DISCORD_BOT_TOKEN=あなたのトークン
+GOOGLE_SHEET_NAME=VC出席記録
+ALLOWED_VOICE_CHANNEL_IDS=123456789,987654321
 ```
 
-## 5. ログ設計
+#### 方法2: GitHub Secrets（本番用）
+1. GitHubのリポジトリを開く
+2. Settings → Secrets → Actions
+3. 「New repository secret」で追加
 
-### 5.1 ログ設定
-```python
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
-```
+---
 
-### 5.2 ログレベル
-- `INFO`: 正常な処理フロー
-- `ERROR`: エラー発生時
+## 4. 🕐 自動実行の設定
 
-### 5.3 ログメッセージ
-```
-INFO: Fetching VC members from Discord...
-INFO: Found 5 members in VCs
-INFO: Connecting to Google Sheets...
-INFO: Recording presence data...
-INFO: Recorded: 3 new, 0 updated
-INFO: Sending Slack notifications...
-INFO: Notified: user#1234 (Day 10)
-INFO: Poll completed successfully
-ERROR: DISCORD_BOT_TOKEN is not set
-ERROR: Service account JSON file not found: service_account.json
-ERROR: Error during polling: [詳細]
-```
+### いつ動く？
 
-## 6. エラー処理
+#### 現在の設定
+- **日本時間 朝4時〜7時**の間
+- **30分ごと**に実行
+- 例：4:00、4:30、5:00、5:30...
 
-### 6.1 エラーの種類と対処
+#### なぜこの時間？
+- 朝活や早朝勉強会の参加者を記録
+- サーバー負荷が少ない時間帯
+- 1日の始まりを記録
 
-#### 環境変数エラー
-- **原因**: 必須環境変数の未設定
-- **対処**: エラーログ出力後、`sys.exit(1)`
-
-#### ファイル不在エラー
-- **原因**: サービスアカウントJSONファイルが見つからない
-- **対処**: エラーログ出力後、`sys.exit(1)`
-
-#### API接続エラー
-- **原因**: Discord/Google/Slack APIへの接続失敗
-- **対処**: エラーログ出力後、`sys.exit(1)`
-
-#### データ処理エラー
-- **原因**: データの変換や処理中のエラー
-- **対処**: エラーログ出力後、`sys.exit(1)`
-
-### 6.2 終了コード
-- `0`: 正常終了
-- `1`: エラーによる異常終了
-
-## 7. 非同期処理
-
-### 7.1 asyncio使用
-```python
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-### 7.2 非同期処理の範囲
-- Discord API通信（必須）
-- その他は同期処理
-
-### 7.3 将来の非同期化候補
-- Google Sheets API
-- Slack API
-
-## 8. モジュール連携
-
-### 8.1 モジュール間のデータフロー
-```
-DiscordVCPoller
-    ↓ [メンバーリスト]
-poll_once.py
-    ↓ [メンバーリスト]
-SheetsClient
-    ↓ [処理結果・通算日数]
-poll_once.py
-    ↓ [メンバー情報・通算日数]
-SlackNotifier
-```
-
-### 8.2 データ形式
-```python
-# DiscordVCPoller → poll_once
-[
-    {
-        "guild_id": "123456789",
-        "user_id": "111111111",
-        "user_name": "user#1234"
-    }
-]
-
-# SheetsClient → poll_once
-{
-    "new": 3,
-    "updated": 0
-}
-
-# poll_once → SlackNotifier
-user_name: "user#1234"
-total_days: 10
-```
-
-## 9. GitHub Actions統合
-
-### 9.1 実行スケジュール
+### 実行時間の変更方法
+GitHub Actionsの設定で変更可能：
 ```yaml
 schedule:
-  - cron: "0,30 19-22 * * *"  # UTC 19-22時（JST 4-7時）の毎時0分と30分
+  - cron: "0,30 19-22 * * *"  # UTC時間（日本時間-9時間）
 ```
 
-### 9.2 環境変数の設定
-GitHub Secretsから環境変数を注入:
-```yaml
-env:
-  DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-  GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
-  # ... 他の環境変数
+---
+
+## 5. ⚠️ エラーが起きたら
+
+### よくあるエラーと対処法
+
+#### エラー1: 設定が見つからない
+```
+ERROR: DISCORD_BOT_TOKEN is not set
+```
+**意味**: Discordのトークンが設定されていません
+**対処**: 環境変数またはGitHub Secretsに設定を追加
+
+#### エラー2: ファイルが見つからない
+```
+ERROR: Service account JSON file not found
+```
+**意味**: Googleの認証ファイルがありません
+**対処**: ファイルを正しい場所に配置
+
+#### エラー3: 接続エラー
+```
+ERROR: Failed to connect to Discord
+```
+**意味**: Discordに接続できません
+**対処**: トークンが正しいか、ネットワークを確認
+
+### エラー時の動作
+1. **エラーログを出力**
+2. **プログラムを停止**
+3. **GitHub Actionsで失敗として記録**
+4. **次回の実行時間まで待機**
+
+---
+
+## 6. 📊 実行結果の確認
+
+### ログの見方
+
+#### 正常な実行ログの例
+```
+2025-01-20 04:00:00 - INFO: Fetching VC members from Discord...
+2025-01-20 04:00:05 - INFO: Found 5 members in VCs
+2025-01-20 04:00:06 - INFO: Connecting to Google Sheets...
+2025-01-20 04:00:08 - INFO: Recorded: 3 new, 2 updated
+2025-01-20 04:00:09 - INFO: Sending Slack notifications...
+2025-01-20 04:00:12 - INFO: Poll completed successfully
 ```
 
-### 9.3 実行時間
-- 想定実行時間: 1-2分
-- タイムアウト: 5分（推奨）
+#### ログの読み方
+| 項目 | 意味 |
+|------|------|
+| **時刻** | いつ実行されたか |
+| **INFO** | 正常な処理 |
+| **ERROR** | エラー発生 |
+| **メッセージ** | 何をしているか |
 
-## 10. パフォーマンス考慮事項
+### GitHub Actionsでの確認方法
+1. GitHubリポジトリを開く
+2. 「Actions」タブをクリック
+3. 実行履歴を確認
+4. 詳細を見たい実行をクリック
 
-### 10.1 処理時間の内訳
-1. Discord接続・取得: 5-10秒
-2. Sheets接続・記録: 2-5秒
-3. Slack通知: 1-3秒/メッセージ
-4. 合計: 10-30秒（通常時）
+---
 
-### 10.2 最適化ポイント
-- Discord: 接続の使い回し（現在は都度接続）
-- Sheets: バッチ処理の活用
-- Slack: 並行送信の検討
+## 7. 🚀 処理速度について
 
-## 11. セキュリティ考慮事項
+### 処理時間の目安
 
-### 11.1 認証情報の管理
-- 環境変数経由でのみ取得
-- ログへの出力禁止
-- GitHub Secretsで暗号化
+| 処理内容 | 時間 |
+|----------|------|
+| Discord接続・取得 | 5〜10秒 |
+| Sheets記録 | 2〜5秒 |
+| Slack通知（5人分） | 5〜10秒 |
+| **合計** | **15〜30秒** |
 
-### 11.2 エラーメッセージ
-- 機密情報を含めない
-- スタックトレースの制限
+### 処理が遅い場合
+- 参加者が多い（50人以上）
+- ネットワークが遅い
+- APIの制限に達している
 
-## 12. テスト戦略
+---
 
-### 12.1 単体テスト
-- 環境変数の検証ロジック
-- エラーハンドリング
+## 8. 🛡️ セキュリティについて
 
-### 12.2 統合テスト
-- モック環境での全体フロー
-- 各モジュールの連携確認
+### 安全に使うための注意点
 
-### 12.3 手動テスト
-- ローカル環境での実行
-- GitHub Actions手動トリガー
+#### パスワード（トークン）の管理
+- ❌ コードに直接書かない
+- ❌ 公開リポジトリにアップしない
+- ✅ 環境変数で管理
+- ✅ GitHub Secretsで暗号化
 
-## 13. 監視とアラート
+#### ログの安全性
+- パスワードは表示しない
+- 個人情報は最小限
+- エラー詳細は必要な範囲のみ
 
-### 13.1 監視項目
-- 実行成功/失敗
-- 処理時間
-- エラー発生率
+---
 
-### 13.2 アラート条件
-- 3回連続失敗
-- 処理時間5分超過
-- 特定エラーの頻発
+## 9. 💡 よくある質問（FAQ）
 
-## 14. 今後の拡張可能性
+### Q1: 手動で実行できますか？
+**A:** はい、以下の方法で可能です：
+- ローカル: `python poll_once.py`
+- GitHub: Actionsページから「Run workflow」
 
-### 14.1 機能拡張
+### Q2: 実行頻度を変更できますか？
+**A:** はい、GitHub Actionsの設定で変更できます。ただし、あまり頻繁にすると制限に達する可能性があります。
+
+### Q3: 複数のDiscordサーバーに対応できますか？
+**A:** 現在のバージョンでは、複数のVCチャンネルには対応していますが、サーバーは1つです。
+
+### Q4: ログはどこに保存されますか？
+**A:** GitHub Actionsの実行ログに保存されます（90日間保持）。
+
+### Q5: エラーが起きたら通知されますか？
+**A:** GitHub Actionsの設定で、失敗時にメール通知を受け取れます。
+
+---
+
+## 10. 🔧 メンテナンスとアップデート
+
+### 定期的な確認事項
+
+#### 毎週確認
+- [ ] GitHub Actionsが正常に動作しているか
+- [ ] エラーログがないか
+
+#### 毎月確認
+- [ ] トークンの有効期限
+- [ ] API使用量
+- [ ] スプレッドシートの容量
+
+#### 毎年確認
+- [ ] 依存ライブラリのアップデート
+- [ ] APIの仕様変更
+- [ ] セキュリティアップデート
+
+---
+
+## 11. 🚧 今後の改善予定
+
+### 近い将来追加したい機能
+- ⏰ 実行時間の柔軟な設定
+- 📧 エラー時のメール通知
+- 📊 実行統計の可視化
+- 🔄 リトライ機能
+
+### 長期的な目標
+- リアルタイム監視
 - 複数サーバー対応
-- 時間帯別の集計
-- 退室時刻の記録
-- 滞在時間の計算
+- Web管理画面
+- AIによる異常検知
 
-### 14.2 アーキテクチャ改善
-- イベント駆動型への移行
-- WebSocket常時接続
-- キューシステムの導入
-- マイクロサービス化
+---
+
+## 12. 📚 もっと詳しく知りたい方へ
+
+### システム構成図
+```
+GitHub Actions（定期実行）
+        ↓
+   poll_once.py（司令塔）
+        ↓
+    ┌───┴───┐
+    ↓        ↓
+Discord    Google
+  Bot      Sheets
+    ↓        ↓
+    └───┬───┘
+        ↓
+     Slack
+```
+
+### 関連用語集
+
+| 用語 | 説明 |
+|------|------|
+| **環境変数** | プログラムの設定を保存する場所 |
+| **トークン** | サービスにアクセスするためのパスワード |
+| **API** | プログラム同士が通信する仕組み |
+| **非同期処理** | 複数の処理を同時に行う技術 |
+| **GitHub Actions** | 自動実行サービス |
+| **cron** | 定期実行のスケジュール形式 |
+
+### 参考リンク
+- [GitHub Actions Documentation](https://docs.github.com/actions) - 自動実行の設定
+- [Python asyncio](https://docs.python.org/3/library/asyncio.html) - 非同期処理
+- [環境変数の設定方法](https://docs.github.com/actions/security-guides/encrypted-secrets) - セキュリティ
+
+---
+
+## 📞 サポート
+
+問題が発生した場合は、以下の情報を準備してお問い合わせください：
+
+1. **エラーメッセージ**の全文
+2. **実行時刻**
+3. **GitHub Actionsのログ**
+4. **環境変数の設定状況**（トークンは除く）
+5. **最後に成功した日時**
+
+この仕様書は定期的に更新されます。最新版は常にこのファイルを参照してください。
+
+---
+
+*最終更新日: 2025年1月*
