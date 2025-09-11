@@ -195,7 +195,7 @@ logs/
 
 | 変数名 | 説明 | 例 |
 |---|---|---|
-| LOG_LEVEL | デフォルトログレベル | DEBUG, INFO, WARNING, ERROR |
+| LOG_LEVEL | デフォルトログレベル | 0-5の整数、またはTRACE, DEBUG, INFO, WARN, ERROR, FATAL |
 | LOG_JSON | JSON形式出力の有効化 | true, false |
 
 ## ログフォーマット
