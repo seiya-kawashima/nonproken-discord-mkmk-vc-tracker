@@ -4,3 +4,9 @@
 2025-09-11 09:21:30,046 [INFO] test_operation - logger._log:236 - 📊 メトリクス: processing_time=523.45ms
 2025-09-11 09:21:30,047 [INFO] test_operation - logger._log:236 - 📊 メトリクス: memory_usage=45.2MB
 2025-09-11 09:21:30,047 [INFO] test_operation - logger._log:236 - ✅ VC監視処理 成功
+2025-09-11 09:21:51,014 [INFO] test_operation - logger._log:236 - 🚀 VC監視処理 開始
+2025-09-11 09:21:51,515 [WARNING] test_operation - logger._log:238 - 多数のユーザーを検出: 13名
+2025-09-11 09:21:51,515 [INFO] test_operation - logger._log:236 - 📊 メトリクス: detected_users=13users
+2025-09-11 09:21:51,515 [INFO] test_operation - logger._log:236 - 📊 メトリクス: processing_time=523.45ms
+2025-09-11 09:21:51,515 [INFO] test_operation - logger._log:236 - 📊 メトリクス: memory_usage=45.2MB
+2025-09-11 09:21:51,515 [INFO] test_operation - logger._log:236 - ✅ VC監視処理 成功
