@@ -1,8 +1,0 @@
-2025-09-11 09:21:51,823 [INFO] test_performance - logger._log:236 - 📊 メトリクス: process_1_duration=298.25ms
-2025-09-11 09:21:51,823 [WARNING] test_performance - logger._log:238 - 処理 1 が遅延: 298.25ms
-2025-09-11 09:21:52,038 [INFO] test_performance - logger._log:236 - 📊 メトリクス: process_2_duration=214.73ms
-2025-09-11 09:21:52,038 [WARNING] test_performance - logger._log:238 - 処理 2 が遅延: 214.73ms
-2025-09-11 09:21:52,171 [INFO] test_performance - logger._log:236 - 📊 メトリクス: process_3_duration=132.24ms
-2025-09-11 09:21:52,331 [INFO] test_performance - logger._log:236 - 📊 メトリクス: process_4_duration=160.02ms
-2025-09-11 09:21:52,622 [INFO] test_performance - logger._log:236 - 📊 メトリクス: process_5_duration=289.87ms
-2025-09-11 09:21:52,622 [WARNING] test_performance - logger._log:238 - 処理 5 が遅延: 289.87ms
