@@ -82,16 +82,36 @@ Discord の特定ボイスチャンネルで
   * 1か月 ≒ 420分
 * → **無料枠内で運用可能**
 
-### Secrets 設定
+### Secrets 設定（重要: 機密情報の管理）
 
-リポジトリの **Settings → Secrets and variables → Actions** に登録：
+#### ⚠️ 本番運用時の機密情報管理
+**絶対にGitHubリポジトリに機密情報を直接コミットしないでください**
 
-* `DISCORD_BOT_TOKEN` … Discord Botのトークン
-* `GOOGLE_SERVICE_ACCOUNT_JSON` … サービスアカウントJSON（Base64化して登録推奨）
-* `GOOGLE_SHEET_NAME` … スプレッドシート名
-* `ALLOWED_VOICE_CHANNEL_IDS` … 対象VC ID（カンマ区切り）
-* `SLACK_BOT_TOKEN` … Slack Bot のトークン
-* `SLACK_CHANNEL_ID` … 通知先チャンネルの ID
+#### GitHub Secretsへの登録方法
+リポジトリの **Settings → Secrets and variables → Actions** に以下を登録：
+
+| Secret名 | 説明 | 取得方法 |
+|---|---|---|
+| `DISCORD_BOT_TOKEN` | Discord Botのトークン | Discord Developer Portal → Bot → Token |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | サービスアカウントJSON | **Base64エンコードして登録** |
+| `GOOGLE_SHEET_NAME` | スプレッドシート名 | Googleスプレッドシートのタイトル |
+| `ALLOWED_VOICE_CHANNEL_IDS` | 対象VC ID（カンマ区切り） | Discord → VCチャンネル右クリック → IDをコピー |
+| `SLACK_BOT_TOKEN` | Slack Bot のトークン | Slack API → OAuth & Permissions → Bot User OAuth Token |
+| `SLACK_CHANNEL_ID` | 通知先チャンネルのID | Slackチャンネル → 詳細 → チャンネルID |
+
+#### Base64エンコード方法（Google Service Account JSON）
+```bash
+# Mac/Linux
+base64 -i service_account.json | pbcopy
+
+# Windows (PowerShell)
+[Convert]::ToBase64String([System.IO.File]::ReadAllBytes("service_account.json")) | Set-Clipboard
+```
+
+#### ローカル開発時
+1. `.env.example` を `.env` にコピー
+2. 実際の値を設定
+3. **`.env` は絶対にGitにコミットしない**（`.gitignore`に登録済み）
 
 ---
 
