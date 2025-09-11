@@ -22,7 +22,9 @@
 project/
 ├── README.md                    # プロジェクト概要
 ├── docs/
-│   ├── overview.md             # システム全体概要
+│   ├── OVERVIEW.md             # システム全体概要
+│   ├── DEVELOPMENT.md          # 開発環境ガイド
+│   ├── SECURITY.md             # セキュリティガイド
 │   ├── specs/                  # 個別詳細仕様書
 │   │   ├── discord_client_spec.md
 │   │   ├── sheets_client_spec.md
