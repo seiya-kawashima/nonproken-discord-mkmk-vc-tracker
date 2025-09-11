@@ -4,7 +4,9 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(python test_logger.py:*)",
-      "Bash(git worktree:*)"
+      "Bash(git worktree:*)",
+      "Read(//c/prj/discord-mkmk-vc-tracker-ci-cd-test/**)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
