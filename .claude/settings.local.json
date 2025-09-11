@@ -6,7 +6,8 @@
       "Bash(python test_logger.py:*)",
       "Bash(git worktree:*)",
       "Read(//c/prj/discord-mkmk-vc-tracker-ci-cd-test/**)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
