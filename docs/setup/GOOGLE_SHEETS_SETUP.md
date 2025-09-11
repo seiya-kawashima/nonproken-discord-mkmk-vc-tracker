@@ -185,23 +185,43 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 
 ### GitHub Actions用（Base64エンコード）
 
-1. **JSONファイルをBase64エンコード**：
+**なぜBase64エンコードが必要？**
+- JSONファイルには改行や特殊文字が含まれているため、そのままGitHub Secretsに保存できません
+- Base64エンコードすることで、1行の文字列に変換してGitHub Secretsに保存できます
 
-   Windows (PowerShell):
+1. **JSONファイルをBase64エンコード（文字列に変換）**：
+
+   **Windows (PowerShell)の場合**：
    ```powershell
+   # PowerShellを開いて、service_account.jsonがあるフォルダで実行
    [Convert]::ToBase64String([IO.File]::ReadAllBytes("service_account.json")) | Out-File encoded.txt
    ```
+   
+   **もっと簡単な方法（Windows）**：
+   - オンライン変換ツール（https://www.base64encode.org/）を使用
+   - service_account.jsonの内容をコピーして貼り付け
+   - 「Encode」ボタンをクリック
+   - 結果をコピー
 
-   Mac/Linux:
+   **Mac/Linuxの場合**：
    ```bash
+   # ターミナルでservice_account.jsonがあるフォルダで実行
    base64 -i service_account.json | tr -d '\n' > encoded.txt
    ```
 
-2. `encoded.txt`の内容をコピー
+2. **エンコードされた文字列を確認**：
+   - `encoded.txt`ファイルを開く
+   - 長い1行の文字列（英数字の羅列）になっていることを確認
+   - 例：`eyJ0eXBlIjoic2VydmljZV9hY2NvdW50IiwicHJvamVjdF9pZCI6...`
 
-3. GitHub Secretsに登録：
-   - テスト環境：`TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
-   - 本番環境：`GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
+3. **encoded.txtの内容を全てコピー**
+
+4. **GitHub Secretsに登録**：
+   - GitHubリポジトリの「Settings」→「Secrets and variables」→「Actions」
+   - 「New repository secret」をクリック
+   - Name: `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`（テスト用）
+   - Secret: コピーした文字列を貼り付け
+   - 「Add secret」をクリック
 
 ## ✅ 動作確認
 
