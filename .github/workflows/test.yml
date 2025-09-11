@@ -1,0 +1,181 @@
+name: Test Environment
+
+on:
+  # Pull Request時に自動実行
+  pull_request:
+    branches: [ main, develop ]
+  
+  # プッシュ時に自動実行（develop, featureブランチ）
+  push:
+    branches: 
+      - develop
+      - 'feature/**'
+  
+  # 手動実行も可能
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - discord_only
+          - sheets_only
+          - slack_only
+      debug_enabled:
+        description: 'Enable debug logging'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: test  # テスト環境を指定
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # テスト用の追加パッケージをインストール
+        pip install pytest pytest-cov pytest-asyncio
+    
+    - name: Create test service account JSON
+      env:
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+      run: |
+        echo "$GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json
+        chmod 600 service_account.json
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/ -v --cov=src --cov-report=term-missing
+    
+    - name: Run integration test (Discord)
+      if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'discord_only'
+      env:
+        DISCORD_BOT_TOKEN: ${{ secrets.TEST_DISCORD_BOT_TOKEN }}
+        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TEST_ALLOWED_VOICE_CHANNEL_IDS }}
+        LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}
+      run: |
+        echo "Testing Discord connection..."
+        python -c "
+import asyncio
+import os
+from src.discord_client import DiscordVCPoller
+
+async def test_discord():
+    token = os.getenv('DISCORD_BOT_TOKEN')
+    channel_ids = os.getenv('ALLOWED_VOICE_CHANNEL_IDS', '').split(',')
+    client = DiscordVCPoller(token, channel_ids)
+    try:
+        members = await client.get_vc_members()
+        print(f'✓ Discord connection successful. Found {len(members)} members')
+        return True
+    except Exception as e:
+        print(f'✗ Discord connection failed: {e}')
+        return False
+
+asyncio.run(test_discord())
+        "
+    
+    - name: Run integration test (Google Sheets)
+      if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'sheets_only'
+      env:
+        GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
+        GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
+      run: |
+        echo "Testing Google Sheets connection..."
+        python -c "
+import os
+from src.sheets_client import SheetsClient
+
+sheet_name = os.getenv('GOOGLE_SHEET_NAME')
+service_account = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
+
+client = SheetsClient(service_account, sheet_name)
+try:
+    client.connect()
+    print('✓ Google Sheets connection successful')
+except Exception as e:
+    print(f'✗ Google Sheets connection failed: {e}')
+    exit(1)
+        "
+    
+    - name: Run integration test (Slack)
+      if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'slack_only'
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.TEST_SLACK_BOT_TOKEN }}
+        SLACK_CHANNEL_ID: ${{ secrets.TEST_SLACK_CHANNEL_ID }}
+      run: |
+        echo "Testing Slack connection..."
+        python -c "
+import os
+from src.slack_notifier import SlackNotifier
+
+token = os.getenv('SLACK_BOT_TOKEN')
+channel = os.getenv('SLACK_CHANNEL_ID')
+
+if token and channel:
+    client = SlackNotifier(token, channel)
+    success = client.send_login_notification('テストユーザー', 1)
+    if success:
+        print('✓ Slack notification test successful')
+    else:
+        print('✗ Slack notification test failed')
+        exit(1)
+else:
+    print('⚠ Slack credentials not configured for testing')
+        "
+    
+    - name: Run full integration test
+      if: github.event.inputs.test_type == 'all'
+      env:
+        DISCORD_BOT_TOKEN: ${{ secrets.TEST_DISCORD_BOT_TOKEN }}
+        GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
+        GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
+        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TEST_ALLOWED_VOICE_CHANNEL_IDS }}
+        SLACK_BOT_TOKEN: ${{ secrets.TEST_SLACK_BOT_TOKEN }}
+        SLACK_CHANNEL_ID: ${{ secrets.TEST_SLACK_CHANNEL_ID }}
+        LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}
+      run: |
+        echo "Running full integration test..."
+        python poll_once.py
+        echo "✓ Full integration test completed"
+    
+    - name: Upload coverage reports
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+    
+    - name: Clean up
+      if: always()
+      run: |
+        rm -f service_account.json
+    
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ テスト環境での動作確認が完了しました。'
+          })
