@@ -51,14 +51,18 @@ class TestDiscordVCPoller:
         mock_guild.voice_channels = [mock_channel]  # VCチャンネルリスト
         
         # Discordクライアントをモック
-        with patch.object(poller.client, 'start', new_callable=AsyncMock) as mock_start:  # startメソッドをモック
-            with patch.object(poller.client, 'guilds', [mock_guild]):  # guildsをモック
-                # on_readyイベントを手動で実行
-                poller.client.user = Mock()  # ユーザーモック
-                poller.client.user.name = "TestBot"  # Bot名
-                
+        with patch.object(poller, 'client') as mock_client:  # クライアント全体をモック
+            mock_client.start = AsyncMock()  # startメソッドをモック
+            mock_client.close = AsyncMock()  # closeメソッドをモック
+            mock_client.guilds = [mock_guild]  # guildsプロパティをモック
+            mock_client.user = Mock()  # ユーザーモック
+            mock_client.user.name = "TestBot"  # Bot名
+            
+            # get_vc_membersを呼び出すと内部でon_readyが呼ばれる想定
+            # しかし実際にはstartが呼ばれるだけなので、手動でデータを設定
+            async def mock_start_side_effect(token):
                 # on_readyの処理を直接実行
-                for guild in [mock_guild]:  # ギルドをループ
+                for guild in mock_client.guilds:  # ギルドをループ
                     for channel in guild.voice_channels:  # VCをループ
                         if str(channel.id) in channel_ids:  # 対象チャンネルか確認
                             for member in channel.members:  # メンバーをループ
@@ -68,12 +72,17 @@ class TestDiscordVCPoller:
                                     "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名
                                 }
                                 poller.members_data.append(member_data)  # データ追加
-                
-                # 結果を確認
-                assert len(poller.members_data) == 1  # メンバー数が1か
-                assert poller.members_data[0]["guild_id"] == "999999999"  # ギルドIDが正しいか
-                assert poller.members_data[0]["user_id"] == "111111111"  # ユーザーIDが正しいか
-                assert poller.members_data[0]["user_name"] == "testuser#1234"  # ユーザー名が正しいか
+            
+            mock_client.start.side_effect = mock_start_side_effect  # side_effectを設定
+            
+            # テスト実行
+            result = await poller.get_vc_members()  # メンバー取得
+            
+            # 結果を確認
+            assert len(result) == 1  # メンバー数が1か
+            assert result[0]["guild_id"] == "999999999"  # ギルドIDが正しいか
+            assert result[0]["user_id"] == "111111111"  # ユーザーIDが正しいか
+            assert result[0]["user_name"] == "testuser#1234"  # ユーザー名が正しいか
 
     @pytest.mark.asyncio
     async def test_get_vc_members_no_members(self):
