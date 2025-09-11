@@ -2,15 +2,46 @@
 
 ## 📋 ドキュメント管理ルール
 
+### 仕様書作成の原則
+**すべての仕様書は非エンジニアでも理解できるように作成すること**
+
+#### 仕様書に必須の要素
+1. **概要説明** - 何をするプログラムかを身近な例えで説明
+2. **Input/Output** - 入力と出力を明確に記載
+3. **処理フロー** - 図や箇条書きで分かりやすく
+4. **具体例** - 実際の使用例を提示
+5. **FAQ** - よくある質問への回答
+6. **トラブルシューティング** - 問題解決の手順
+
+#### Input/Outputセクションの書き方
+```markdown
+## 📥 Input（入力）
+| 項目 | 説明 | 例 |
+|------|------|-----|
+| 入力データ | 何を受け取るか | 具体例 |
+
+## 📤 Output（出力）
+| 項目 | 説明 | 例 |
+|------|------|-----|
+| 出力データ | 何を返すか | 具体例 |
+```
+
+### 仕様書の配置ルール
+**ソースコードの階層構造に合わせて仕様書を配置すること**
+
+#### 配置例
+- `src/discord_client.py` → `docs/specs/src/discord_client.md`
+- `src/sheets_client.py` → `docs/specs/src/sheets_client.md`
+- `src/slack_notifier.py` → `docs/specs/src/slack_notifier.md`
+- `poll_once.py` → `docs/specs/poll_once.md`
+- `tests/test_discord_client.py` → `docs/specs/tests/test_discord_client.md`
+
 ### 必須ドキュメント更新
 開発・機能追加・修正を行った際は、必ず以下のドキュメントを作成・更新すること:
 
 1. **README.md** - プロジェクト概要とセットアップ手順を更新
 2. **docs/OVERVIEW.md** - システム全体の概要を更新
 3. **個別仕様書** - 各モジュール/機能ごとの詳細仕様書を作成・更新
-   - 例: `docs/specs/discord_client_spec.md`
-   - 例: `docs/specs/sheets_client_spec.md`
-   - 例: `docs/specs/slack_notifier_spec.md`
 
 ### ドキュメント更新タイミング
 - **新機能追加時**: 実装前に仕様書作成 → 実装 → ドキュメント更新
@@ -26,12 +57,48 @@ project/
 │   ├── DEVELOPMENT.md          # 開発環境ガイド
 │   ├── SECURITY.md             # セキュリティガイド
 │   ├── specs/                  # 個別詳細仕様書
-│   │   ├── discord_client_spec.md
-│   │   ├── sheets_client_spec.md
-│   │   └── slack_notifier_spec.md
+│   │   ├── poll_once.md       # メイン処理
+│   │   ├── src/                # srcディレクトリの仕様書
+│   │   │   ├── discord_client.md
+│   │   │   ├── sheets_client.md
+│   │   │   └── slack_notifier.md
+│   │   └── tests/              # テストの仕様書
+│   │       └── test_spec.md
 │   └── todo-archive.md         # 完了TODOアーカイブ
 └── .claude/
-    └── claude.md               # このファイル
+    └── CLAUDE.md               # このファイル
+```
+
+### 仕様書テンプレート
+```markdown
+# [モジュール名]仕様書
+
+## 📌 このドキュメントについて
+[非エンジニアでも理解できる説明]
+
+## 📥 Input（入力）
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| [入力名] | [型] | [説明] | [具体例] |
+
+## 📤 Output（出力）
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| [出力名] | [型] | [説明] | [具体例] |
+
+## 🔧 処理の流れ
+1. [ステップ1]
+2. [ステップ2]
+3. [ステップ3]
+
+## 💡 使用例
+[実際の使用例を記載]
+
+## ⚠️ 注意事項
+[注意すべき点]
+
+## ❓ FAQ
+[よくある質問と回答]
 ```
 
 ## 💻 コーディング規約
