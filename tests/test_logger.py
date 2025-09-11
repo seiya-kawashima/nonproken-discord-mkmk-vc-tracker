@@ -21,7 +21,7 @@ class TestLogger:
     
     def test_debug_logging(self, caplog):
         """デバッグログのテスト"""
-        test_logger = VCTrackerLogger("test")  # テスト用ロガーを作成
+        test_logger = VCTrackerLogger("test", level="DEBUG")  # DEBUGレベルでテスト用ロガーを作成
         with caplog.at_level("DEBUG"):  # DEBUGレベルでログをキャプチャ
             test_logger.debug("Debug message")  # デバッグメッセージをログ出力
         assert "Debug message" in caplog.text  # メッセージがログに含まれているか確認
@@ -58,14 +58,16 @@ class TestLogger:
         """追加パラメータ付きログのテスト"""
         test_logger = VCTrackerLogger("test")  # テスト用ロガーを作成
         with caplog.at_level("INFO"):  # INFOレベルでログをキャプチャ
-            test_logger.info("Message with %s", "parameter")  # パラメータ付きメッセージをログ出力
+            # VCTrackerLoggerはextraパラメータを使うので、直接フォーマットする
+            test_logger.info(f"Message with {'parameter'}")  # パラメータ付きメッセージをログ出力
         assert "Message with parameter" in caplog.text  # フォーマットされたメッセージが含まれているか確認
     
-    @patch('logger.logging.FileHandler')
+    @patch('logger.RotatingFileHandler')  # RotatingFileHandlerをモック
     def test_file_handler_creation(self, mock_file_handler):
         """ファイルハンドラー作成のテスト"""
-        test_logger = VCTrackerLogger("test", log_file="test.log")  # ファイル出力付きロガーを作成
-        mock_file_handler.assert_called()  # FileHandlerが呼ばれたか確認
+        from pathlib import Path
+        test_logger = VCTrackerLogger("test", log_dir=Path("logs"), enable_file=True)  # ファイル出力付きロガーを作成
+        mock_file_handler.assert_called()  # RotatingFileHandlerが呼ばれたか確認
     
     def test_logger_level_setting(self):
         """ログレベル設定のテスト"""
