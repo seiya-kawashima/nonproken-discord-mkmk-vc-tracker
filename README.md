@@ -189,7 +189,7 @@ jobs:
 
 ## ドキュメント
 
-詳細な仕様書は [docs/specification.md](docs/specification.md) を参照してください。
+詳細な仕様書は [docs/overview.md](docs/overview.md) を参照してください。
 
 ---
 
