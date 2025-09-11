@@ -25,7 +25,8 @@
       "Bash(do for file in $dir/*.md)",
       "Bash(do if [ -f \"$file\" ])",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": []
