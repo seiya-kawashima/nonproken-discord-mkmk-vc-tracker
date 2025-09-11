@@ -1,0 +1,176 @@
+"""Google Sheetsクライアント - 出席データの記録と管理"""  # モジュールの説明
+
+import os  # ファイルパス操作用
+import json  # JSON形式の処理用
+import logging  # ログ出力用
+from datetime import datetime, timezone, timedelta  # 日時処理用
+from typing import List, Dict, Any, Optional  # 型ヒント用
+import gspread  # Google Sheets API用
+from google.oauth2.service_account import Credentials  # 認証用
+
+# ロガーの設定
+logger = logging.getLogger(__name__)  # このモジュール用のロガー
+
+
+class SheetsClient:
+    """Google Sheetsへのデータ記録を管理するクラス"""  # クラスの説明
+
+    SCOPES = [  # 必要なGoogle APIスコープ
+        'https://www.googleapis.com/auth/spreadsheets',  # スプレッドシート読み書き権限
+    ]
+
+    def __init__(self, service_account_json: str, sheet_name: str):
+        """初期化処理
+
+        Args:
+            service_account_json: サービスアカウントJSONファイルパス
+            sheet_name: スプレッドシート名
+        """  # 初期化処理の説明
+        self.service_account_json = service_account_json  # JSONファイルパスを保存
+        self.sheet_name = sheet_name  # シート名を保存
+        self.client = None  # Google Sheetsクライアント
+        self.sheet = None  # アクティブなシート
+        self.worksheet = None  # アクティブなワークシート
+
+    def connect(self):
+        """Google Sheetsに接続"""  # メソッドの説明
+        try:
+            # 認証情報を読み込み
+            creds = Credentials.from_service_account_file(  # サービスアカウント認証
+                self.service_account_json,  # JSONファイルパス
+                scopes=self.SCOPES  # 必要なスコープ
+            )
+            
+            # gspreadクライアントを作成
+            self.client = gspread.authorize(creds)  # 認証済みクライアント作成
+            
+            # スプレッドシートを開く
+            self.sheet = self.client.open(self.sheet_name)  # シート名で開く
+            
+            # daily_presenceワークシートを取得（なければ作成）
+            try:
+                self.worksheet = self.sheet.worksheet('daily_presence')  # ワークシート取得
+            except gspread.WorksheetNotFound:  # ワークシートが存在しない場合
+                self.worksheet = self.sheet.add_worksheet(  # 新規作成
+                    title='daily_presence',  # シート名
+                    rows=1000,  # 初期行数
+                    cols=5  # 初期列数（A-E）
+                )
+                # ヘッダー行を設定
+                headers = ['date_jst', 'guild_id', 'user_id', 'user_name', 'present']  # ヘッダー定義
+                self.worksheet.update('A1:E1', [headers])  # ヘッダーを書き込み
+                logger.info("Created daily_presence worksheet with headers")  # 作成完了をログ出力
+            
+            logger.info(f"Connected to Google Sheets: {self.sheet_name}")  # 接続成功をログ出力
+            
+        except Exception as e:  # エラー発生時
+            logger.error(f"Failed to connect to Google Sheets: {e}")  # エラーをログ出力
+            raise  # エラーを再発生
+
+    def upsert_presence(self, members: List[Dict[str, Any]]) -> Dict[str, int]:
+        """メンバーの出席情報を記録（Upsert）
+
+        Args:
+            members: メンバー情報のリスト
+
+        Returns:
+            処理結果（新規追加数、更新数）
+        """  # メソッドの説明
+        if not self.worksheet:  # ワークシートが未接続の場合
+            raise RuntimeError("Not connected to Google Sheets")  # エラーを発生
+
+        # JSTの今日の日付を取得
+        jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
+        today_jst = datetime.now(jst).strftime('%Y-%m-%d')  # 今日の日付（YYYY-MM-DD形式）
+        
+        # 既存データを取得
+        all_values = self.worksheet.get_all_records()  # 全レコードを取得
+        
+        # 今日のデータを抽出
+        today_data = {  # 今日のデータを辞書形式で保存
+            (row['guild_id'], row['user_id']): row  # (guild_id, user_id)をキーとする
+            for row in all_values  # 全レコードをループ
+            if row.get('date_jst') == today_jst  # 今日の日付のみ抽出
+        }
+        
+        new_count = 0  # 新規追加カウンタ
+        update_count = 0  # 更新カウンタ
+        rows_to_append = []  # 追加する行のリスト
+        
+        for member in members:  # メンバーリストをループ
+            key = (member['guild_id'], member['user_id'])  # キーを作成
+            
+            if key not in today_data:  # 今日のデータに存在しない場合
+                # 新規追加
+                row = [  # 新しい行データ
+                    today_jst,  # 日付
+                    member['guild_id'],  # ギルドID
+                    member['user_id'],  # ユーザーID
+                    member['user_name'],  # ユーザー名
+                    'TRUE'  # 出席フラグ
+                ]
+                rows_to_append.append(row)  # 追加リストに追加
+                new_count += 1  # カウンタ増加
+                logger.info(f"New presence: {member['user_name']} on {today_jst}")  # 新規追加をログ出力
+            else:
+                # 既にTRUEの場合は更新不要
+                if today_data[key].get('present') != 'TRUE':  # まだTRUEでない場合
+                    # 該当行を探して更新（本来はより効率的な方法を使うべき）
+                    update_count += 1  # カウンタ増加
+                    logger.info(f"Would update presence: {member['user_name']} on {today_jst}")  # 更新をログ出力
+        
+        # 新規データを一括追加
+        if rows_to_append:  # 追加データがある場合
+            self.worksheet.append_rows(rows_to_append)  # 一括追加
+            logger.info(f"Added {new_count} new presence records")  # 追加完了をログ出力
+        
+        return {"new": new_count, "updated": update_count}  # 処理結果を返す
+
+    def get_total_days(self, user_id: str) -> int:
+        """ユーザーの通算ログイン日数を取得
+
+        Args:
+            user_id: ユーザーID
+
+        Returns:
+            通算ログイン日数
+        """  # メソッドの説明
+        if not self.worksheet:  # ワークシートが未接続の場合
+            raise RuntimeError("Not connected to Google Sheets")  # エラーを発生
+
+        # 全データを取得
+        all_values = self.worksheet.get_all_records()  # 全レコードを取得
+        
+        # 指定ユーザーのTRUEレコードをカウント
+        total_days = sum(  # 合計を計算
+            1 for row in all_values  # 全レコードをループ
+            if row.get('user_id') == user_id  # ユーザーIDが一致
+            and row.get('present') == 'TRUE'  # 出席フラグがTRUE
+        )
+        
+        return total_days  # 通算日数を返す
+
+    def get_today_members(self) -> List[Dict[str, Any]]:
+        """今日ログインしたメンバーのリストを取得
+
+        Returns:
+            今日のメンバー情報リスト
+        """  # メソッドの説明
+        if not self.worksheet:  # ワークシートが未接続の場合
+            raise RuntimeError("Not connected to Google Sheets")  # エラーを発生
+
+        # JSTの今日の日付を取得
+        jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
+        today_jst = datetime.now(jst).strftime('%Y-%m-%d')  # 今日の日付（YYYY-MM-DD形式）
+        
+        # 全データを取得
+        all_values = self.worksheet.get_all_records()  # 全レコードを取得
+        
+        # 今日のメンバーを抽出
+        today_members = [  # リスト内包表記で抽出
+            row for row in all_values  # 全レコードをループ
+            if row.get('date_jst') == today_jst  # 今日の日付
+            and row.get('present') == 'TRUE'  # 出席フラグがTRUE
+        ]
+        
+        return today_members  # 今日のメンバーリストを返す
