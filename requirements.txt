@@ -1,0 +1,26 @@
+# Discord VC Tracker Dependencies
+# Python 3.11+ required
+
+# Discord Bot
+discord.py==2.3.2
+
+# Google Sheets
+gspread==6.1.0
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
+
+# Slack
+slack-sdk==3.27.1
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Timezone
+pytz==2024.1
+
+# Async Support
+aiohttp==3.9.5
+asyncio-mqtt==0.16.2
+
+# Utilities
+typing-extensions==4.11.0
