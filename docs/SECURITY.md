@@ -63,6 +63,7 @@ echo "$GOOGLE_SERVICE_ACCOUNT_JSON" | base64 -d > service_account.json
 
 ### 必要なGitHub Secrets
 
+#### 本番環境用Secrets
 以下のSecretsをGitHubリポジトリに設定する必要があります：
 
 | Secret名 | 説明 | 取得方法 |
@@ -73,6 +74,20 @@ echo "$GOOGLE_SERVICE_ACCOUNT_JSON" | base64 -d > service_account.json
 | `ALLOWED_VOICE_CHANNEL_IDS` | 監視対象VCチャンネルID（カンマ区切り） | Discord開発者モードでチャンネルIDをコピー |
 | `SLACK_BOT_TOKEN` | Slack Botトークン | Slack App管理画面から取得 |
 | `SLACK_CHANNEL_ID` | 通知先SlackチャンネルID | Slackチャンネル情報から取得 |
+
+#### テスト環境用Secrets
+テスト環境では、すべてのSecret名に`TEST_`プレフィックスを付けます：
+
+| Secret名 | 説明 | 用途 |
+|----------|------|------|
+| `TEST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン | テストサーバーでの動作確認 |
+| `TEST_GOOGLE_SHEET_NAME` | テスト用スプレッドシート名 | テストデータの記録 |
+| `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | テスト用サービスアカウント | テストシートへのアクセス |
+| `TEST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID | テストサーバーのVC監視 |
+| `TEST_SLACK_BOT_TOKEN` | テスト用Slackトークン | テスト通知の送信 |
+| `TEST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル | テスト通知先 |
+
+詳細な環境設定については[ENVIRONMENTS.md](ENVIRONMENTS.md)を参照してください。
 
 ### GitHub Secretsの設定手順
 
