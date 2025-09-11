@@ -6,7 +6,7 @@
 開発・機能追加・修正を行った際は、必ず以下のドキュメントを作成・更新すること:
 
 1. **README.md** - プロジェクト概要とセットアップ手順を更新
-2. **docs/overview.md** - システム全体の概要を更新
+2. **docs/OVERVIEW.md** - システム全体の概要を更新
 3. **個別仕様書** - 各モジュール/機能ごとの詳細仕様書を作成・更新
    - 例: `docs/specs/discord_client_spec.md`
    - 例: `docs/specs/sheets_client_spec.md`
