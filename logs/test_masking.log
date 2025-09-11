@@ -1,0 +1,4 @@
+2025-09-11 09:21:29,545 [INFO] test_masking - logger._log:238 - Discord接続情報: token='***MASKED***' server='discord.gg'
+2025-09-11 09:21:29,545 [INFO] test_masking - logger._log:238 - API設定: api_key='***MASKED***' endpoint='https://api.example.com'
+2025-09-11 09:21:29,545 [INFO] test_masking - logger._log:238 - 認証情報: password='***MASKED***' username='admin'
+2025-09-11 09:21:29,545 [INFO] test_masking - logger._log:238 - 環境変数: SECRET='***MASKED***' PUBLIC='this_is_public'

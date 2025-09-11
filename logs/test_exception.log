@@ -1,0 +1,6 @@
+2025-09-11 09:21:30,049 [ERROR] test_exception - logger._log:238 - 計算処理でエラーが発生しました
+Traceback (most recent call last):
+  File "C:\prj\discord-mkmk-vc-tracker\test_logger.py", line 135, in test_exception_logging
+    result = 10 / 0
+             ~~~^~~
+ZeroDivisionError: division by zero

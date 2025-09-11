@@ -137,7 +137,7 @@ def test_exception_logging():
         logger.exception("計算処理でエラーが発生しました")
         logger.log_failure("数値計算処理", error=e,
                          input_value=10,
-                         operation="division")
+                         calc_operation="division")
     
     try:
         # 別の例外

@@ -1,0 +1,5 @@
+2025-09-11 09:21:29,541 [DEBUG] test_basic - logger._log:238 - 🔍 デバッグ: プログラムの詳細な動作情報
+2025-09-11 09:21:29,542 [INFO] test_basic - logger._log:238 - ℹ️ 情報: 正常な処理の進行状況
+2025-09-11 09:21:29,542 [WARNING] test_basic - logger._log:238 - ⚠️ 警告: 注意が必要な状況
+2025-09-11 09:21:29,542 [ERROR] test_basic - logger._log:238 - ❌ エラー: エラーが発生したが処理は継続
+2025-09-11 09:21:29,543 [CRITICAL] test_basic - logger._log:238 - 🚨 重大: システムに重大な問題が発生
