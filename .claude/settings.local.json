@@ -26,7 +26,8 @@
       "Bash(do if [ -f \"$file\" ])",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
