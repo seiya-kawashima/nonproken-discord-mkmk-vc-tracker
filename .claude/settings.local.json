@@ -9,7 +9,9 @@
       "Bash(python:*)",
       "Bash(mkdir:*)",
       "Bash(pip install:*)",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(git push:*)",
+      "Bash(git remote add:*)"
     ],
     "deny": [],
     "ask": []
