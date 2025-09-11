@@ -168,11 +168,11 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     subgraph "エラー処理パターン"
-        E1[環境変数不足] --> Exit1[sys.exit(1)]
+        E1[環境変数不足] --> Exit1[sys.exit 1]
         E2[Discord接続エラー] --> Log1[エラーログ出力]
-        Log1 --> Exit2[sys.exit(1)]
+        Log1 --> Exit2[sys.exit 1]
         E3[Sheets接続エラー] --> Log2[エラーログ出力]
-        Log2 --> Exit3[sys.exit(1)]
+        Log2 --> Exit3[sys.exit 1]
         E4[Slack送信エラー] --> Log3[警告ログ出力]
         Log3 --> Continue[処理継続]
     end
