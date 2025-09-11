@@ -1,0 +1,60 @@
+name: Sync docs to Wiki
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        path: repo
+
+    - name: Checkout wiki
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository }}.wiki
+        path: wiki
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sync docs to wiki
+      run: |
+        # docsフォルダの内容をWikiにコピー
+        rm -rf wiki/*
+        cp -r repo/docs/* wiki/
+        
+        # Wikiのホームページを作成
+        echo "# VC Tracker Documentation" > wiki/Home.md
+        echo "" >> wiki/Home.md
+        echo "## 📚 ドキュメント一覧" >> wiki/Home.md
+        echo "" >> wiki/Home.md
+        echo "### セットアップガイド" >> wiki/Home.md
+        echo "- [Discord Bot セットアップ](setup/DISCORD_BOT_SETUP)" >> wiki/Home.md
+        echo "- [Slack Bot セットアップ](setup/SLACK_BOT_SETUP)" >> wiki/Home.md
+        echo "- [Google Sheets セットアップ](setup/GOOGLE_SHEETS_SETUP)" >> wiki/Home.md
+        echo "" >> wiki/Home.md
+        echo "### 開発ガイド" >> wiki/Home.md
+        echo "- [開発環境構築](DEVELOPMENT)" >> wiki/Home.md
+        echo "- [環境別設定](ENVIRONMENTS)" >> wiki/Home.md
+        echo "- [セキュリティガイド](SECURITY)" >> wiki/Home.md
+        echo "- [CI/CDスキップ方法](CI_CD_SKIP)" >> wiki/Home.md
+        
+    - name: Commit and push to wiki
+      working-directory: wiki
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        if [ -n "$(git status --porcelain)" ]; then
+          git add -A
+          git commit -m "Sync docs from main repository"
+          git push
+        else
+          echo "No changes to commit"
+        fi
