@@ -187,6 +187,12 @@ jobs:
 
 ---
 
+## ドキュメント
+
+詳細な仕様書は [docs/specification.md](docs/specification.md) を参照してください。
+
+---
+
 ## 開発環境
 
 ### 言語・ライブラリ
