@@ -20,7 +20,12 @@
       "Bash(coverage report:*)",
       "Read(//c/prj/discord-mkmk-vc-tracker-spec-fix/**)",
       "Bash(git reset:*)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(for dir in setup specs)",
+      "Bash(do for file in $dir/*.md)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []
