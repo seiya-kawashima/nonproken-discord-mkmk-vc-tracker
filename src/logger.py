@@ -1,6 +1,7 @@
 """
 強力なロガークラスモジュール
 開発時のデバッグ、本番環境での監視、トラブルシューティングに対応
+6段階のログレベル: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
 """
 
 import logging
@@ -8,10 +9,44 @@ import sys
 import os
 import json
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
 import traceback
+
+
+# カスタムログレベルの定義
+TRACE = 5  # 最も詳細なトレース情報
+DEBUG = 10  # デバッグ情報（Python標準）
+INFO = 20  # 一般情報（Python標準）
+WARN = 30  # 警告（Python標準のWARNINGと同じ）
+ERROR = 40  # エラー（Python標準）
+FATAL = 50  # 致命的エラー（Python標準のCRITICALと同じ）
+
+# ログレベルマッピング
+LOG_LEVELS = {
+    0: TRACE,  # 0: TRACE
+    1: DEBUG,  # 1: DEBUG
+    2: INFO,   # 2: INFO
+    3: WARN,   # 3: WARN
+    4: ERROR,  # 4: ERROR
+    5: FATAL,  # 5: FATAL
+}
+
+# ログレベル名マッピング
+LOG_LEVEL_NAMES = {
+    TRACE: 'TRACE',
+    DEBUG: 'DEBUG',
+    INFO: 'INFO',
+    WARN: 'WARN',
+    ERROR: 'ERROR',
+    FATAL: 'FATAL',
+}
+
+# Pythonのloggingモジュールにカスタムレベルを追加
+logging.addLevelName(TRACE, 'TRACE')
+logging.addLevelName(WARN, 'WARN')
+logging.addLevelName(FATAL, 'FATAL')
 
 
 class ColoredFormatter(logging.Formatter):
@@ -19,13 +54,16 @@ class ColoredFormatter(logging.Formatter):
     カラー付きのコンソール出力用フォーマッター
     """
     
-    # ANSIカラーコード定義
+    # ANSIカラーコード定義（6段階対応）
     COLORS = {
+        'TRACE': '\033[90m',     # 灰色
         'DEBUG': '\033[36m',     # シアン
         'INFO': '\033[32m',      # 緑
-        'WARNING': '\033[33m',   # 黄色
+        'WARN': '\033[33m',      # 黄色
+        'WARNING': '\033[33m',   # 黄色（互換性）
         'ERROR': '\033[31m',     # 赤
-        'CRITICAL': '\033[35m',  # マゼンタ
+        'FATAL': '\033[35m',     # マゼンタ
+        'CRITICAL': '\033[35m',  # マゼンタ（互換性）
         'RESET': '\033[0m'       # リセット
     }
     
@@ -36,7 +74,7 @@ class ColoredFormatter(logging.Formatter):
         
         # カラーコードを適用
         if levelname in self.COLORS:
-            record.levelname = f"{self.COLORS[levelname]}{levelname}{self.COLORS['RESET']}"
+            record.levelname = f"{self.COLORS[levelname]}{levelname:5}{self.COLORS['RESET']}"  # 5文字幅で揃える
         
         # 基底クラスのフォーマットを実行
         result = super().format(record)
@@ -57,6 +95,7 @@ class JSONFormatter(logging.Formatter):
         log_data = {
             'timestamp': datetime.utcnow().isoformat(),  # ISO形式のタイムスタンプ
             'level': record.levelname,                   # ログレベル
+            'level_no': record.levelno,                  # ログレベル番号
             'logger': record.name,                       # ロガー名
             'module': record.module,                     # モジュール名
             'function': record.funcName,                 # 関数名
@@ -112,12 +151,13 @@ class MaskingFormatter(logging.Formatter):
 class VCTrackerLogger:
     """
     Discord VC Tracker用の強力なロガークラス
+    6段階のログレベル対応: TRACE, DEBUG, INFO, WARN, ERROR, FATAL
     """
     
     def __init__(
         self,
         name: str = "vc_tracker",
-        level: str = "INFO",
+        level: Union[int, str] = 2,  # デフォルトはINFO (2)
         log_dir: Optional[Path] = None,
         enable_file: bool = True,
         enable_console: bool = True,
@@ -131,7 +171,7 @@ class VCTrackerLogger:
         
         Args:
             name: ロガー名
-            level: ログレベル（DEBUG, INFO, WARNING, ERROR, CRITICAL）
+            level: ログレベル（0-5の整数、または 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'）
             log_dir: ログファイルの保存ディレクトリ
             enable_file: ファイル出力を有効化
             enable_console: コンソール出力を有効化
@@ -142,8 +182,30 @@ class VCTrackerLogger:
         """
         self.name = name  # ロガー名
         self.logger = logging.getLogger(name)  # ロガーインスタンス作成
-        self.logger.setLevel(getattr(logging, level.upper()))  # ログレベル設定
+        
+        # ログレベルの設定（整数または文字列対応）
+        if isinstance(level, int):
+            if 0 <= level <= 5:
+                log_level = LOG_LEVELS[level]  # 0-5の整数をログレベルに変換
+            else:
+                log_level = INFO  # 範囲外はINFOにフォールバック
+        else:
+            # 文字列の場合
+            level_map = {
+                'TRACE': TRACE,
+                'DEBUG': DEBUG,
+                'INFO': INFO,
+                'WARN': WARN,
+                'WARNING': WARN,  # 互換性
+                'ERROR': ERROR,
+                'FATAL': FATAL,
+                'CRITICAL': FATAL,  # 互換性
+            }
+            log_level = level_map.get(level.upper(), INFO)  # デフォルトはINFO
+        
+        self.logger.setLevel(log_level)  # ログレベル設定
         self.logger.handlers = []  # 既存のハンドラーをクリア
+        self.current_level = log_level  # 現在のログレベルを保存
         
         # ログディレクトリの設定
         if log_dir is None:
@@ -152,7 +214,7 @@ class VCTrackerLogger:
         self.log_dir = log_dir
         
         # フォーマット定義
-        console_format = "%(asctime)s [%(levelname)8s] %(name)s - %(funcName)s:%(lineno)d - %(message)s"
+        console_format = "%(asctime)s [%(levelname)5s] %(name)s - %(funcName)s:%(lineno)d - %(message)s"
         file_format = "%(asctime)s [%(levelname)s] %(name)s - %(module)s.%(funcName)s:%(lineno)d - %(message)s"
         
         # コンソール出力の設定
@@ -192,7 +254,7 @@ class VCTrackerLogger:
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
             
-            # エラー専用ログファイル
+            # エラー専用ログファイル（ERROR以上）
             error_file = log_dir / f"{name}_error.log"
             error_handler = RotatingFileHandler(
                 error_file,
@@ -200,29 +262,71 @@ class VCTrackerLogger:
                 backupCount=backup_count,
                 encoding='utf-8'
             )
-            error_handler.setLevel(logging.ERROR)  # ERRORレベル以上のみ
+            error_handler.setLevel(ERROR)  # ERRORレベル以上のみ
             error_handler.setFormatter(formatter)
             self.logger.addHandler(error_handler)
     
+    def set_level(self, level: Union[int, str]):
+        """
+        ログレベルを動的に変更
+        
+        Args:
+            level: 0-5の整数、または 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'
+        """
+        if isinstance(level, int):
+            if 0 <= level <= 5:
+                log_level = LOG_LEVELS[level]
+            else:
+                return  # 範囲外は無視
+        else:
+            level_map = {
+                'TRACE': TRACE,
+                'DEBUG': DEBUG,
+                'INFO': INFO,
+                'WARN': WARN,
+                'WARNING': WARN,
+                'ERROR': ERROR,
+                'FATAL': FATAL,
+                'CRITICAL': FATAL,
+            }
+            log_level = level_map.get(level.upper())
+            if log_level is None:
+                return  # 不正な文字列は無視
+        
+        self.logger.setLevel(log_level)
+        self.current_level = log_level
+    
+    def trace(self, message: str, extra: Optional[Dict[str, Any]] = None):
+        """TRACEレベルのログ出力（最も詳細）"""
+        self._log(TRACE, message, extra)
+    
     def debug(self, message: str, extra: Optional[Dict[str, Any]] = None):
         """DEBUGレベルのログ出力"""
-        self._log(logging.DEBUG, message, extra)
+        self._log(DEBUG, message, extra)
     
     def info(self, message: str, extra: Optional[Dict[str, Any]] = None):
         """INFOレベルのログ出力"""
-        self._log(logging.INFO, message, extra)
+        self._log(INFO, message, extra)
+    
+    def warn(self, message: str, extra: Optional[Dict[str, Any]] = None):
+        """WARNレベルのログ出力"""
+        self._log(WARN, message, extra)
     
     def warning(self, message: str, extra: Optional[Dict[str, Any]] = None):
-        """WARNINGレベルのログ出力"""
-        self._log(logging.WARNING, message, extra)
+        """WARNINGレベルのログ出力（warnのエイリアス）"""
+        self.warn(message, extra)
     
     def error(self, message: str, extra: Optional[Dict[str, Any]] = None, exc_info: bool = False):
         """ERRORレベルのログ出力"""
-        self._log(logging.ERROR, message, extra, exc_info=exc_info)
+        self._log(ERROR, message, extra, exc_info=exc_info)
+    
+    def fatal(self, message: str, extra: Optional[Dict[str, Any]] = None, exc_info: bool = False):
+        """FATALレベルのログ出力（致命的エラー）"""
+        self._log(FATAL, message, extra, exc_info=exc_info)
     
     def critical(self, message: str, extra: Optional[Dict[str, Any]] = None, exc_info: bool = False):
-        """CRITICALレベルのログ出力"""
-        self._log(logging.CRITICAL, message, extra, exc_info=exc_info)
+        """CRITICALレベルのログ出力（fatalのエイリアス）"""
+        self.fatal(message, extra, exc_info=exc_info)
     
     def exception(self, message: str, extra: Optional[Dict[str, Any]] = None):
         """例外情報付きでERRORログ出力"""
@@ -273,7 +377,7 @@ class VCTrackerLogger:
         if status_code and 200 <= status_code < 300:
             self.info(f"🌐 API呼び出し成功: {api_name} - {endpoint}", extra=api_data)
         else:
-            self.warning(f"⚠️ API呼び出し: {api_name} - {endpoint} (status: {status_code})", extra=api_data)
+            self.warn(f"⚠️ API呼び出し: {api_name} - {endpoint} (status: {status_code})", extra=api_data)
     
     @classmethod
     def get_logger(cls, name: str = "vc_tracker", **kwargs) -> 'VCTrackerLogger':
@@ -288,7 +392,17 @@ class VCTrackerLogger:
             VCTrackerLoggerインスタンス
         """
         # 環境変数からデフォルト値を取得
-        level = os.getenv('LOG_LEVEL', kwargs.get('level', 'INFO'))
+        level_env = os.getenv('LOG_LEVEL')
+        if level_env:
+            # 環境変数が整数の場合
+            try:
+                level = int(level_env)
+            except ValueError:
+                # 文字列の場合
+                level = level_env
+        else:
+            level = kwargs.get('level', 2)  # デフォルトはINFO (2)
+        
         enable_json = os.getenv('LOG_JSON', 'false').lower() == 'true'
         
         kwargs['level'] = level
@@ -303,15 +417,45 @@ logger = VCTrackerLogger.get_logger()
 
 # 使用例とテスト
 if __name__ == "__main__":
-    # ロガー作成
-    test_logger = VCTrackerLogger.get_logger("test", level="DEBUG")
+    # ロガー作成（整数レベル指定）
+    test_logger = VCTrackerLogger.get_logger("test", level=0)  # TRACE (0)
+    
+    print("=" * 60)
+    print("6段階ログレベルテスト（整数指定: level=0 でTRACE）")
+    print("=" * 60)
     
     # 各レベルのログ出力テスト
+    test_logger.trace("トレースメッセージ（最も詳細）")
     test_logger.debug("デバッグメッセージ")
     test_logger.info("情報メッセージ")
-    test_logger.warning("警告メッセージ")
+    test_logger.warn("警告メッセージ")
     test_logger.error("エラーメッセージ")
-    test_logger.critical("重大エラーメッセージ")
+    test_logger.fatal("致命的エラーメッセージ")
+    
+    print("\n" + "=" * 60)
+    print("ログレベル動的変更テスト")
+    print("=" * 60)
+    
+    # レベルを3 (WARN) に変更
+    test_logger.set_level(3)
+    print("→ レベルを3 (WARN) に設定")
+    
+    test_logger.trace("このトレースは表示されない")
+    test_logger.debug("このデバッグは表示されない")
+    test_logger.info("この情報は表示されない")
+    test_logger.warn("この警告は表示される")
+    test_logger.error("このエラーは表示される")
+    test_logger.fatal("この致命的エラーは表示される")
+    
+    print("\n" + "=" * 60)
+    print("文字列でのレベル指定テスト")
+    print("=" * 60)
+    
+    # 文字列でレベル指定
+    test_logger2 = VCTrackerLogger.get_logger("test2", level="DEBUG")
+    test_logger2.trace("トレースは表示されない（DEBUG以上）")
+    test_logger2.debug("デバッグは表示される")
+    test_logger2.info("情報は表示される")
     
     # 追加データ付きログ
     test_logger.info("ユーザーログイン", extra={
@@ -322,16 +466,6 @@ if __name__ == "__main__":
     
     # 機密情報のマスキングテスト
     test_logger.info("接続情報: token='abc123def456' api_key='secret123'")
-    
-    # 処理フローのログ
-    test_logger.log_start("VC監視処理")
-    test_logger.log_success("VC監視処理", processed=10, duration=1.23)
-    
-    # メトリクスログ
-    test_logger.log_metric("active_users", 42, "users")
-    
-    # API呼び出しログ
-    test_logger.log_api_call("Discord", "/guilds/123/channels", 200)
     
     # 例外のログ
     try:
