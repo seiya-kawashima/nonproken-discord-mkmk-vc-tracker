@@ -75,7 +75,7 @@ logger.set_level("TRACE")  # すべて出力
 | パラメータ | 型 | デフォルト | 説明 |
 |---|---|---|---|
 | name | str | "vc_tracker" | ロガー名 |
-| level | str | "INFO" | ログレベル |
+| level | Union[int, str] | 2 | ログレベル（0-5の整数、または文字列） |
 | log_dir | Path | "logs" | ログ保存ディレクトリ |
 | enable_file | bool | True | ファイル出力有効化 |
 | enable_console | bool | True | コンソール出力有効化 |
