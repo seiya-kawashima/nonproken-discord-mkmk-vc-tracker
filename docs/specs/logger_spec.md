@@ -126,14 +126,19 @@ log_api_call(api_name: str, endpoint: str, status_code: Optional[int] = None, **
 ```python
 from src.logger import VCTrackerLogger
 
-# ロガー取得
-logger = VCTrackerLogger.get_logger("my_module")
+# ロガー取得（整数レベル指定）
+logger = VCTrackerLogger.get_logger("my_module", level=1)  # DEBUG
 
-# 各レベルのログ
+# 6段階のログ出力
+logger.trace("詳細なトレース情報")
 logger.debug("デバッグ情報")
 logger.info("処理完了")
-logger.warning("リトライ実行")
+logger.warn("リトライ実行")
 logger.error("接続失敗")
+logger.fatal("システム停止レベルのエラー")
+
+# 動的レベル変更
+logger.set_level(3)  # WARN以上のみ出力
 ```
 
 ### 処理フローのログ
