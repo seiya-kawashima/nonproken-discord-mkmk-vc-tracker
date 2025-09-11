@@ -26,7 +26,50 @@
 
 ---
 
-## 2. 🔧 どうやって動く？
+## 2. 📥 Input（入力）
+
+### このプログラムが受け取る情報（環境変数）
+
+#### 必須の入力
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| **DISCORD_BOT_TOKEN** | 文字列 | Discord Botのパスワード | MTIzNDU2Nzg5... |
+| **GOOGLE_SHEET_NAME** | 文字列 | 記録先のスプレッドシート名 | VC出席記録 |
+| **ALLOWED_VOICE_CHANNEL_IDS** | 文字列 | 監視するVCのID（カンマ区切り） | 123456789,987654321 |
+
+#### オプションの入力
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| **GOOGLE_SERVICE_ACCOUNT_JSON** | ファイルパス | Google認証ファイルの場所 | service_account.json |
+| **SLACK_BOT_TOKEN** | 文字列 | SlackのBotトークン | xoxb-123456... |
+| **SLACK_CHANNEL_ID** | 文字列 | Slack通知先チャンネル | C1234567890 |
+
+---
+
+## 3. 📤 Output（出力）
+
+### このプログラムが出力する情報
+
+| 出力先 | 内容 | 形式 | 例 |
+|--------|------|------|-----|
+| **コンソール** | 実行ログ | テキスト | 下記参照 |
+| **Google Sheets** | 出席記録 | スプレッドシート | 日付、名前、出席状態 |
+| **Slack** | 通知メッセージ | チャット | ○○さんがログインしました |
+| **終了コード** | 実行結果 | 数値 | 0（成功）/ 1（失敗） |
+
+### ログ出力の例
+```
+INFO: Fetching VC members from Discord...
+INFO: Found 5 members in VCs
+INFO: Connecting to Google Sheets...
+INFO: Recorded: 3 new, 2 updated
+INFO: Sending Slack notifications...
+INFO: Poll completed successfully
+```
+
+---
+
+## 4. 🔧 どうやって動く？
 
 ### 動作の流れ（水が流れるように）
 
