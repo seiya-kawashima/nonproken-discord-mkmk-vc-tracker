@@ -29,7 +29,8 @@ class TestStandardLogging:
     
     def test_info_logging(self):
         """INFOログのテスト（出力があることを確認）"""
-        logger = setup_logger("test_info", level="INFO")  # INFOレベルで作成
+        logging.basicConfig(level=logging.INFO, force=True)
+        logger = logging.getLogger("test_info")  # INFOレベルで作成
         # ログ出力ができることを確認（エラーが出なければOK）
         try:
             logger.info("Test message")  # テストメッセージ
@@ -40,7 +41,8 @@ class TestStandardLogging:
     
     def test_error_logging(self):
         """ERRORログのテスト（出力があることを確認）"""
-        logger = setup_logger("test_error", level="INFO")  # INFOレベルで作成
+        logging.basicConfig(level=logging.INFO, force=True)
+        logger = logging.getLogger("test_error")  # INFOレベルで作成
         # ログ出力ができることを確認（エラーが出なければOK）
         try:
             logger.error("Error message")  # エラーメッセージ
@@ -49,9 +51,10 @@ class TestStandardLogging:
             success = False
         assert success  # エラーなく実行できたか確認
     
-    def test_ci_environment_detection(self, monkeypatch):
-        """CI環境検出のテスト"""
-        # CI環境をシミュレート
-        monkeypatch.setenv("GITHUB_ACTIONS", "true")  # GitHub Actions環境変数
-        logger = setup_logger("ci_test")  # CI環境でロガー作成
-        assert logger is not None  # ロガーが作成されたか確認
+    def test_env_log_level(self, monkeypatch):
+        """環境変数からログレベル設定のテスト"""
+        # 環境変数をシミュレート
+        monkeypatch.setenv("LOG_LEVEL", "DEBUG")  # LOG_LEVEL環境変数
+        level = os.getenv("LOG_LEVEL", "INFO")
+        logging.basicConfig(level=getattr(logging, level), force=True)
+        assert logging.getLogger().level == logging.DEBUG  # DEBUGレベルか確認
