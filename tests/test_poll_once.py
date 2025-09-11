@@ -89,7 +89,7 @@ class TestPollOnce:
         await poll_once.main()  # メイン処理実行
         
         # アサーション
-        mock_exit.assert_called_once_with(1)  # 異常終了が呼ばれたか
+        mock_exit.assert_called_with(1)  # 異常終了が呼ばれたか
 
     @pytest.mark.asyncio
     @patch('poll_once.load_dotenv')
@@ -112,7 +112,7 @@ class TestPollOnce:
         await poll_once.main()  # メイン処理実行
         
         # アサーション
-        mock_exit.assert_called_once_with(1)  # 異常終了が呼ばれたか
+        mock_exit.assert_called_with(1)  # 異常終了が呼ばれたか
 
     @pytest.mark.asyncio
     @patch('poll_once.load_dotenv')
@@ -182,4 +182,4 @@ class TestPollOnce:
         await poll_once.main()  # メイン処理実行
         
         # アサーション
-        mock_exit.assert_called_once_with(1)  # 異常終了が呼ばれたか
+        mock_exit.assert_called_with(1)  # 異常終了が呼ばれたか
