@@ -1,0 +1,80 @@
+name: Discord VC Polling
+
+on:
+  schedule:
+    # 日本時間で毎日 9:00, 15:00, 21:00 に実行
+    # UTC時間で 0:00, 6:00, 12:00
+    - cron: '0 0,6,12 * * *'
+  
+  # 手動実行も可能にする
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run with debug logging'
+        required: false
+        default: 'false'
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # タイムアウト設定
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'  # pip依存関係をキャッシュ
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create service account JSON
+      env:
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+      run: |
+        echo "$GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json
+        # セキュリティ: ファイル権限を制限
+        chmod 600 service_account.json
+    
+    - name: Mask sensitive data
+      run: |
+        # GitHub Actionsのログで機密情報をマスク
+        echo "::add-mask::${{ secrets.DISCORD_BOT_TOKEN }}"
+        echo "::add-mask::${{ secrets.SLACK_BOT_TOKEN }}"
+        echo "::add-mask::${{ secrets.SLACK_CHANNEL_ID }}"
+    
+    - name: Run polling script
+      env:
+        DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
+        GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
+        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+        TZ: Asia/Tokyo  # タイムゾーン設定
+        LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}  # デバッグモード対応
+      run: |
+        python poll_once.py
+    
+    - name: Clean up
+      if: always()  # 常に実行
+      run: |
+        # 機密ファイルを削除
+        rm -f service_account.json
+    
+    # エラー通知（オプション）
+    - name: Notify on failure
+      if: failure()
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+      run: |
+        # エラー通知スクリプト（別途作成が必要）
+        echo "Polling failed at $(date)"
+        # python notify_error.py  # エラー通知スクリプトがある場合
