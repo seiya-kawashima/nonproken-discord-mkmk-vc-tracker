@@ -57,7 +57,7 @@ with open(file_path, 'r', encoding='utf-8') as f:
 
 ```bash
 # 1. リポジトリのクローン
-git clone https://github.com/your-username/discord-mkmk-vc-tracker.git
+git clone https://github.com/seiya-kawashima/discord-mkmk-vc-tracker.git
 cd discord-mkmk-vc-tracker
 
 # 2. Python仮想環境の作成
