@@ -12,7 +12,8 @@
       "Bash(pytest:*)",
       "Bash(git push:*)",
       "Bash(git remote add:*)",
-      "Bash(git remote remove:*)"
+      "Bash(git remote remove:*)",
+      "Bash(gh:*)"
     ],
     "deny": [],
     "ask": []
