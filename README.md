@@ -212,7 +212,9 @@ jobs:
 
 ## ドキュメント
 
-詳細な仕様書は [docs/overview.md](docs/overview.md) を参照してください。
+- 📖 [システム概要](docs/overview.md) - 詳細な仕様書
+- 💻 [開発環境ガイド](docs/DEVELOPMENT.md) - セットアップ手順、クロスプラットフォーム対応
+- 🔒 [セキュリティガイド](docs/SECURITY.md) - 機密情報の取り扱い
 
 ---
 
