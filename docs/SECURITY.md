@@ -61,13 +61,46 @@ echo "$GOOGLE_SERVICE_ACCOUNT_JSON" | base64 -d > service_account.json
 
 ## GitHub Actions での安全な運用
 
-### Secrets の設定
+### 必要なGitHub Secrets
+
+以下のSecretsをGitHubリポジトリに設定する必要があります：
+
+| Secret名 | 説明 | 取得方法 |
+|----------|------|----------|
+| `DISCORD_BOT_TOKEN` | Discord Botのトークン | Discord Developer Portalから取得 |
+| `GOOGLE_SHEET_NAME` | Googleスプレッドシート名 | 作成したシートの名前 |
+| `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | サービスアカウントJSON（Base64エンコード済み） | `base64 -i service_account.json` で生成 |
+| `ALLOWED_VOICE_CHANNEL_IDS` | 監視対象VCチャンネルID（カンマ区切り） | Discord開発者モードでチャンネルIDをコピー |
+| `SLACK_BOT_TOKEN` | Slack Botトークン | Slack App管理画面から取得 |
+| `SLACK_CHANNEL_ID` | 通知先SlackチャンネルID | Slackチャンネル情報から取得 |
+
+### GitHub Secretsの設定手順
+
+1. **リポジトリの Settings を開く**
+2. **Security → Secrets and variables → Actions を選択**
+3. **New repository secret をクリック**
+4. **各Secretを追加**：
+   
+   例：Discord Bot Tokenの追加
+   - Name: `DISCORD_BOT_TOKEN`
+   - Secret: `実際のトークン値`
+   
+   Service Account JSONの追加（特殊）
+   ```bash
+   # まずBase64エンコード
+   base64 -i service_account.json | tr -d '\n' > encoded.txt
+   # encoded.txtの内容をコピーしてSecretに貼り付け
+   ```
+
+### Secrets の使用例
 ```yaml
 # .github/workflows/poll.yml
 env:
   DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
   SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-  # 他の機密情報も同様に
+  GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
+  ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
+  SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
 ```
 
 ### ログのマスキング
