@@ -27,7 +27,8 @@
       "Bash(fi)",
       "Bash(done)",
       "Bash(git fetch:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Read(//c/prj/**)"
     ],
     "deny": [],
     "ask": []
