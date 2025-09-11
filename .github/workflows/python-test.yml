@@ -47,4 +47,4 @@ jobs:
     
     - name: Check coverage threshold
       run: |
-        coverage report --fail-under=85  # 高品質を維持するため85%に設定
+        coverage report --show-missing --fail-under=85  # カバーされていない行番号も表示
