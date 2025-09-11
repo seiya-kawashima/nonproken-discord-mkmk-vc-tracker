@@ -86,14 +86,20 @@ logger.set_level("TRACE")  # すべて出力
 
 #### 主要メソッド
 
-##### 基本ログメソッド
+##### 基本ログメソッド（6段階）
 ```python
-debug(message: str, extra: Optional[Dict] = None)
-info(message: str, extra: Optional[Dict] = None)
-warning(message: str, extra: Optional[Dict] = None)
-error(message: str, extra: Optional[Dict] = None, exc_info: bool = False)
-critical(message: str, extra: Optional[Dict] = None, exc_info: bool = False)
-exception(message: str, extra: Optional[Dict] = None)
+trace(message: str, extra: Optional[Dict] = None)        # レベル0: 最も詳細
+debug(message: str, extra: Optional[Dict] = None)        # レベル1: デバッグ
+info(message: str, extra: Optional[Dict] = None)         # レベル2: 情報
+warn(message: str, extra: Optional[Dict] = None)         # レベル3: 警告
+error(message: str, extra: Optional[Dict] = None, exc_info: bool = False)  # レベル4: エラー
+fatal(message: str, extra: Optional[Dict] = None, exc_info: bool = False)  # レベル5: 致命的
+exception(message: str, extra: Optional[Dict] = None)    # 例外情報付きERROR
+```
+
+##### レベル設定メソッド
+```python
+set_level(level: Union[int, str])  # ログレベルを動的に変更
 ```
 
 ##### 専用ログメソッド
