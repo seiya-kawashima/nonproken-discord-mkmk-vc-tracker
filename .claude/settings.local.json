@@ -18,7 +18,8 @@
       "Bash(git rm:*)",
       "Bash(git branch:*)",
       "Bash(coverage report:*)",
-      "Read(//c/prj/discord-mkmk-vc-tracker-spec-fix/**)"
+      "Read(//c/prj/discord-mkmk-vc-tracker-spec-fix/**)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

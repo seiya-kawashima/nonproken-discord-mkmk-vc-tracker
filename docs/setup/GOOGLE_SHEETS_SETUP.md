@@ -1,0 +1,324 @@
+# Google Sheets セットアップガイド
+
+## 📌 このガイドについて
+
+Google Sheetsとサービスアカウントを設定し、プログラムからアクセスできるようにする手順を説明します。
+所要時間：約20分
+
+## 📊 Google Sheetsとサービスアカウントとは？
+
+- **Google Sheets**：Googleが提供する無料のオンライン表計算ソフト
+- **サービスアカウント**：プログラムがGoogleサービスにアクセスするための専用アカウント（人間用ではない）
+
+このプロジェクトでは、VCログイン記録をGoogle Sheetsに保存するために使用します。
+
+## 📝 事前準備
+
+- Googleアカウント（無料）
+- ウェブブラウザ（Chrome、Firefox等）
+
+## 🚀 セットアップ手順
+
+### パート1：Google Sheetsの準備
+
+#### ステップ1：新しいスプレッドシートを作成
+
+1. [Google Sheets](https://sheets.google.com)にアクセス
+
+2. 「**空白**」をクリックして新規スプレッドシート作成
+
+3. スプレッドシート名を変更：
+   - 本番用例：`VC_Tracker_Database`
+   - テスト用例：`VC_Tracker_Test`
+   
+   （左上の「無題のスプレッドシート」をクリックして変更）
+
+4. **URLをメモしておく**（後で使用）
+   ```
+   例：https://docs.google.com/spreadsheets/d/1ABC...XYZ/edit
+   ```
+
+### パート2：Google Cloud Projectの設定
+
+#### ステップ1：Google Cloud Consoleにアクセス
+
+1. [Google Cloud Console](https://console.cloud.google.com)を開く
+
+2. Googleアカウントでログイン
+
+3. 利用規約に同意（初回のみ）
+
+#### ステップ2：新しいプロジェクトを作成
+
+1. 上部の「**プロジェクトを選択**」→「**新しいプロジェクト**」をクリック
+
+2. プロジェクト情報を入力：
+   - **プロジェクト名**：
+     - 例：`VC-Tracker`
+   - **場所**：「組織なし」のまま
+
+3. 「**作成**」をクリック
+
+4. 作成完了まで約30秒待つ
+
+#### ステップ3：Google Sheets APIを有効化
+
+1. 左側メニューから「**APIとサービス**」→「**ライブラリ**」を選択
+
+2. 検索ボックスに「**Google Sheets API**」と入力
+
+3. 「**Google Sheets API**」をクリック
+
+4. 「**有効にする**」ボタンをクリック
+
+5. 有効化完了まで約10秒待つ
+
+### パート3：サービスアカウントの作成
+
+#### ステップ1：サービスアカウントを作成
+
+1. 左側メニューから「**APIとサービス**」→「**認証情報**」を選択
+
+2. 「**+ 認証情報を作成**」→「**サービスアカウント**」をクリック
+
+3. サービスアカウント詳細を入力：
+   - **サービスアカウント名**：
+     - 例：`vc-tracker-service`
+   - **サービスアカウントID**：自動生成される
+   - **説明**（オプション）：
+     - 例：`VC Tracker用のサービスアカウント`
+
+4. 「**作成して続行**」をクリック
+
+5. 「**ロールを選択**」は**スキップ**（「続行」をクリック）
+
+6. 「**ユーザーにこのサービスアカウントへのアクセスを許可**」も**スキップ**（「完了」をクリック）
+
+#### ステップ2：キーを作成してダウンロード
+
+1. 作成したサービスアカウントの**メールアドレスをクリック**
+   ```
+   例：vc-tracker-service@vc-tracker-123456.iam.gserviceaccount.com
+   ```
+
+2. 「**キー**」タブを選択
+
+3. 「**鍵を追加**」→「**新しい鍵を作成**」をクリック
+
+4. キーのタイプ：「**JSON**」を選択
+
+5. 「**作成**」をクリック
+
+6. **JSONファイルが自動ダウンロードされる**
+   - ファイル名例：`vc-tracker-123456-abcdef123456.json`
+   - **このファイルを`service_account.json`にリネーム**
+
+⚠️ **重要な注意事項**：
+- このJSONファイルは**二度とダウンロードできません**
+- 安全な場所に保管してください
+- GitHubにコミットしないでください
+- 他人と共有しないでください
+
+### パート4：スプレッドシートへのアクセス権限を付与
+
+#### ステップ1：サービスアカウントのメールアドレスをコピー
+
+1. Google Cloud Consoleの「認証情報」ページに戻る
+
+2. サービスアカウントの**メールアドレスをコピー**
+   ```
+   例：vc-tracker-service@vc-tracker-123456.iam.gserviceaccount.com
+   ```
+
+#### ステップ2：スプレッドシートを共有
+
+1. 作成したGoogle Sheetsを開く
+
+2. 右上の「**共有**」ボタンをクリック
+
+3. サービスアカウントのメールアドレスを貼り付け
+
+4. 権限を「**編集者**」に設定
+
+5. 「**通知を送信する**」のチェックを**外す**（重要！）
+
+6. 「**共有**」をクリック
+
+7. 「**このユーザーに通知メールを送信しますか？**」と聞かれたら「**共有**」をクリック
+
+## 🔐 認証情報の保管方法
+
+### 開発環境（ローカル）
+
+1. プロジェクトルートに`service_account.json`を配置
+
+2. `.env`ファイルに設定：
+```env
+GOOGLE_SERVICE_ACCOUNT_JSON=service_account.json
+GOOGLE_SHEET_NAME=VC_Tracker_Test
+```
+
+### GitHub Actions用（Base64エンコード）
+
+1. **JSONファイルをBase64エンコード**：
+
+   Windows (PowerShell):
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("service_account.json")) | Out-File encoded.txt
+   ```
+
+   Mac/Linux:
+   ```bash
+   base64 -i service_account.json | tr -d '\n' > encoded.txt
+   ```
+
+2. `encoded.txt`の内容をコピー
+
+3. GitHub Secretsに登録：
+   - テスト環境：`TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
+   - 本番環境：`GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
+
+## ✅ 動作確認
+
+### テストコード
+
+```python
+import gspread
+from google.oauth2.service_account import Credentials
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# 認証情報を設定
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')
+SHEET_NAME = os.getenv('GOOGLE_SHEET_NAME')
+
+try:
+    # 認証
+    creds = Credentials.from_service_account_file(
+        SERVICE_ACCOUNT_FILE,
+        scopes=SCOPES
+    )
+    client = gspread.authorize(creds)
+    
+    # スプレッドシートを開く
+    sheet = client.open(SHEET_NAME)
+    worksheet = sheet.get_worksheet(0)
+    
+    # テストデータを書き込み
+    worksheet.update('A1', 'テスト成功！')
+    
+    print(f"✅ Google Sheets接続成功: {SHEET_NAME}")
+    print(f"✅ A1セルに「テスト成功！」を書き込みました")
+    
+except Exception as e:
+    print(f"❌ エラー: {e}")
+```
+
+## 🚨 トラブルシューティング
+
+### よくあるエラーと対処法
+
+#### 1. 「SpreadsheetNotFound」エラー
+**原因**：スプレッドシート名が間違っているか、共有されていない
+**対処**：
+- スプレッドシート名を確認
+- サービスアカウントに共有されているか確認
+
+#### 2. 「APIError: 403」エラー
+**原因**：権限不足またはAPIが有効化されていない
+**対処**：
+- Google Sheets APIが有効化されているか確認
+- サービスアカウントに「編集者」権限があるか確認
+
+#### 3. 「FileNotFoundError: service_account.json」
+**原因**：JSONファイルが見つからない
+**対処**：
+- ファイル名が正しいか確認
+- ファイルパスが正しいか確認
+
+#### 4. 「Invalid grant」エラー
+**原因**：サービスアカウントキーが無効
+**対処**：
+- 新しいキーを作成してダウンロード
+- 時刻設定が正しいか確認（時刻のずれがあるとエラーになる）
+
+## 📊 スプレッドシート構成例
+
+### 推奨シート構成
+
+```
+daily_presence シート:
+| date_jst   | guild_id | user_id | user_name | present |
+|------------|----------|---------|-----------|---------|
+| 2024-01-01 | 123...   | 456...  | 田中太郎   | TRUE    |
+| 2024-01-01 | 123...   | 789...  | 鈴木花子   | TRUE    |
+```
+
+## 💡 Tips
+
+### 複数環境の管理
+
+| 環境 | スプレッドシート名 | サービスアカウント |
+|------|-------------------|-------------------|
+| 本番 | VC_Tracker_Database | 本番専用アカウント |
+| テスト | VC_Tracker_Test | テスト専用アカウント |
+| 開発 | VC_Tracker_Dev | 開発専用アカウント |
+
+### クォータとレート制限
+
+Google Sheets APIには以下の制限があります：
+
+- **読み取り**：100リクエスト/100秒/ユーザー
+- **書き込み**：100リクエスト/100秒/ユーザー
+- **セル数**：500万セル/スプレッドシート
+
+### セキュリティのベストプラクティス
+
+1. **最小権限の原則**
+   - 必要なスプレッドシートのみ共有
+   - 不要になったら共有を解除
+
+2. **キーのローテーション**
+   - 定期的に新しいキーを作成
+   - 古いキーは削除
+
+3. **アクセスログの確認**
+   - Google Cloud Consoleで定期的に確認
+   - 不審なアクセスをチェック
+
+## ❓ よくある質問
+
+### Q: 無料で使えますか？
+A: はい、Google Sheets APIは無料枠で十分使用可能です。
+
+### Q: 複数のスプレッドシートにアクセスできますか？
+A: はい、それぞれにサービスアカウントを共有すればアクセス可能です。
+
+### Q: スプレッドシートのオーナー権限は必要ですか？
+A: いいえ、編集者権限があれば十分です。
+
+### Q: サービスアカウントのメールアドレスを忘れました
+A: Google Cloud Consoleの「認証情報」ページで確認できます。
+
+### Q: JSONファイルを紛失しました
+A: 新しいキーを作成してください。古いキーは削除することを推奨します。
+
+## 📚 参考リンク
+
+- [Google Sheets API Documentation](https://developers.google.com/sheets/api)
+- [gspread Documentation](https://docs.gspread.org/)
+- [Google Cloud Console](https://console.cloud.google.com)
+- [Service Account Best Practices](https://cloud.google.com/iam/docs/best-practices-for-using-service-accounts)
+
+## 🆘 サポート
+
+問題が解決しない場合は、以下の情報を含めてIssueを作成してください：
+
+1. エラーメッセージの全文
+2. 実行したコード
+3. Google Cloud Consoleの設定スクリーンショット
+4. スプレッドシートの共有設定スクリーンショット
+5. 試した対処法

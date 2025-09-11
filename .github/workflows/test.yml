@@ -4,12 +4,22 @@ on:
   # Pull Request時に自動実行
   pull_request:
     branches: [ main, develop ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   
   # プッシュ時に自動実行（develop, featureブランチ）
   push:
     branches: 
       - develop
       - 'feature/**'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
   
   # 手動実行も可能
   workflow_dispatch:
