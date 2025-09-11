@@ -1,4 +1,0 @@
-2025-09-11 10:01:11,202 [ERROR] test - logger._log:238 - Error message
-2025-09-11 10:01:11,205 [CRITICAL] test - logger._log:238 - Critical message
-2025-09-11 10:01:28,013 [ERROR] test - logger._log:238 - Error message
-2025-09-11 10:01:28,016 [CRITICAL] test - logger._log:238 - Critical message
