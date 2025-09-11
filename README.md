@@ -48,9 +48,12 @@ Discord の特定ボイスチャンネルで
 ### Discord 側
 
 * Discord Developer Portal で Bot を作成
-* Bot Token を発行
+* Bot Token を発行（**Client ID/Secretは不要、Bot Tokenのみ使用**）
 * Intents で `Server Members` / `Voice States` を有効化
 * Bot をサーバーに招待しておく（VCに参加する必要はなし）
+* 必要な権限:
+  - View Channels（チャンネル表示）
+  - Connect（VC接続確認）
 
 ### Google 側
 
