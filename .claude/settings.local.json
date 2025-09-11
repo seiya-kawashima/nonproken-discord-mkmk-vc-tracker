@@ -14,7 +14,9 @@
       "Bash(git remote add:*)",
       "Bash(git remote remove:*)",
       "Bash(gh:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(git rm:*)",
+      "Bash(git branch:*)"
     ],
     "deny": [],
     "ask": []
