@@ -9,6 +9,7 @@ import sys
 import json
 import base64
 import tempfile
+import argparse
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.dirname(__file__))
@@ -16,16 +17,25 @@ sys.path.insert(0, os.path.dirname(__file__))
 from config import EnvConfig, Environment
 
 
-def test_base64_auth():
+def test_base64_auth(env_arg=None):
     """Base64認証のテスト"""
     
+    # 環境を取得
+    try:
+        env = EnvConfig.get_environment_from_arg(env_arg)
+    except ValueError as e:
+        print(f"\n❌ エラー: {e}")
+        return 1
+    
+    env_name = EnvConfig.get_environment_name(env)
+    
     print("=" * 70)
-    print("Google Sheets Base64認証テスト")
+    print(f"Google Sheets Base64認証テスト ({env_name})")
     print("=" * 70)
     
-    # テスト環境の設定を取得
+    # 指定環境の設定を取得
     try:
-        config = EnvConfig.get_google_sheets_config(Environment.TEST)
+        config = EnvConfig.get_google_sheets_config(env)
         print("\n✅ 設定取得成功")
         print(f"  シート名: {config['sheet_name']}")
     except ValueError as e:
@@ -124,4 +134,13 @@ def test_base64_auth():
 
 
 if __name__ == "__main__":
-    sys.exit(test_base64_auth())
+    parser = argparse.ArgumentParser(description='Base64認証テスト')
+    parser.add_argument(
+        '--env',
+        type=int,
+        choices=[0, 1, 2],
+        default=1,  # デフォルトはテスト環境
+        help='0=本番環境, 1=テスト環境(デフォルト), 2=開発環境'
+    )
+    args = parser.parse_args()
+    sys.exit(test_base64_auth(args.env))
