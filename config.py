@@ -153,25 +153,22 @@ class EnvConfig:
             }
     
     @classmethod
-    def get_slack_config(cls, use_test=None):
+    def get_slack_config(cls, env=Environment.PRODUCTION):
         """Slack関連の設定を取得
         
         Args:
-            use_test: Trueの場合はテスト環境、Falseの場合は本番/開発環境
-                     Noneの場合は自動判定
+            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
         
         Returns:
             dict: Slack設定の辞書
         """
-        if use_test is None:
-            use_test = cls.is_test_environment()
-        
-        if use_test:
+        if env == Environment.TEST:
             return {
                 'token': cls.get(cls.TEST_SLACK_BOT_TOKEN),
                 'channel_id': cls.get(cls.TEST_SLACK_CHANNEL_ID)
             }
         else:
+            # 本番と開発は同じ設定を使用
             return {
                 'token': cls.get(cls.SLACK_BOT_TOKEN),
                 'channel_id': cls.get(cls.SLACK_CHANNEL_ID)
