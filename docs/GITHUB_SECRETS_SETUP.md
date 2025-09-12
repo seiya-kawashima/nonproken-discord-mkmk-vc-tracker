@@ -89,13 +89,16 @@ Value: [Base64エンコードされた文字列全体]
 
 ## 🔧 トラブルシューティング
 
-### エラー: 環境変数 TEST_GOOGLE_SHEET_NAME が設定されていません
+### エラー: Request had insufficient authentication scopes
 
-**原因**: GitHub Secretsに`TEST_GOOGLE_SHEET_NAME`が設定されていない
+**原因**: 
+- Google Sheets APIが有効化されていない
+- サービスアカウントの権限が不足している
 
 **解決方法**:
-1. GitHub Secretsに`TEST_GOOGLE_SHEET_NAME`を追加
-2. 値にテスト用スプレッドシート名を入力
+1. Google Cloud ConsoleでGoogle Sheets APIを有効化
+2. サービスアカウントに必要なスコープを付与
+3. スプレッドシートの共有設定を確認
 
 ### エラー: スプレッドシートが見つかりません
 
