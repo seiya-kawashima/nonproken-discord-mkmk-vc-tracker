@@ -38,14 +38,20 @@ class EnvConfig:
     DISCORD_BOT_TOKEN = 'DISCORD_BOT_TOKEN'
     ALLOWED_VOICE_CHANNEL_IDS = 'ALLOWED_VOICE_CHANNEL_IDS'
     
-    # Google Sheets関連の環境変数名
-    GOOGLE_SHEET_NAME = 'GOOGLE_SHEET_NAME'
+    # Google Sheets関連の環境変数名  
     GOOGLE_SERVICE_ACCOUNT_JSON = 'GOOGLE_SERVICE_ACCOUNT_JSON'
     GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 = 'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64'
     
     # Slack関連の環境変数名
     SLACK_BOT_TOKEN = 'SLACK_BOT_TOKEN'
     SLACK_CHANNEL_ID = 'SLACK_CHANNEL_ID'
+    
+    # スプレッドシート名（環境ごとに固定）
+    SHEET_NAMES = {
+        Environment.PRODUCTION: 'VCトラッカー',  # 本番用シート名
+        Environment.TEST: 'テスト用VCトラッカー',  # テスト用シート名
+        Environment.DEVELOPMENT: '開発VCトラッカー'  # 開発用シート名
+    }
     
     # GitHub Actions環境の判定
     GITHUB_ACTIONS = 'GITHUB_ACTIONS'
@@ -125,13 +131,9 @@ class EnvConfig:
             dict: Discord設定の辞書
         """
         env_name = cls.get_environment_name(env)
-        env_prefix = 'TEST_' if env == Environment.TEST else ''
         
-        token_key = f'{env_prefix}{cls.DISCORD_BOT_TOKEN}'
-        channel_ids_key = f'{env_prefix}{cls.ALLOWED_VOICE_CHANNEL_IDS}'
-        
-        token = cls.get_required(token_key, env_name)  # 必須値として取得
-        channel_ids_str = cls.get_required(channel_ids_key, env_name)  # 必須値として取得
+        token = cls.get_required(cls.DISCORD_BOT_TOKEN, env_name)  # 必須値として取得
+        channel_ids_str = cls.get_required(cls.ALLOWED_VOICE_CHANNEL_IDS, env_name)  # 必須値として取得
         
         # チャンネルIDのリストに変換
         channel_ids = [id.strip() for id in channel_ids_str.split(',') if id.strip()]
@@ -154,23 +156,19 @@ class EnvConfig:
             dict: Google Sheets設定の辞書
         """
         env_name = cls.get_environment_name(env)
-        env_prefix = 'TEST_' if env == Environment.TEST else ''
         
-        sheet_name_key = f'{env_prefix}{cls.GOOGLE_SHEET_NAME}'
-        json_key = f'{env_prefix}{cls.GOOGLE_SERVICE_ACCOUNT_JSON}'
-        base64_key = f'{env_prefix}{cls.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64}'
-        
-        sheet_name = cls.get_required(sheet_name_key, env_name)  # 必須値として取得
+        # 環境ごとに固定のシート名を使用
+        sheet_name = cls.SHEET_NAMES[env]
         
         # サービスアカウント認証はJSONファイルかBase64のいずれかが必須
-        service_account_json = cls.get(json_key, 'service_account.json')
-        service_account_json_base64 = cls.get(base64_key)
+        service_account_json = cls.get(cls.GOOGLE_SERVICE_ACCOUNT_JSON, 'service_account.json')
+        service_account_json_base64 = cls.get(cls.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64)
         
         # どちらも設定されていない場合はエラー
         if not service_account_json_base64 and not os.path.exists(service_account_json):
             raise ValueError(
                 f"{env_name}環境用の認証情報が見つかりません。"
-                f"{base64_key}または{json_key}（ファイル）を設定してください"
+                f"{cls.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64}または{cls.GOOGLE_SERVICE_ACCOUNT_JSON}（ファイル）を設定してください"
             )
         
         return {
@@ -189,15 +187,10 @@ class EnvConfig:
         Returns:
             dict: Slack設定の辞書（設定がない場合はNone値を含む）
         """
-        env_prefix = 'TEST_' if env == Environment.TEST else ''
-        
-        token_key = f'{env_prefix}{cls.SLACK_BOT_TOKEN}'
-        channel_id_key = f'{env_prefix}{cls.SLACK_CHANNEL_ID}'
-        
         # Slackはオプションなので、設定がない場合はNoneを返す
         return {
-            'token': cls.get(token_key),
-            'channel_id': cls.get(channel_id_key)
+            'token': cls.get(cls.SLACK_BOT_TOKEN),
+            'channel_id': cls.get(cls.SLACK_CHANNEL_ID)
         }
     
     @classmethod
