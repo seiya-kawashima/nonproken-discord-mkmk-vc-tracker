@@ -271,7 +271,11 @@ else:
     print(f"\n{'=' * 60}")
     print(f"🔍 テスト環境のテスト")
     print(f"{'=' * 60}")
-    print("\n⚠️ テスト環境の設定がありません")
+    if not is_github:
+        print("\n⚠️ テスト環境はGitHub Actions上でのみ使用されます")
+        print("   現在はローカル環境のため、テスト環境の設定は無効です")
+    else:
+        print("\n⚠️ テスト環境の設定がありません")
 
 # 3. 本番環境のテスト（プレフィックスなし、GitHub Actions用）
 print("\n📋 本番環境の設定取得:")
