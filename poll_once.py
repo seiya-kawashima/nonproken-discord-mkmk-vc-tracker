@@ -27,16 +27,22 @@ logger = logging.getLogger(__name__)  # このモジュール用のロガー
 async def main():
     """メイン処理"""  # 関数の説明
     
-    # .envファイルから環境変数を読み込み
-    load_dotenv()  # .envファイルを読み込み
+    # 現在の環境を判定
+    env_name = EnvConfig.get_environment_name()  # 環境名を取得
+    logger.info(f"Environment: {env_name}")  # 環境名をログ出力
     
-    # 環境変数を取得
-    discord_token = os.getenv('DISCORD_BOT_TOKEN')  # Discord Botトークン
-    sheet_name = os.getenv('GOOGLE_SHEET_NAME')  # スプレッドシート名
-    service_account_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')  # サービスアカウントJSON
-    channel_ids = os.getenv('ALLOWED_VOICE_CHANNEL_IDS', '').split(',')  # 監視対象VCチャンネルID
-    slack_token = os.getenv('SLACK_BOT_TOKEN')  # Slack Botトークン
-    slack_channel = os.getenv('SLACK_CHANNEL_ID')  # Slackチャンネル ID
+    # 環境に応じた設定を取得
+    discord_config = EnvConfig.get_discord_config()  # Discord設定
+    sheets_config = EnvConfig.get_google_sheets_config()  # Google Sheets設定
+    slack_config = EnvConfig.get_slack_config()  # Slack設定
+    
+    # 設定値を展開
+    discord_token = discord_config['token']  # Discord Botトークン
+    channel_ids = discord_config['channel_ids']  # 監視対象VCチャンネルID
+    sheet_name = sheets_config['sheet_name']  # スプレッドシート名
+    service_account_json = sheets_config['service_account_json']  # サービスアカウントJSON
+    slack_token = slack_config['token']  # Slack Botトークン
+    slack_channel = slack_config['channel_id']  # Slackチャンネル ID
     
     # 必須環境変数のチェック
     if not discord_token:  # Discordトークンがない場合
