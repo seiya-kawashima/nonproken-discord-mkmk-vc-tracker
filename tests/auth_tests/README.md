@@ -21,9 +21,16 @@ python tests/auth_tests/test_google_sheets_auth.py
 
 #### 方法1: 手動実行（推奨）
 1. GitHubリポジトリの「Actions」タブを開く
-2. 左側のワークフロー一覧から「Authentication Tests」を選択
-3. 右側の「Run workflow」ボタンをクリック
+2. 左側のワークフロー一覧から以下のいずれかを選択：
+   - 「**Manual Auth Test**」（シンプル版、推奨）
+   - 「**Authentication Tests**」（詳細版）
+3. 右側の「**Run workflow**」ボタンをクリック
 4. ブランチを選択して「Run workflow」を実行
+
+**注意**: 「Run workflow」ボタンが表示されない場合：
+- ワークフローファイルがmaster/mainブランチにpushされているか確認
+- 初回はワークフローが一度実行される必要があります
+- リポジトリの管理者権限があるか確認
 
 #### 方法2: 自動実行
 以下の条件で自動的に実行されます：
