@@ -31,8 +31,7 @@ jobs:
     
     - name: Run Connection Test
       env:
-        TEST_GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
-        TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
         GITHUB_ACTIONS: 'true'
       run: |
         echo "🔍 Google Sheets接続テストを実行（テスト環境）"
@@ -49,6 +48,5 @@ jobs:
       run: |
         echo "❌ Google Sheets接続テスト失敗"
         echo "GitHub Secretsの設定を確認してください:"
-        echo "  - TEST_GOOGLE_SHEET_NAME"
-        echo "  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"
+        echo "  - GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"
         exit 1
