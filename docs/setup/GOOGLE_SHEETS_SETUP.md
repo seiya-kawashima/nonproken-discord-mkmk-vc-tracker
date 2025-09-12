@@ -200,19 +200,23 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 
    **Windows (PowerShell)の場合**：
    
-   方法1: フルパスを指定
-   ```powershell
-   # PowerShellを開いて実行（ファイルパスは実際の場所に変更してください）
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\Users\ユーザー名\Downloads\service_account.json")) | Out-File "C:\Users\ユーザー名\Downloads\encoded.txt"
-   ```
-   
-   方法2: ファイルがあるフォルダに移動してから実行
+   最も確実な方法: Get-Contentを使用
    ```powershell
    # まずファイルがあるフォルダに移動
    cd C:\Users\ユーザー名\Downloads
    
-   # その後、以下のコマンドを実行
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes(".\service_account.json")) | Out-File ".\encoded.txt"
+   # Base64エンコード（この方法が最も確実）
+   [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Path "service_account.json" -Raw))) | Out-File "encoded.txt"
+   ```
+   
+   別の方法: 現在のディレクトリを明示的に指定
+   ```powershell
+   # ファイルがあるフォルダに移動
+   cd C:\Users\ユーザー名\Downloads
+   
+   # 現在のディレクトリのフルパスを取得して使用
+   $filePath = Join-Path (Get-Location) "service_account.json"
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes($filePath)) | Out-File "encoded.txt"
    ```
    
    **もっと簡単な方法（Windows）**：
