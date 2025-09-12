@@ -39,14 +39,9 @@ GitHub ActionsでCI/CDテストを実行するために必要なSecretsの設定
    - **Name**: Secret名（例：`TEST_GOOGLE_SHEET_NAME`）
    - **Value**: 設定値
 
-### 3. TEST_GOOGLE_SHEET_NAMEの設定
+### 3. Google Sheetsの準備
 
-```
-Name: TEST_GOOGLE_SHEET_NAME
-Value: あなたのテスト用スプレッドシート名
-```
-
-**注意**: この名前は実際にGoogle Sheetsで作成したスプレッドシートの名前と完全に一致する必要があります。
+テスト環境用に「テスト用VCトラッカー」という名前のスプレッドシートを作成し、サービスアカウントに編集権限を付与してください。
 
 ### 4. TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64の設定
 
