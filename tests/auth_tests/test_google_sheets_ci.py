@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 import gspread
 from google.oauth2.service_account import Credentials
-from config import EnvConfig
+from config import EnvConfig, Environment
 
 
 def test_google_sheets_connection():
@@ -34,21 +34,19 @@ def test_google_sheets_connection():
     print(f"\n実行環境: {'GitHub Actions' if is_github else 'ローカル'}")
     
     # テスト環境の設定を取得
-    config = EnvConfig.get_google_sheets_config(use_test=True)
+    try:
+        config = EnvConfig.get_google_sheets_config(Environment.TEST)
+    except ValueError as e:
+        print(f"\n❗ 設定エラー: {e}")
+        sys.exit(1)
     sheet_name = config['sheet_name']
     service_account_json = config['service_account_json']
     service_account_json_base64 = config['service_account_json_base64']
     
     print("\n📋 環境変数チェック:")
-    print(f"  TEST_GOOGLE_SHEET_NAME: {'✅ 設定済み' if sheet_name else '❌ 未設定'}")
+    print(f"  TEST_GOOGLE_SHEET_NAME: ✅ {sheet_name}")
     print(f"  TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: {'✅ 設定済み' if service_account_json_base64 else '❌ 未設定'}")
     print(f"  TEST_GOOGLE_SERVICE_ACCOUNT_JSON: {'✅ 設定済み' if service_account_json else '❌ 未設定'}")
-    
-    # 必須環境変数のチェック
-    if not sheet_name:
-        print("\n❌ エラー: TEST_GOOGLE_SHEET_NAME が設定されていません")
-        print("   GitHub Secretsに TEST_GOOGLE_SHEET_NAME を設定してください")
-        sys.exit(1)
     
     # 認証ファイルの処理
     auth_file = None
@@ -76,6 +74,7 @@ def test_google_sheets_connection():
         auth_file = service_account_json
         print(f"\n🔐 認証ファイル使用: {service_account_json}")
     else:
+        # config.pyで既にチェック済みなのでここには来ないが、念のため
         print("\n❌ エラー: 認証情報が見つかりません")
         print("   以下のいずれかを設定してください:")
         print("   - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 (GitHub Secrets)")
