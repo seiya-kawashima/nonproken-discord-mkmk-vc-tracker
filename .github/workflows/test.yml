@@ -107,8 +107,7 @@ asyncio.run(test_discord())
     - name: Run integration test (Google Sheets)
       if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'sheets_only'
       env:
-        TEST_GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
-        TEST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
+        GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
       run: |
         echo "Testing Google Sheets connection..."
         python -c "
