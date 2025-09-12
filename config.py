@@ -129,26 +129,23 @@ class EnvConfig:
             }
     
     @classmethod
-    def get_google_sheets_config(cls, use_test=None):
+    def get_google_sheets_config(cls, env=Environment.PRODUCTION):
         """Google Sheets関連の設定を取得
         
         Args:
-            use_test: Trueの場合はテスト環境、Falseの場合は本番/開発環境
-                     Noneの場合は自動判定
+            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
         
         Returns:
             dict: Google Sheets設定の辞書
         """
-        if use_test is None:
-            use_test = cls.is_test_environment()
-        
-        if use_test:
+        if env == Environment.TEST:
             return {
                 'sheet_name': cls.get(cls.TEST_GOOGLE_SHEET_NAME),
                 'service_account_json': cls.get(cls.TEST_GOOGLE_SERVICE_ACCOUNT_JSON),
                 'service_account_json_base64': cls.get(cls.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64)
             }
         else:
+            # 本番と開発は同じ設定を使用
             return {
                 'sheet_name': cls.get(cls.GOOGLE_SHEET_NAME),
                 'service_account_json': cls.get(cls.GOOGLE_SERVICE_ACCOUNT_JSON, 'service_account.json'),
