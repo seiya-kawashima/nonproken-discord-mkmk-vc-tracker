@@ -2,6 +2,19 @@
 
 このスクリプトを実行して、Google Sheetsの設定が正しくできているか確認できます。
 使い方: python test_google_sheets.py
+
+環境変数の読み込み方針:
+1. 開発環境（ローカル）: .envファイルから読み込み
+   - GOOGLE_SHEET_NAME
+   - GOOGLE_SERVICE_ACCOUNT_JSON
+
+2. テスト環境（GitHub Actions）: TEST_プレフィックス付き
+   - TEST_GOOGLE_SHEET_NAME
+   - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64
+
+3. 本番環境（GitHub Actions）: プレフィックスなし
+   - GOOGLE_SHEET_NAME
+   - GOOGLE_SERVICE_ACCOUNT_JSON_BASE64
 """
 
 import gspread  # Google Sheets操作ライブラリ
