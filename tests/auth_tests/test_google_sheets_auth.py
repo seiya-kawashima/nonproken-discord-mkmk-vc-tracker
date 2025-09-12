@@ -34,6 +34,41 @@ print("=" * 70)
 print("Google Sheets 接続テスト - 全環境チェック")
 print("=" * 70)
 
+# デバッグ: 環境変数の状態を表示
+print("\n" + "=" * 70)
+print("🔍 環境変数の検出状況（デバッグ情報）")
+print("=" * 70)
+
+# 全ての関連環境変数をチェック
+env_vars_to_check = [
+    ('GOOGLE_SHEET_NAME', EnvConfig.GOOGLE_SHEET_NAME),
+    ('GOOGLE_SERVICE_ACCOUNT_JSON', EnvConfig.GOOGLE_SERVICE_ACCOUNT_JSON),
+    ('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64', EnvConfig.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64),
+    ('TEST_GOOGLE_SHEET_NAME', EnvConfig.TEST_GOOGLE_SHEET_NAME),
+    ('TEST_GOOGLE_SERVICE_ACCOUNT_JSON', EnvConfig.TEST_GOOGLE_SERVICE_ACCOUNT_JSON),
+    ('TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64', EnvConfig.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64),
+]
+
+print("\n環境変数の設定状況:")
+for display_name, env_key in env_vars_to_check:
+    value = os.getenv(env_key)
+    if value:
+        if 'BASE64' in env_key:
+            # Base64の場合は最初の20文字だけ表示
+            display_value = f"{value[:20]}... (Base64データ)" if len(value) > 20 else value
+        elif 'SHEET_NAME' in env_key:
+            display_value = value
+        else:
+            # ファイル名の場合
+            display_value = value
+        print(f"  ✅ {display_name}: {display_value}")
+    else:
+        print(f"  ❌ {display_name}: 未設定")
+
+# GitHub Actions環境かどうか
+is_github = EnvConfig.is_github_actions()
+print(f"\nGitHub Actions環境: {'はい' if is_github else 'いいえ'}")
+
 # 認証情報を設定
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']  # スプレッドシート編集権限
 
