@@ -278,9 +278,9 @@ else:
         print("\n⚠️ テスト環境の設定がありません")
 
 # 3. 本番環境のテスト（プレフィックスなし、GitHub Actions用）
-print("\n📋 本番環境の設定取得:")
 # 本番環境はTEST_プレフィックスがない場合のみテスト
 if not test_sheet:  # テスト環境が設定されていない場合のみ
+    print("\n📋 本番環境の設定取得:")
     prod_config = EnvConfig.get_google_sheets_config(use_test=False)
     prod_sheet = prod_config['sheet_name']
     prod_account_base64 = prod_config['service_account_json_base64']
