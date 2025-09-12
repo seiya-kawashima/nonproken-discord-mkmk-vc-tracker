@@ -4,11 +4,11 @@ import os  # 環境変数の取得用
 import sys  # システム関連操作用
 import asyncio  # 非同期処理用
 import logging  # ログ出力用
-from dotenv import load_dotenv  # 環境変数読み込み用
 
 # srcディレクトリをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))  # srcディレクトリをインポートパスに追加
 
+from config import EnvConfig  # 環境変数設定モジュール
 from src.discord_client import DiscordVCPoller  # Discord VCポーリングクラス
 from src.sheets_client import SheetsClient  # Google Sheetsクライアント
 from src.slack_notifier import SlackNotifier  # Slack通知クライアント
