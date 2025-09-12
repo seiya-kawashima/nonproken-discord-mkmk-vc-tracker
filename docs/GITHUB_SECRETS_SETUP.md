@@ -76,17 +76,16 @@ Value: [Base64エンコードされた文字列全体]
 ### 1. GitHub Actionsで手動実行
 
 1. リポジトリの「Actions」タブを開く
-2. 「Test Base64 Authentication」ワークフローを選択
-3. 「Run workflow」ボタンをクリック
-4. 実行結果を確認
+2. 「Google Sheets Connection Test」ワークフローを選択
+3. 最新の実行結果を確認
 
 ### 2. 設定チェックリスト
 
-- [ ] `TEST_GOOGLE_SHEET_NAME`が設定されている
-- [ ] スプレッドシート名が実際のシート名と一致している
+- [ ] Google Sheetsに「テスト用VCトラッカー」スプレッドシートが存在する
 - [ ] `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`が設定されている
 - [ ] Base64エンコードが正しく行われている
 - [ ] サービスアカウントにスプレッドシートの編集権限がある
+- [ ] Google Sheets APIが有効化されている
 
 ## 🔧 トラブルシューティング
 
