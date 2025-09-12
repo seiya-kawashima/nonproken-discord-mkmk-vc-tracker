@@ -191,11 +191,6 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 - 変換前：複雑なJSONファイル（改行や記号がたくさん）
 - 変換後：`eyJ0eXBlIjoic2VydmljZV9hY2NvdW50I...`（英数字の羅列）
 
-**身近な例え**：
-- 引っ越しの時、家具を分解して箱に入れるようなもの
-- 元の形（JSONファイル）では運べないので、一旦別の形（文字列）に変換
-- 使う時は逆変換（デコード）して元に戻します
-
 **なぜGitHub Actionsで必要？**
 - GitHub Secretsは「1行のテキスト」しか保存できない仕様
 - JSONファイルは複数行で特殊文字も含むため、そのまま保存不可
@@ -204,9 +199,20 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 1. **JSONファイルをBase64エンコード（文字列に変換）**：
 
    **Windows (PowerShell)の場合**：
+   
+   方法1: フルパスを指定
    ```powershell
-   # PowerShellを開いて、service_account.jsonがあるフォルダで実行
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes("service_account.json")) | Out-File encoded.txt
+   # PowerShellを開いて実行（ファイルパスは実際の場所に変更してください）
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\Users\ユーザー名\Downloads\service_account.json")) | Out-File "C:\Users\ユーザー名\Downloads\encoded.txt"
+   ```
+   
+   方法2: ファイルがあるフォルダに移動してから実行
+   ```powershell
+   # まずファイルがあるフォルダに移動
+   cd C:\Users\ユーザー名\Downloads
+   
+   # その後、以下のコマンドを実行
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes(".\service_account.json")) | Out-File ".\encoded.txt"
    ```
    
    **もっと簡単な方法（Windows）**：
