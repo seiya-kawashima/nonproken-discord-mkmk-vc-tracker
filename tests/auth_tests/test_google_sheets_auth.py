@@ -202,9 +202,9 @@ results = {
 print("\n" + "=" * 70)
 print("📌 環境変数の読み込み優先順位")
 print("=" * 70)
+print("0. 本番環境 (プレフィックスなし) - GitHub Actions 本番用")
 print("1. テスト環境 (TEST_プレフィックス) - GitHub Actions テスト用")
-print("2. 本番環境 (プレフィックスなし) - GitHub Actions 本番用")
-print("3. 開発環境 (.envファイル) - ローカル開発用")
+print("2. 開発環境 (.envファイル) - ローカル開発用")
 
 # 開発環境のテスト（.envファイルから）
 print("\n📋 開発環境の設定取得:")
@@ -232,10 +232,14 @@ else:
     print("\n⚠️ 開発環境の設定がないか、テスト環境が優先されています")
 
 # 2. テスト環境のテスト（TEST_プレフィックス付き）
+print("\n📋 テスト環境の設定取得:")
 test_config = EnvConfig.get_google_sheets_config(use_test=True)
 test_sheet = test_config['sheet_name']
 test_account_base64 = test_config['service_account_json_base64']
 test_account_file = test_config['service_account_json']
+print(f"  - sheet_name: {test_sheet if test_sheet else '未設定'}")
+print(f"  - service_account_json_base64: {'あり（Base64）' if test_account_base64 else '未設定'}")
+print(f"  - service_account_json: {test_account_file if test_account_file else '未設定'}")
 
 if test_sheet:
     # Base64とファイルの両方を確認
