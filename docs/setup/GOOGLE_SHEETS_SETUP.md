@@ -243,7 +243,7 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 
 ```bash
 # プロジェクトフォルダで以下のコマンドを実行するだけ
-python test_google_sheets.py
+python tests/auth_tests/test_google_sheets_auth.py
 ```
 
 このテストスクリプトが自動的に：
