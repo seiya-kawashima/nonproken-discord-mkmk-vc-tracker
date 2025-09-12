@@ -310,7 +310,11 @@ if not test_sheet:  # テスト環境が設定されていない場合のみ
         print(f"\n{'=' * 60}")
         print(f"🔍 本番環境のテスト")
         print(f"{'=' * 60}")
-        print("\n⚠️ 本番環境の設定がありません")
+        if not is_github:
+            print("\n⚠️ 本番環境はGitHub Actions上でのみ使用されます")
+            print("   現在はローカル環境のため、本番環境の設定は無効です")
+        else:
+            print("\n⚠️ 本番環境の設定がありません")
 else:
     print("  - テスト環境が設定されているため、本番環境のテストはスキップ")
     print(f"\n{'=' * 60}")
