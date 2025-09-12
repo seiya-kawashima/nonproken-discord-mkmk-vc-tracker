@@ -222,8 +222,9 @@ else:
 # 3. 本番環境のテスト（プレフィックスなし、GitHub Actions用）
 # 本番環境はTEST_プレフィックスがない場合のみテスト
 if not test_sheet:  # テスト環境が設定されていない場合のみ
-    prod_sheet = os.getenv('GOOGLE_SHEET_NAME')
-    prod_account_base64 = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64')
+    prod_config = EnvConfig.get_google_sheets_config(use_test=False)
+    prod_sheet = prod_config['sheet_name']
+    prod_account_base64 = prod_config['service_account_json_base64']
     
     if prod_sheet and prod_account_base64:
         results["本番環境"] = test_environment(
