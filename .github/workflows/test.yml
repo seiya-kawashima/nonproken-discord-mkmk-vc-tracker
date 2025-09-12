@@ -65,10 +65,10 @@ jobs:
     
     - name: Create test service account JSON
       env:
-        TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
       run: |
-        if [ -n "$TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
-          echo "$TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json
+        if [ -n "$GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
+          echo "$GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json
           chmod 600 service_account.json
         fi
     
