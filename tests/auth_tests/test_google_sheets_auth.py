@@ -69,6 +69,11 @@ for display_name, env_key in env_vars_to_check:
 is_github = EnvConfig.is_github_actions()
 print(f"\nGitHub Actions環境: {'はい' if is_github else 'いいえ'}")
 
+if not is_github:
+    print("\n⚠️ 注意: 現在はローカル環境で実行されています")
+    print("  - テスト環境と本番環境はGitHub Actions上でのみ使用されます")
+    print("  - ローカルでは開発環境（.envファイル）の設定のみが有効です")
+
 # 認証情報を設定
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']  # スプレッドシート編集権限
 
