@@ -29,7 +29,7 @@ def test_google_sheets_connection():
     print("Google Sheets CI/CD 接続テスト")
     print("=" * 70)
     
-    # GitHub Actions環境かチェック
+    # GitHub Actions環境かチェック  
     is_github = EnvConfig.is_github_actions()
     print(f"\n実行環境: {'GitHub Actions' if is_github else 'ローカル'}")
     
