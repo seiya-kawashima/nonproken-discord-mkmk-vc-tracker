@@ -36,9 +36,13 @@ if IS_TEST_ENV:
     print(f"  ⚠️ テスト環境の設定を使用しています")
 
 if not SHEET_NAME:
-    print("\n❌ エラー: GOOGLE_SHEET_NAMEが設定されていません")
-    print("   .envファイルに以下を追加してください:")
+    print("\n❌ エラー: スプレッドシート名が設定されていません")
+    print("\n   以下のいずれかの方法で設定してください:")
+    print("\n   方法1: .envファイルに追加")
     print("   GOOGLE_SHEET_NAME=あなたのスプレッドシート名")
+    print("\n   方法2: テスト用の.envファイルに追加")
+    print("   TEST_GOOGLE_SHEET_NAME=テスト用スプレッドシート名")
+    print("\n   📌 注: TEST_プレフィックス付きの設定が優先されます")
     exit(1)
 
 if not os.path.exists(SERVICE_ACCOUNT_FILE):
