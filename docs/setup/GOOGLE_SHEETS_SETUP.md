@@ -208,16 +208,7 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
    # Base64エンコード（この方法が最も確実）
    [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Path "service_account.json" -Raw))) | Out-File "encoded.txt"
    ```
-   
-   別の方法: 現在のディレクトリを明示的に指定
-   ```powershell
-   # ファイルがあるフォルダに移動
-   cd C:\Users\ユーザー名\Downloads
-   
-   # 現在のディレクトリのフルパスを取得して使用
-   $filePath = Join-Path (Get-Location) "service_account.json"
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes($filePath)) | Out-File "encoded.txt"
-   ```
+
    
    **もっと簡単な方法（Windows）**：
    - オンライン変換ツール（https://www.base64encode.org/）を使用
@@ -247,7 +238,14 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 
 ## ✅ 動作確認
 
-### テストコード
+### このセクションについて
+**このテストコードは参考例です。実際に書く必要はありません。**
+- すでにプロジェクトには必要なコードが含まれています
+- 設定が正しいかを確認したい場合のみ使用してください
+
+### 動作確認の方法（オプション）
+
+もし設定が正しくできたか確認したい場合は、以下のテストコードを使用できます：
 
 ```python
 import gspread
