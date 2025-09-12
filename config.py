@@ -5,10 +5,30 @@
 """
 
 import os
+from enum import IntEnum
 from dotenv import load_dotenv
 
 # .envファイルを読み込み
 load_dotenv()
+
+
+class Environment(IntEnum):
+    """環境の定義
+    
+    0: PRODUCTION - 本番環境
+    1: TEST - テスト環境
+    2: DEVELOPMENT - 開発環境
+    """
+    PRODUCTION = 0  # 本番環境（デフォルト）
+    TEST = 1        # テスト環境
+    DEVELOPMENT = 2  # 開発環境
+    
+    @classmethod
+    def from_value(cls, value):
+        """数値から環境を取得"""
+        if value is None:
+            return cls.PRODUCTION  # デフォルトは本番
+        return cls(value)
 
 
 class EnvConfig:
