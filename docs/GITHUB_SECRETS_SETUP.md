@@ -16,14 +16,14 @@ GitHub ActionsでCI/CDテストを実行するために必要なSecretsの設定
 - 本番環境: `VCトラッカー`
 - 開発環境: `開発VCトラッカー`
 
-### テスト環境用（オプション）
+### オプション設定
 
 | Secret名 | 説明 | 例 |
 |----------|------|-----|
-| `TEST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン | `MTIzNDU2Nzg5...` |
-| `TEST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID（カンマ区切り） | `1234567890,0987654321` |
-| `TEST_SLACK_BOT_TOKEN` | テスト用Slack Botトークン | `xoxb-test-...` |
-| `TEST_SLACK_CHANNEL_ID` | テスト用SlackチャンネルID | `C1234567890` |
+| `DISCORD_BOT_TOKEN` | Discord Botトークン | `MTIzNDU2Nzg5...` |
+| `ALLOWED_VOICE_CHANNEL_IDS` | VCチャンネルID（カンマ区切り） | `1234567890,0987654321` |
+| `SLACK_BOT_TOKEN` | Slack Botトークン | `xoxb-...` |
+| `SLACK_CHANNEL_ID` | SlackチャンネルID | `C1234567890` |
 
 ## 📝 設定手順
 
