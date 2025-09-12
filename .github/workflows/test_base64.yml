@@ -1,0 +1,73 @@
+name: Test Base64 Authentication
+
+on:
+  # 手動実行を許可
+  workflow_dispatch:
+  
+  # PRとpush時に実行
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+jobs:
+  test-base64:
+    runs-on: ubuntu-latest
+    name: Test Google Sheets Base64 Auth
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install gspread google-auth python-dotenv
+    
+    - name: Check environment variables
+      run: |
+        echo "🔍 環境変数チェック"
+        if [ -n "${{ secrets.TEST_GOOGLE_SHEET_NAME }}" ]; then
+          echo "  ✅ TEST_GOOGLE_SHEET_NAME: 設定済み"
+        else
+          echo "  ❌ TEST_GOOGLE_SHEET_NAME: 未設定"
+        fi
+        if [ -n "${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}" ]; then
+          echo "  ✅ TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 設定済み"
+        else
+          echo "  ❌ TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 未設定"
+        fi
+    
+    - name: Run Base64 Authentication Test
+      env:
+        TEST_GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
+        TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        GITHUB_ACTIONS: 'true'
+      run: |
+        echo "🔐 Base64認証テストを実行"
+        python test_base64_auth.py
+        
+    - name: Test Result Success
+      if: success()
+      run: |
+        echo "✅ Base64認証テスト成功"
+        echo "Google SheetsへのBase64認証が正常に動作しています"
+        
+    - name: Test Failed
+      if: failure()
+      run: |
+        echo "❌ Base64認証テスト失敗"
+        echo "GitHub Secretsの設定を確認してください:"
+        echo "  - TEST_GOOGLE_SHEET_NAME"
+        echo "  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"
+        echo ""
+        echo "Base64エンコード方法:"
+        echo "  Linux/Mac: base64 -i service_account.json"
+        echo "  Windows: [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes('service_account.json'))"
+        exit 1
