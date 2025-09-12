@@ -1,8 +1,17 @@
 name: Authentication Tests
 
 on:
-  # 手動実行を許可
+  # 手動実行を許可（ボタンから実行可能）
   workflow_dispatch:
+    inputs:
+      debug_mode:
+        description: 'デバッグモードで実行'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
   
   # PRとpush時に実行
   pull_request:
