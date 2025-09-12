@@ -36,27 +36,16 @@ class EnvConfig:
     
     # Discord関連の環境変数名
     DISCORD_BOT_TOKEN = 'DISCORD_BOT_TOKEN'
-    TEST_DISCORD_BOT_TOKEN = 'TEST_DISCORD_BOT_TOKEN'
-    
     ALLOWED_VOICE_CHANNEL_IDS = 'ALLOWED_VOICE_CHANNEL_IDS'
-    TEST_ALLOWED_VOICE_CHANNEL_IDS = 'TEST_ALLOWED_VOICE_CHANNEL_IDS'
     
     # Google Sheets関連の環境変数名
     GOOGLE_SHEET_NAME = 'GOOGLE_SHEET_NAME'
-    TEST_GOOGLE_SHEET_NAME = 'TEST_GOOGLE_SHEET_NAME'
-    
     GOOGLE_SERVICE_ACCOUNT_JSON = 'GOOGLE_SERVICE_ACCOUNT_JSON'
-    TEST_GOOGLE_SERVICE_ACCOUNT_JSON = 'TEST_GOOGLE_SERVICE_ACCOUNT_JSON'
-    
     GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 = 'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64'
-    TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 = 'TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64'
     
     # Slack関連の環境変数名
     SLACK_BOT_TOKEN = 'SLACK_BOT_TOKEN'
-    TEST_SLACK_BOT_TOKEN = 'TEST_SLACK_BOT_TOKEN'
-    
     SLACK_CHANNEL_ID = 'SLACK_CHANNEL_ID'
-    TEST_SLACK_CHANNEL_ID = 'TEST_SLACK_CHANNEL_ID'
     
     # GitHub Actions環境の判定
     GITHUB_ACTIONS = 'GITHUB_ACTIONS'
@@ -67,18 +56,24 @@ class EnvConfig:
         return os.getenv(key, default)
     
     @classmethod
-    def get_with_test_prefix(cls, base_key, default=None):
-        """TEST_プレフィックス付きを優先的に取得
+    def get_required(cls, key, env_name=""):
+        """必須環境変数を取得（存在しない場合はエラー）
         
         Args:
-            base_key: プレフィックスなしの環境変数名
-            default: デフォルト値
+            key: 環境変数名
+            env_name: エラーメッセージ用の環境名
             
         Returns:
-            環境変数の値（TEST_プレフィックス付きを優先）
+            環境変数の値
+            
+        Raises:
+            ValueError: 環境変数が設定されていない場合
         """
-        test_key = f'TEST_{base_key}'
-        return os.getenv(test_key) or os.getenv(base_key, default)
+        value = os.getenv(key)
+        if not value:
+            env_prefix = f"{env_name}環境用の" if env_name else ""
+            raise ValueError(f"{env_prefix}環境変数 {key} が設定されていません")
+        return value
     
     @classmethod
     def is_github_actions(cls):
@@ -86,25 +81,38 @@ class EnvConfig:
         return cls.get(cls.GITHUB_ACTIONS) == 'true'
     
     @classmethod
-    def is_test_environment(cls):
-        """テスト環境かどうかを判定（TEST_プレフィックス付き環境変数の存在で判定）"""
-        test_vars = [
-            cls.TEST_GOOGLE_SHEET_NAME,
-            cls.TEST_DISCORD_BOT_TOKEN,
-            cls.TEST_GOOGLE_SERVICE_ACCOUNT_JSON,
-            cls.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64
-        ]
-        return any(os.getenv(var) for var in test_vars)
+    def get_environment_from_arg(cls, env_arg=None):
+        """引数から環境を取得
+        
+        Args:
+            env_arg: 環境指定引数 (0=本番, 1=テスト, 2=開発)
+            
+        Returns:
+            Environment: 環境の列挙型
+        """
+        if env_arg is None:
+            return Environment.PRODUCTION
+        try:
+            return Environment(int(env_arg))
+        except (ValueError, TypeError):
+            raise ValueError(f"無効な環境指定: {env_arg}. 0(本番), 1(テスト), 2(開発)のいずれかを指定してください")
     
     @classmethod
-    def get_environment_name(cls):
-        """現在の環境名を取得"""
-        if cls.is_test_environment():
+    def get_environment_name(cls, env=Environment.PRODUCTION):
+        """環境名を取得
+        
+        Args:
+            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
+            
+        Returns:
+            str: 環境名
+        """
+        if env == Environment.TEST:
             return "テスト環境"
-        elif cls.is_github_actions():
-            return "本番環境"
-        else:
+        elif env == Environment.DEVELOPMENT:
             return "開発環境"
+        else:
+            return "本番環境"
     
     @classmethod
     def get_discord_config(cls, env=Environment.PRODUCTION):
@@ -116,17 +124,24 @@ class EnvConfig:
         Returns:
             dict: Discord設定の辞書
         """
-        if env == Environment.TEST:
-            return {
-                'token': cls.get(cls.TEST_DISCORD_BOT_TOKEN),
-                'channel_ids': cls.get(cls.TEST_ALLOWED_VOICE_CHANNEL_IDS, '').split(',')
-            }
-        else:
-            # 本番と開発は同じ設定を使用
-            return {
-                'token': cls.get(cls.DISCORD_BOT_TOKEN),
-                'channel_ids': cls.get(cls.ALLOWED_VOICE_CHANNEL_IDS, '').split(',')
-            }
+        env_name = cls.get_environment_name(env)
+        env_prefix = 'TEST_' if env == Environment.TEST else ''
+        
+        token_key = f'{env_prefix}{cls.DISCORD_BOT_TOKEN}'
+        channel_ids_key = f'{env_prefix}{cls.ALLOWED_VOICE_CHANNEL_IDS}'
+        
+        token = cls.get_required(token_key, env_name)  # 必須値として取得
+        channel_ids_str = cls.get_required(channel_ids_key, env_name)  # 必須値として取得
+        
+        # チャンネルIDのリストに変換
+        channel_ids = [id.strip() for id in channel_ids_str.split(',') if id.strip()]
+        if not channel_ids:
+            raise ValueError(f"{env_name}環境用のチャンネルIDが正しく設定されていません")
+        
+        return {
+            'token': token,
+            'channel_ids': channel_ids
+        }
     
     @classmethod
     def get_google_sheets_config(cls, env=Environment.PRODUCTION):
@@ -138,57 +153,68 @@ class EnvConfig:
         Returns:
             dict: Google Sheets設定の辞書
         """
-        if env == Environment.TEST:
-            return {
-                'sheet_name': cls.get(cls.TEST_GOOGLE_SHEET_NAME),
-                'service_account_json': cls.get(cls.TEST_GOOGLE_SERVICE_ACCOUNT_JSON),
-                'service_account_json_base64': cls.get(cls.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64)
-            }
-        else:
-            # 本番と開発は同じ設定を使用
-            return {
-                'sheet_name': cls.get(cls.GOOGLE_SHEET_NAME),
-                'service_account_json': cls.get(cls.GOOGLE_SERVICE_ACCOUNT_JSON, 'service_account.json'),
-                'service_account_json_base64': cls.get(cls.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64)
-            }
+        env_name = cls.get_environment_name(env)
+        env_prefix = 'TEST_' if env == Environment.TEST else ''
+        
+        sheet_name_key = f'{env_prefix}{cls.GOOGLE_SHEET_NAME}'
+        json_key = f'{env_prefix}{cls.GOOGLE_SERVICE_ACCOUNT_JSON}'
+        base64_key = f'{env_prefix}{cls.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64}'
+        
+        sheet_name = cls.get_required(sheet_name_key, env_name)  # 必須値として取得
+        
+        # サービスアカウント認証はJSONファイルかBase64のいずれかが必須
+        service_account_json = cls.get(json_key, 'service_account.json')
+        service_account_json_base64 = cls.get(base64_key)
+        
+        # どちらも設定されていない場合はエラー
+        if not service_account_json_base64 and not os.path.exists(service_account_json):
+            raise ValueError(
+                f"{env_name}環境用の認証情報が見つかりません。"
+                f"{base64_key}または{json_key}（ファイル）を設定してください"
+            )
+        
+        return {
+            'sheet_name': sheet_name,
+            'service_account_json': service_account_json,
+            'service_account_json_base64': service_account_json_base64
+        }
     
     @classmethod
     def get_slack_config(cls, env=Environment.PRODUCTION):
-        """Slack関連の設定を取得
+        """Slack関連の設定を取得（オプション）
         
         Args:
             env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
         
         Returns:
-            dict: Slack設定の辞書
+            dict: Slack設定の辞書（設定がない場合はNone値を含む）
         """
-        if env == Environment.TEST:
-            return {
-                'token': cls.get(cls.TEST_SLACK_BOT_TOKEN),
-                'channel_id': cls.get(cls.TEST_SLACK_CHANNEL_ID)
-            }
-        else:
-            # 本番と開発は同じ設定を使用
-            return {
-                'token': cls.get(cls.SLACK_BOT_TOKEN),
-                'channel_id': cls.get(cls.SLACK_CHANNEL_ID)
-            }
+        env_prefix = 'TEST_' if env == Environment.TEST else ''
+        
+        token_key = f'{env_prefix}{cls.SLACK_BOT_TOKEN}'
+        channel_id_key = f'{env_prefix}{cls.SLACK_CHANNEL_ID}'
+        
+        # Slackはオプションなので、設定がない場合はNoneを返す
+        return {
+            'token': cls.get(token_key),
+            'channel_id': cls.get(channel_id_key)
+        }
     
     @classmethod
     def get_all_configs(cls):
         """全環境の設定を取得（デバッグ用）"""
-        return {
-            '開発環境': {
-                'discord': cls.get_discord_config(use_test=False),
-                'google_sheets': cls.get_google_sheets_config(use_test=False),
-                'slack': cls.get_slack_config(use_test=False)
-            },
-            'テスト環境': {
-                'discord': cls.get_discord_config(use_test=True),
-                'google_sheets': cls.get_google_sheets_config(use_test=True),
-                'slack': cls.get_slack_config(use_test=True)
-            }
-        }
+        configs = {}
+        for env in Environment:
+            env_name = cls.get_environment_name(env)
+            try:
+                configs[env_name] = {
+                    'discord': cls.get_discord_config(env),
+                    'google_sheets': cls.get_google_sheets_config(env),
+                    'slack': cls.get_slack_config(env)
+                }
+            except ValueError as e:
+                configs[env_name] = {'error': str(e)}
+        return configs
 
 
 # エクスポート用のインスタンス
