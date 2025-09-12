@@ -33,25 +33,19 @@ jobs:
     - name: Check environment variables
       run: |
         echo "🔍 環境変数チェック"
-        if [ -n "${{ secrets.TEST_GOOGLE_SHEET_NAME }}" ]; then
-          echo "  ✅ TEST_GOOGLE_SHEET_NAME: 設定済み"
+        if [ -n "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}" ]; then
+          echo "  ✅ GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 設定済み"
         else
-          echo "  ❌ TEST_GOOGLE_SHEET_NAME: 未設定"
-        fi
-        if [ -n "${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}" ]; then
-          echo "  ✅ TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 設定済み"
-        else
-          echo "  ❌ TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 未設定"
+          echo "  ❌ GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 未設定"
         fi
     
     - name: Run Base64 Authentication Test
       env:
-        TEST_GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
-        TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
         GITHUB_ACTIONS: 'true'
       run: |
-        echo "🔐 Base64認証テストを実行"
-        python test_base64_auth.py
+        echo "🔐 Base64認証テストを実行（テスト環境）"
+        python test_base64_auth.py --env 1
         
     - name: Test Result Success
       if: success()
@@ -64,8 +58,7 @@ jobs:
       run: |
         echo "❌ Base64認証テスト失敗"
         echo "GitHub Secretsの設定を確認してください:"
-        echo "  - TEST_GOOGLE_SHEET_NAME"
-        echo "  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"
+        echo "  - GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"
         echo ""
         echo "Base64エンコード方法:"
         echo "  Linux/Mac: base64 -i service_account.json"
