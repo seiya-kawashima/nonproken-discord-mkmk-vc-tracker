@@ -207,12 +207,18 @@ print("2. 本番環境 (プレフィックスなし) - GitHub Actions 本番用"
 print("3. 開発環境 (.envファイル) - ローカル開発用")
 
 # 開発環境のテスト（.envファイルから）
+print("\n📋 開発環境の設定取得:")
 dev_config = EnvConfig.get_google_sheets_config(use_test=False)
 dev_sheet = dev_config['sheet_name']
 dev_account = dev_config['service_account_json']
+print(f"  - sheet_name: {dev_sheet if dev_sheet else '未設定'}")
+print(f"  - service_account_json: {dev_account if dev_account else '未設定'}")
 
 # TEST_プレフィックスがない場合のみ開発環境をテスト
-if dev_sheet and not EnvConfig.get(EnvConfig.TEST_GOOGLE_SHEET_NAME):
+test_sheet_exists = EnvConfig.get(EnvConfig.TEST_GOOGLE_SHEET_NAME)
+print(f"  - TEST_GOOGLE_SHEET_NAMEの存在: {'あり' if test_sheet_exists else 'なし'}")
+
+if dev_sheet and not test_sheet_exists:
     results["開発環境"] = test_environment(
         "開発環境",
         dev_sheet,
