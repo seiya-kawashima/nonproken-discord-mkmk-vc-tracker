@@ -29,9 +29,11 @@ IS_TEST_ENV = bool(os.getenv('TEST_GOOGLE_SHEET_NAME') or os.getenv('TEST_GOOGLE
 ENV_TYPE = "テスト環境" if IS_TEST_ENV else "本番環境"
 
 # 設定値の確認
-print(f"\n📋 設定確認:")
+print(f"\n📋 設定確認 ({ENV_TYPE}):")
 print(f"  - 認証ファイル: {SERVICE_ACCOUNT_FILE}")
 print(f"  - スプレッドシート名: {SHEET_NAME}")
+if IS_TEST_ENV:
+    print(f"  ⚠️ テスト環境の設定を使用しています")
 
 if not SHEET_NAME:
     print("\n❌ エラー: GOOGLE_SHEET_NAMEが設定されていません")
