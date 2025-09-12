@@ -20,10 +20,14 @@
 import gspread  # Google Sheets操作ライブラリ
 from google.oauth2.service_account import Credentials  # 認証用
 import os  # 環境変数取得用
+import sys  # パス追加用
 from datetime import datetime  # 現在時刻取得用
 import base64  # Base64デコード用
 import json  # JSON処理用
 import tempfile  # 一時ファイル作成用
+
+# プロジェクトルートをパスに追加
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 from config import EnvConfig  # 環境変数設定モジュール
 
 print("=" * 70)
