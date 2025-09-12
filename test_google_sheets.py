@@ -19,8 +19,14 @@ print("=" * 50)
 
 # 認証情報を設定
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']  # スプレッドシート編集権限
-SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')  # 認証ファイルパス
-SHEET_NAME = os.getenv('GOOGLE_SHEET_NAME')  # スプレッドシート名
+
+# テスト環境の設定を優先的に読み込み（TEST_プレフィックス付きを先に確認）
+SERVICE_ACCOUNT_FILE = os.getenv('TEST_GOOGLE_SERVICE_ACCOUNT_JSON') or os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')  # 認証ファイルパス
+SHEET_NAME = os.getenv('TEST_GOOGLE_SHEET_NAME') or os.getenv('GOOGLE_SHEET_NAME')  # スプレッドシート名
+
+# 環境の判定
+IS_TEST_ENV = bool(os.getenv('TEST_GOOGLE_SHEET_NAME') or os.getenv('TEST_GOOGLE_SERVICE_ACCOUNT_JSON'))
+ENV_TYPE = "テスト環境" if IS_TEST_ENV else "本番環境"
 
 # 設定値の確認
 print(f"\n📋 設定確認:")
