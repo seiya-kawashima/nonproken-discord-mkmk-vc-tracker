@@ -1,32 +1,14 @@
-name: Authentication Tests
+name: Google Sheets Connection Test
 
 on:
-  # 手動実行を許可（ボタンから実行可能）
+  # 手動実行を許可
   workflow_dispatch:
-    inputs:
-      debug_mode:
-        description: 'デバッグモードで実行'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
   
-  # PRとpush時に実行
+  # PRとpush時に必ず実行
   pull_request:
-    paths:
-      - 'tests/auth_tests/**'
-      - 'config.py'
-      - '.github/workflows/test_auth.yml'
+    branches: [main, master]
   push:
-    branches:
-      - main
-      - master
-    paths:
-      - 'tests/auth_tests/**'
-      - 'config.py'
-      - '.github/workflows/test_auth.yml'
+    branches: [main, master]
 
 jobs:
   test-google-sheets-auth:
