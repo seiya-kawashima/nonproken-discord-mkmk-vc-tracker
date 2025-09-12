@@ -4,11 +4,12 @@ import os  # 環境変数の取得用
 import sys  # システム関連操作用
 import asyncio  # 非同期処理用
 import logging  # ログ出力用
+import argparse  # コマンドライン引数処理用
 
 # srcディレクトリをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))  # srcディレクトリをインポートパスに追加
 
-from config import EnvConfig  # 環境変数設定モジュール
+from config import EnvConfig, Environment  # 環境変数設定モジュールと環境列挙型
 from src.discord_client import DiscordVCPoller  # Discord VCポーリングクラス
 from src.sheets_client import SheetsClient  # Google Sheetsクライアント
 from src.slack_notifier import SlackNotifier  # Slack通知クライアント
@@ -24,41 +25,65 @@ logging.basicConfig(  # ロギングの基本設定
 logger = logging.getLogger(__name__)  # このモジュール用のロガー
 
 
-async def main():
-    """メイン処理"""  # 関数の説明
+async def main(env_arg=None):
+    """メイン処理
     
-    # 現在の環境を判定
-    env_name = EnvConfig.get_environment_name()  # 環境名を取得
+    Args:
+        env_arg: 環境指定 (0=本番, 1=テスト, 2=開発)
+    """  # 関数の説明
+    
+    # 引数から環境を取得
+    try:
+        env = EnvConfig.get_environment_from_arg(env_arg)  # 環境を引数から取得
+    except ValueError as e:
+        logger.error(str(e))  # エラーメッセージをログ出力
+        sys.exit(1)  # 異常終了
+    
+    env_name = EnvConfig.get_environment_name(env)  # 環境名を取得
     logger.info(f"Environment: {env_name}")  # 環境名をログ出力
     
-    # 環境に応じた設定を取得
-    discord_config = EnvConfig.get_discord_config()  # Discord設定
-    sheets_config = EnvConfig.get_google_sheets_config()  # Google Sheets設定
-    slack_config = EnvConfig.get_slack_config()  # Slack設定
+    # 環境に応じた設定を取得（必須値チェック付き）
+    try:
+        discord_config = EnvConfig.get_discord_config(env)  # Discord設定
+        sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定
+        slack_config = EnvConfig.get_slack_config(env)  # Slack設定
+    except ValueError as e:
+        logger.error(f"設定エラー: {e}")  # 設定エラーをログ出力
+        sys.exit(1)  # 異常終了
     
-    # 設定値を展開
+    # 設定値を展開（必須値は既にconfig.pyでチェック済み）
     discord_token = discord_config['token']  # Discord Botトークン
     channel_ids = discord_config['channel_ids']  # 監視対象VCチャンネルID
     sheet_name = sheets_config['sheet_name']  # スプレッドシート名
     service_account_json = sheets_config['service_account_json']  # サービスアカウントJSON
+    service_account_json_base64 = sheets_config['service_account_json_base64']  # Base64エンコードされた認証情報
     slack_token = slack_config['token']  # Slack Botトークン
     slack_channel = slack_config['channel_id']  # Slackチャンネル ID
     
-    # 必須環境変数のチェック
-    if not discord_token:  # Discordトークンがない場合
-        logger.error("DISCORD_BOT_TOKEN is not set")  # エラーログ出力
-        sys.exit(1)  # 異常終了
+    # Base64エンコードされた認証情報がある場合はデコード
+    import json  # JSON処理用
+    import base64  # Base64デコード用
+    import tempfile  # 一時ファイル作成用
     
-    if not sheet_name:  # シート名がない場合
-        logger.error("GOOGLE_SHEET_NAME is not set")  # エラーログ出力
-        sys.exit(1)  # 異常終了
-    
-    if not channel_ids or channel_ids == ['']:  # チャンネルIDがない場合
-        logger.error("ALLOWED_VOICE_CHANNEL_IDS is not set")  # エラーログ出力
-        sys.exit(1)  # 異常終了
+    temp_file = None  # 一時ファイルパス
+    if service_account_json_base64:  # Base64エンコードされた認証情報がある場合
+        try:
+            decoded_bytes = base64.b64decode(service_account_json_base64)  # Base64デコード
+            decoded_str = decoded_bytes.decode('utf-8')  # UTF-8文字列に変換
+            json_data = json.loads(decoded_str)  # JSONパース
+            
+            # 一時ファイルに保存
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:  # 一時ファイル作成
+                json.dump(json_data, f)  # JSONデータを書き込み
+                temp_file = f.name  # ファイルパスを保存
+                service_account_json = temp_file  # サービスアカウントJSONパスを更新
+            logger.info("認証情報をBase64からデコードしました")  # デコード成功ログ
+        except Exception as e:  # デコードエラー時
+            logger.error(f"Base64デコードエラー: {e}")  # エラーログ出力
+            sys.exit(1)  # 異常終了
     
     # サービスアカウントJSONファイルの存在確認
-    if not os.path.exists(service_account_json):  # JSONファイルが存在しない場合
+    elif not os.path.exists(service_account_json):  # JSONファイルが存在しない場合
         logger.error(f"Service account JSON file not found: {service_account_json}")  # エラーログ出力
         sys.exit(1)  # 異常終了
     
@@ -108,7 +133,27 @@ async def main():
     except Exception as e:  # エラー発生時
         logger.error(f"Error during polling: {e}")  # エラーログ出力
         sys.exit(1)  # 異常終了
+    
+    finally:
+        # 一時ファイルの削除
+        if temp_file and os.path.exists(temp_file):  # 一時ファイルが存在する場合
+            os.unlink(temp_file)  # ファイル削除
+            logger.debug("一時ファイルを削除しました")  # 削除ログ
 
 
 if __name__ == "__main__":  # スクリプト直接実行時
-    asyncio.run(main())  # メイン処理を非同期実行
+    # コマンドライン引数のパース
+    parser = argparse.ArgumentParser(  # 引数パーサー作成
+        description='Discord VC Tracker - VCメンバーを記録'  # スクリプト説明
+    )
+    parser.add_argument(  # 環境引数追加
+        '--env',  # オプション名
+        type=int,  # 整数型
+        choices=[0, 1, 2],  # 許可値
+        default=0,  # デフォルト値
+        help='0=本番環境(デフォルト), 1=テスト環境, 2=開発環境'  # ヘルプメッセージ
+    )
+    args = parser.parse_args()  # 引数パース
+    
+    # メイン処理を非同期実行
+    asyncio.run(main(args.env))  # 環境引数を渡して実行
