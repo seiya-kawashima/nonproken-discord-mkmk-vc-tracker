@@ -258,42 +258,32 @@ python test_google_sheets.py
 - ✅ テストデータの書き込み
 - ✅ 設定の問題があれば分かりやすくエラー表示
 
-**参考：テストスクリプトの中身（見る必要はありません）**
+### テストが成功すると
 
-```python
-import gspread
-from google.oauth2.service_account import Credentials
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# 認証情報を設定
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-SERVICE_ACCOUNT_FILE = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')
-SHEET_NAME = os.getenv('GOOGLE_SHEET_NAME')
-
-try:
-    # 認証
-    creds = Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE,
-        scopes=SCOPES
-    )
-    client = gspread.authorize(creds)
-    
-    # スプレッドシートを開く
-    sheet = client.open(SHEET_NAME)
-    worksheet = sheet.get_worksheet(0)
-    
-    # テストデータを書き込み
-    worksheet.update('A1', 'テスト成功！')
-    
-    print(f"✅ Google Sheets接続成功: {SHEET_NAME}")
-    print(f"✅ A1セルに「テスト成功！」を書き込みました")
-    
-except Exception as e:
-    print(f"❌ エラー: {e}")
 ```
+==================================================
+Google Sheets 接続テスト開始
+==================================================
+
+📋 設定確認:
+  - 認証ファイル: service_account.json
+  - スプレッドシート名: VC_Tracker_Test
+
+🔐 認証処理中...
+   ✅ 認証成功
+
+📊 スプレッドシート 'VC_Tracker_Test' に接続中...
+   ✅ 接続成功
+
+✏️ テストデータを書き込み中...
+   ✅ 書き込み成功
+
+==================================================
+🎉 テスト成功！
+==================================================
+```
+
+設定に問題がある場合は、分かりやすいエラーメッセージが表示されます。
 
 ## 🚨 トラブルシューティング
 
