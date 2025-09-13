@@ -158,7 +158,7 @@ DISCORD_BOT_TOKEN=あなたのトークンをここに貼り付け
 
 ### テスト環境（GitHub）
 
-GitHub Secretsに`TEST_DISCORD_BOT_TOKEN`として保存
+GitHub Secretsに`TST_DISCORD_BOT_TOKEN`として保存
 
 ### 本番環境（GitHub）
 
