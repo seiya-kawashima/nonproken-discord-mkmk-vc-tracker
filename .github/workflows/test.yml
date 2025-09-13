@@ -137,8 +137,8 @@ except Exception as e:
 import os
 from src.slack_notifier import SlackNotifier
 
-token = os.getenv('TEST_SLACK_BOT_TOKEN')
-channel = os.getenv('TEST_SLACK_CHANNEL_ID')
+token = os.getenv('TST_SLACK_BOT_TOKEN')
+channel = os.getenv('TST_SLACK_CHANNEL_ID')
 
 if token and channel:
     client = SlackNotifier(token, channel)
