@@ -58,8 +58,8 @@ jobs:
           echo "Applying fix for VCTrackerLogger not callable error"
           
           # Fix the test file
-          sed -i 's/from logger import logger/from logger import VCTrackerLogger/' tests/test_logger.py
-          sed -i 's/test_logger = logger(/test_logger = VCTrackerLogger(/' tests/test_logger.py
+          sed -i 's/from logger import logger/from logger import VCTrackerLogger/' tst/test_logger.py
+          sed -i 's/test_logger = logger(/test_logger = VCTrackerLogger(/' tst/test_logger.py
           
           echo "Fix applied successfully"
         fi
@@ -68,7 +68,7 @@ jobs:
       continue-on-error: true
       run: |
         pip install pytest pytest-cov
-        pytest tests/ --tb=short
+        pytest tst/ --tb=short
     
     - name: Commit and Push Fix
       if: steps.analyze.outputs.fix_available == 'true'
