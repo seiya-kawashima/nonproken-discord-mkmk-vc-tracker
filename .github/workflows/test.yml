@@ -156,8 +156,8 @@ else:
       if: github.event.inputs.test_type == 'all'
       env:
         TEST_DISCORD_BOT_TOKEN: ${{ secrets.TEST_DISCORD_BOT_TOKEN }}
-        TEST_GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
-        TEST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
+        TST_GOOGLE_SHEET_NAME: ${{ secrets.TST_GOOGLE_SHEET_NAME }}
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
         TEST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TEST_ALLOWED_VOICE_CHANNEL_IDS }}
         TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}
         TST_SLACK_CHANNEL_ID: ${{ secrets.TST_SLACK_CHANNEL_ID }}
