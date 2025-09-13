@@ -283,29 +283,134 @@ Google Sheets 接続テスト開始
 
 ### よくあるエラーと対処法
 
-#### 1. 「SpreadsheetNotFound」エラー
-**原因**：スプレッドシート名が間違っているか、共有されていない
-**対処**：
-- スプレッドシート名を確認
-- サービスアカウントに共有されているか確認
+#### 1. 「APIError: [403]: Request had insufficient authentication scopes」エラー
 
-#### 2. 「APIError: 403」エラー
-**原因**：権限不足またはAPIが有効化されていない
-**対処**：
-- Google Sheets APIが有効化されているか確認
-- サービスアカウントに「編集者」権限があるか確認
+**症状**：
+```
+❌ Google API エラー: APIError: [403]: Request had insufficient authentication scopes.
+```
 
-#### 3. 「FileNotFoundError: service_account.json」
+**原因**：
+認証情報（サービスアカウントJSON）は正しく読み込まれているが、以下のいずれかの問題が発生している：
+1. Google Sheets APIが有効化されていない
+2. スプレッドシートが存在しない、またはサービスアカウントに共有されていない  
+3. サービスアカウントの権限が不足している
+
+**対処法**：
+
+**1) Google Sheets APIを有効化する**
+- [Google Cloud Console](https://console.cloud.google.com/)にアクセス
+- プロジェクトを選択
+- 「APIとサービス」→「ライブラリ」を開く
+- 「Google Sheets API」を検索
+- 「有効にする」ボタンをクリック
+
+**2) スプレッドシートを作成・共有する**
+
+環境ごとのスプレッドシート名：
+- 本番環境: `VCトラッカー`
+- テスト環境: `テスト用VCトラッカー`
+- 開発環境: `開発VCトラッカー`
+
+共有手順：
+1. Google Sheetsで対応する名前のスプレッドシートを作成
+2. 右上の「共有」ボタンをクリック
+3. サービスアカウントのメールアドレスを入力
+   - メールアドレスは`service_account.json`の`client_email`フィールドに記載
+   - 例: `your-service-account@your-project.iam.gserviceaccount.com`
+4. 「編集者」権限を選択
+5. 「送信」をクリック
+
+**3) サービスアカウントの権限を確認**
+- Google Cloud Consoleで「IAMと管理」→「サービスアカウント」を開く
+- 該当のサービスアカウントを選択
+- 「権限」タブで適切なロールが付与されているか確認
+
+#### 2. 「SpreadsheetNotFound」エラー
+
+**症状**：
+```
+❌ エラー: スプレッドシート 'テスト用VCトラッカー' が見つかりません
+```
+
+**原因**：
+- スプレッドシート名が間違っている
+- スプレッドシートが存在しない
+- サービスアカウントに共有されていない
+
+**対処**：
+- スプレッドシート名を確認（大文字小文字も完全一致）
+- Google Sheetsで正確な名前のスプレッドシートを作成
+- サービスアカウントのメールアドレスに「編集者」権限で共有
+
+#### 3. 「環境変数が設定されていません」エラー
+
+**症状**：
+```
+❗ 設定エラー: テスト環境環境用の環境変数 TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 が設定されていません
+```
+
+**原因**：
+GitHub Secretsに必要な環境変数が設定されていない
+
+**対処**：
+1. GitHubリポジトリの「Settings」タブを開く
+2. 左メニューの「Secrets and variables」→「Actions」をクリック
+3. 「New repository secret」をクリック
+4. 以下を設定：
+   - Name: `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
+   - Value: Base64エンコードされたサービスアカウントJSON
+
+#### 4. 「FileNotFoundError: service_account.json」
+
 **原因**：JSONファイルが見つからない
+
 **対処**：
 - ファイル名が正しいか確認
 - ファイルパスが正しいか確認
+- プロジェクトルートディレクトリに配置されているか確認
 
-#### 4. 「Invalid grant」エラー
+#### 5. 「Invalid grant」エラー
+
 **原因**：サービスアカウントキーが無効
+
 **対処**：
 - 新しいキーを作成してダウンロード
 - 時刻設定が正しいか確認（時刻のずれがあるとエラーになる）
+
+#### 6. Base64デコードエラー
+
+**症状**：
+```
+❌ Base64デコードエラー: Incorrect padding
+```
+
+**原因**：
+Base64エンコードされた文字列が不正
+
+**対処**：
+1. 再エンコード：
+   ```bash
+   # 正しくエンコードされているか確認
+   base64 -i service_account.json | base64 -d
+   ```
+2. 改行や空白を除去（1行の連続した文字列として設定）
+3. 文字列全体をコピーしているか確認
+
+#### 7. レート制限エラー
+
+**症状**：
+```
+gspread.exceptions.APIError: {'code': 429, 'message': 'Quota exceeded'}
+```
+
+**原因**：
+Google Sheets APIのレート制限に達した
+
+**対処**：
+- 1分間待ってから再試行
+- リクエスト頻度を下げる
+- Google Cloud Consoleで「APIとサービス」→「割り当て」から申請
 
 ## 📊 スプレッドシート構成例
 
