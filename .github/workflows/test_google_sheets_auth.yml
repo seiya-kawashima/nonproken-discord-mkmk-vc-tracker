@@ -49,5 +49,10 @@ jobs:  # 実行するジョブ（作業）の定義
       run: |  # エラーメッセージを表示
         echo "❌ Google Sheets接続テスト失敗"  # 失敗マークを表示
         echo "GitHub Secretsの設定を確認してください:"  # 対処法を案内
-        echo "  - GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"  # 確認すべき設定名
+        echo "  - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"  # テスト環境用の設定名
+        echo "  - TST_GOOGLE_SHEET_NAME"  # テスト環境用のシート名
+        echo ""
+        echo "Google APIの有効化も確認してください:"
+        echo "  - Google Drive API"
+        echo "  - Google Sheets API"
         exit 1  # エラーコード1で終了（失敗を明示）
