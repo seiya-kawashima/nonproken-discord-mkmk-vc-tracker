@@ -33,6 +33,7 @@ jobs:  # 実行するジョブ（作業）の定義
       env:  # 環境変数の設定
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # GitHub Secretsから認証情報を取得
         GITHUB_ACTIONS: 'true'  # GitHub Actions環境であることを示すフラグ
+        GH_TOKEN: ${{ github.token }}  # GitHub CLIで使用するトークン（Secrets一覧取得用）
       run: |  # テストスクリプトを実行
         echo "🔍 Google Sheets接続テストを実行（テスト環境）"  # 実行開始メッセージを表示
         python tests/auth_tests/test_google_sheets_ci.py  # テストスクリプトを実行
