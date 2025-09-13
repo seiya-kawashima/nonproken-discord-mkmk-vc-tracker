@@ -272,7 +272,7 @@ Google Sheets CI/CD 接続テスト
 実行環境: GitHub Actions
 
 📋 環境変数チェック:
-  TEST_GOOGLE_SHEET_NAME: ✅ TST_VCトラッカー
+  TST_GOOGLE_SHEET_NAME: ✅ TST_VCトラッカー
   TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ✅ 設定済み
 
 🔐 Base64認証情報をデコード中...
