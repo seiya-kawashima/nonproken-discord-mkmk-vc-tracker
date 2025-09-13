@@ -76,16 +76,15 @@ echo "$GOOGLE_SERVICE_ACCOUNT_JSON" | base64 -d > service_account.json
 | `SLACK_CHANNEL_ID` | 通知先SlackチャンネルID | Slackチャンネル情報から取得 |
 
 #### テスト環境用Secrets
-テスト環境では、すべてのSecret名に`TEST_`プレフィックスを付けます：
+テスト環境では、すべてのSecret名に`TST_`プレフィックスを付けます：
 
 | Secret名 | 説明 | 用途 |
 |----------|------|------|
-| `TEST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン | テストサーバーでの動作確認 |
-| `TEST_GOOGLE_SHEET_NAME` | テスト用スプレッドシート名 | テストデータの記録 |
-| `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | テスト用サービスアカウント | テストシートへのアクセス |
-| `TEST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID | テストサーバーのVC監視 |
-| `TEST_SLACK_BOT_TOKEN` | テスト用Slackトークン | テスト通知の送信 |
-| `TEST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル | テスト通知先 |
+| `TST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン | テストサーバーでの動作確認 |
+| `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | テスト用サービスアカウント | テストシートへのアクセス |
+| `TST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID | テストサーバーのVC監視 |
+| `TST_SLACK_BOT_TOKEN` | テスト用Slackトークン | テスト通知の送信 |
+| `TST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル | テスト通知先 |
 
 詳細な環境設定については[ENVIRONMENTS.md](ENVIRONMENTS.md)を参照してください。
 
