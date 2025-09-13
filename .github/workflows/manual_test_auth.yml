@@ -83,4 +83,4 @@ jobs:
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
       run: |
         echo "🚀 認証テストを実行します..."
-        python tests/auth_tests/test_google_sheets_auth.py
+        python tst/auth_tests/test_google_sheets_auth.py
