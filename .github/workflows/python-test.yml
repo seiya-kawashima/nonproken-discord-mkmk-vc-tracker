@@ -1,50 +1,59 @@
-name: Python テスト（カバレッジ付き）
+# ========================================
+# Python テスト（カバレッジ付き） ワークフロー
+# ========================================
+# 概要: Pythonコードの単体テストを実行し、テストカバレッジを測定する
+#       すべてのテストが成功し、カバレッジが基準値（83%）を満たすことを確認
+#       テスト結果とカバレッジレポートを保存し、Codecovにアップロード
+#       mainブランチへのプッシュ時とPR作成時に自動実行される
+# ========================================
 
-on:
-  push:
-    branches: [ main, develop, 'feature/**' ]
-  pull_request:
-    branches: [ main, develop ]
+name: Python テスト（カバレッジ付き）  # GitHub Actionsのワークフロー名
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.13']
+on:  # このワークフローが実行されるタイミングの定義
+  push:  # コードプッシュ時に実行
+    branches: [ main, develop, 'feature/**' ]  # main、develop、featureブランチへのプッシュが対象
+  pull_request:  # プルリクエスト作成・更新時に実行
+    branches: [ main, develop ]  # main、developブランチへのPRが対象
 
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Python ${{ matrix.python-version }} セットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: 依存関係インストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements-test.txt
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    
-    - name: カバレッジ付きテスト実行
-      run: |
-        pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term tst/
-    
-    - name: Codecovにカバレッジをアップロード
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false  # トークンなしでも失敗しないように
-    
-    - name: カバレッジレポートをアーカイブ
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report-${{ matrix.python-version }}
-        path: htmlcov/
-    
-    - name: カバレッジ闾値チェック
-      run: |
-        coverage report --show-missing --fail-under=83  # カバーされていない行番号も表示（一時的に83%に下げる）
+jobs:  # 実行するジョブの定義
+  test:  # ジョブID
+    runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
+    strategy:  # 実行戦略の設定
+      matrix:  # マトリックスビルドの設定
+        python-version: ['3.13']  # Python 3.13でテスト実行
+
+    steps:  # ジョブ内で実行するステップの定義
+    - uses: actions/checkout@v4  # リポジトリのコードを取得
+
+    - name: Python ${{ matrix.python-version }} セットアップ  # Pythonのセットアップ
+      uses: actions/setup-python@v5  # Python公式のセットアップアクション
+      with:  # アクションのパラメータ
+        python-version: ${{ matrix.python-version }}  # マトリックスで指定されたPythonバージョンを使用
+
+    - name: 依存関係インストール  # 必要なパッケージのインストール
+      run: |  # シェルコマンドを実行
+        python -m pip install --upgrade pip  # pipを最新版にアップグレード
+        pip install -r requirements-test.txt  # テスト用の依存関係をインストール
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi  # 本番用の依存関係があればインストール
+
+    - name: カバレッジ付きテスト実行  # テストとカバレッジ測定を実行
+      run: |  # シェルコマンドを実行
+        pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term tst/  # pytestでテスト実行、srcディレクトリのカバレッジを測定
+
+    - name: Codecovにカバレッジをアップロード  # カバレッジデータをCodecovに送信
+      uses: codecov/codecov-action@v4  # Codecov公式アクション
+      with:  # アクションのパラメータ
+        file: ./coverage.xml  # アップロードするカバレッジファイル
+        flags: unittests  # テストの種類を示すフラグ
+        name: codecov-umbrella  # レポートの名前
+        fail_ci_if_error: false  # トークンなしでも失敗しないように設定
+
+    - name: カバレッジレポートをアーカイブ  # HTMLカバレッジレポートを保存
+      uses: actions/upload-artifact@v4  # GitHub公式のアーティファクトアップロードアクション
+      with:  # アクションのパラメータ
+        name: coverage-report-${{ matrix.python-version }}  # アーティファクト名（Pythonバージョン付き）
+        path: htmlcov/  # 保存するディレクトリパス
+
+    - name: カバレッジ閾値チェック  # カバレッジが基準値を満たすか確認
+      run: |  # シェルコマンドを実行
+        coverage report --show-missing --fail-under=83  # カバーされていない行番号も表示、83%未満で失敗
