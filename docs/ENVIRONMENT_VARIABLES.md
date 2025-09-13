@@ -31,28 +31,28 @@ SLACK_CHANNEL_ID=your_slack_channel_id
 **設定場所**: GitHub Secrets  
 **プレフィックス**: `TST_`を付ける  
 **用途**: Pull Request時の自動テスト
+**Google Sheets**: テスト用の別スプレッドシートを使用（シート名は`VCトラッカー`で統一）
 
 | 変数名 | 説明 |
 |--------|------|
 | `TST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン |
 | `TST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID |
-| `TST_GOOGLE_SHEET_NAME` | テスト用スプレッドシート名 |
-| `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | Base64エンコードされた認証JSON |
+| `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | テスト用スプレッドシートのBase64エンコードされた認証JSON |
 | `TST_SLACK_BOT_TOKEN` | テスト用Slack Botトークン |
 | `TST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル |
 
 ### 3. 本番環境（GitHub Actions）
 
 **設定場所**: GitHub Secrets  
-**プレフィックス**: なし  
+**プレフィックス**: なし（PRD環境はプレフィックス不要）  
 **用途**: 定期実行（本番運用）
+**Google Sheets**: 本番用のスプレッドシートを使用（シート名は`VCトラッカー`で統一）
 
 | 変数名 | 説明 |
 |--------|------|
 | `DISCORD_BOT_TOKEN` | 本番用Discord Botトークン |
 | `ALLOWED_VOICE_CHANNEL_IDS` | 本番用VCチャンネルID |
-| `GOOGLE_SHEET_NAME` | 本番用スプレッドシート名 |
-| `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | Base64エンコードされた認証JSON |
+| `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | 本番用スプレッドシートのBase64エンコードされた認証JSON |
 | `SLACK_BOT_TOKEN` | 本番用Slack Botトークン |
 | `SLACK_CHANNEL_ID` | 本番用Slackチャンネル |
 
@@ -61,11 +61,13 @@ SLACK_CHANNEL_ID=your_slack_channel_id
 コード内では以下の優先順位で環境変数を読み込みます：
 
 ```python
-# 例: Google Sheets名の読み込み
-sheet_name = (
-    os.getenv('TST_GOOGLE_SHEET_NAME') or  # 1. テスト環境（最優先）
-    os.getenv('GOOGLE_SHEET_NAME')           # 2. 本番/開発環境
-)
+# Google Sheets名は全環境で'VCトラッカー'に統一
+# 環境ごとに異なるスプレッドシートファイルを使用
+# 認証情報は環境に応じて切り替え
+if env == Environment.TST:
+    auth_base64 = os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64')
+else:
+    auth_base64 = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64')
 ```
 
 ## 🔐 Base64エンコードについて
