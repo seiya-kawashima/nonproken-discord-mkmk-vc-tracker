@@ -1,4 +1,4 @@
-name: Discord Bot Connection Test
+name: Discord Bot 接続テスト
 
 on:
   # 手動実行を許可
