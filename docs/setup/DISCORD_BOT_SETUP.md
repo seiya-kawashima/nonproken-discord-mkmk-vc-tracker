@@ -184,12 +184,7 @@ GitHub Secretsに設定：
 
 ## ✅ 動作確認
 
-### 1. Botがオンラインか確認
-
-- Discordサーバーのメンバーリストを確認
-- Botが「オンライン」になっていればOK
-
-### 2. GitHub Actionsでの動作確認
+### GitHub Actionsでの動作確認
 
 #### 手動実行による確認
 
