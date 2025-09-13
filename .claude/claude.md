@@ -191,3 +191,24 @@ feat: Discord VCメンバー取得機能を追加
 - 3回連続でエラー発生
 - API Rate Limit到達
 - 認証エラー発生
+
+## 🔧 GitHub Actions設定
+
+### ワークフロー作成ルール
+- **name フィールドは必ず日本語で記載**
+- **各ステップの name も日本語で記載**
+- わかりやすい名前を付ける
+
+#### 例
+```yaml
+name: Discord Bot 接続テスト  # 日本語で記載
+
+jobs:
+  test:
+    name: テスト実行  # 日本語で記載
+    steps:
+    - name: コードをチェックアウト  # 日本語で記載
+      uses: actions/checkout@v4
+    - name: Pythonセットアップ  # 日本語で記載
+      uses: actions/setup-python@v5
+```
