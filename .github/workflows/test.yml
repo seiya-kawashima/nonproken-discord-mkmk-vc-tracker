@@ -129,8 +129,8 @@ except Exception as e:
     - name: Run integration test (Slack)
       if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'slack_only'
       env:
-        TEST_SLACK_BOT_TOKEN: ${{ secrets.TEST_SLACK_BOT_TOKEN }}
-        TEST_SLACK_CHANNEL_ID: ${{ secrets.TEST_SLACK_CHANNEL_ID }}
+        TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}
+        TST_SLACK_CHANNEL_ID: ${{ secrets.TST_SLACK_CHANNEL_ID }}
       run: |
         echo "Testing Slack connection..."
         python -c "
@@ -159,8 +159,8 @@ else:
         TEST_GOOGLE_SHEET_NAME: ${{ secrets.TEST_GOOGLE_SHEET_NAME }}
         TEST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
         TEST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TEST_ALLOWED_VOICE_CHANNEL_IDS }}
-        TEST_SLACK_BOT_TOKEN: ${{ secrets.TEST_SLACK_BOT_TOKEN }}
-        TEST_SLACK_CHANNEL_ID: ${{ secrets.TEST_SLACK_CHANNEL_ID }}
+        TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}
+        TST_SLACK_CHANNEL_ID: ${{ secrets.TST_SLACK_CHANNEL_ID }}
         LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}
       run: |
         echo "Running full integration test..."
