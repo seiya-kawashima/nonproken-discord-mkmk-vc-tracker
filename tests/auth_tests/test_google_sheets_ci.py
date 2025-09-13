@@ -58,7 +58,7 @@ def test_google_sheets_connection():
     
     # テスト環境の設定を取得
     try:
-        config = EnvConfig.get_google_sheets_config(Environment.TEST)
+        config = EnvConfig.get_google_sheets_config(Environment.TST)
     except ValueError as e:
         print(f"\n❗ 設定エラー: {e}")
         
@@ -73,8 +73,8 @@ def test_google_sheets_connection():
                 print("  (一覧を取得できませんでした)")
             
             print("\n💡 必要なSecrets:")
-            print("  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
-            print("\n※ TEST_プレフィックス付きの環境変数が必要です")
+            print("  - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
+            print("\n※ TST_プレフィックス付きの環境変数が必要です")
         
         sys.exit(1)
     sheet_name = config['sheet_name']
@@ -82,9 +82,9 @@ def test_google_sheets_connection():
     service_account_json_base64 = config['service_account_json_base64']
     
     print("\n📋 環境変数チェック:")
-    print(f"  TEST_GOOGLE_SHEET_NAME: ✅ {sheet_name}")
-    print(f"  TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: {'✅ 設定済み' if service_account_json_base64 else '❌ 未設定'}")
-    print(f"  TEST_GOOGLE_SERVICE_ACCOUNT_JSON: {'✅ 設定済み' if service_account_json else '❌ 未設定'}")
+    print(f"  TST_GOOGLE_SHEET_NAME: ✅ {sheet_name}")
+    print(f"  TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: {'✅ 設定済み' if service_account_json_base64 else '❌ 未設定'}")
+    print(f"  TST_GOOGLE_SERVICE_ACCOUNT_JSON: {'✅ 設定済み' if service_account_json else '❌ 未設定'}")
     
     # 認証ファイルの処理
     auth_file = None
@@ -115,8 +115,8 @@ def test_google_sheets_connection():
         # config.pyで既にチェック済みなのでここには来ないが、念のため
         print("\n❌ エラー: 認証情報が見つかりません")
         print("   以下のいずれかを設定してください:")
-        print("   - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 (GitHub Secrets)")
-        print("   - TEST_GOOGLE_SERVICE_ACCOUNT_JSON (ファイルパス)")
+        print("   - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 (GitHub Secrets)")
+        print("   - TST_GOOGLE_SERVICE_ACCOUNT_JSON (ファイルパス)")
         sys.exit(1)
     
     # Google Sheetsへの接続テスト
@@ -163,7 +163,7 @@ def test_google_sheets_connection():
         print(f"\n❌ エラー: スプレッドシート '{sheet_name}' が見つかりません")
         print("\n確認事項:")
         print("1. スプレッドシート名が正しいか確認")
-        print(f"   期待されるシート名: 'テスト用VCトラッカー'")
+        print(f"   期待されるシート名: 'TST_VCトラッカー'")
         print("2. サービスアカウントに共有されているか確認:")
         print("   - Google Sheetsで「共有」ボタンをクリック")
         print("   - サービスアカウントのメールアドレスを追加")
@@ -215,8 +215,8 @@ def test_google_sheets_connection():
                 print("  (一覧を取得できませんでした)")
             
             print("\n💡 必要なSecrets:")
-            print("  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
-            print("\n※ テスト環境ではTEST_プレフィックス付きの環境変数が必要です")
+            print("  - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
+            print("\n※ テスト環境ではTST_プレフィックス付きの環境変数が必要です")
         
         sys.exit(1)
         
