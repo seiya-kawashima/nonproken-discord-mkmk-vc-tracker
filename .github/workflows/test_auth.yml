@@ -13,23 +13,23 @@ on:  # このワークフローが実行されるタイミングの設定
 jobs:  # 実行するジョブ（作業）の定義
   test-connection:  # ジョブの名前（任意の名前をつけられる）
     runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
-    name: Test Google Sheets Connection  # ジョブの表示名
+    name: Google Sheets 接続テスト  # ジョブの表示名
     
     steps:  # ジョブ内で実行するステップ（手順）の定義
-    - name: Checkout code  # ステップ1: コードを取得
+    - name: コードをチェックアウト  # ステップ1: コードを取得
       uses: actions/checkout@v4  # GitHubが提供するコード取得アクションを使用
     
-    - name: Set up Python  # ステップ2: Python環境をセットアップ
+    - name: Pythonセットアップ  # ステップ2: Python環境をセットアップ
       uses: actions/setup-python@v5  # Pythonセットアップ用の公式アクションを使用
       with:  # アクションへの設定
         python-version: '3.11'  # Python 3.11を使用
     
-    - name: Install dependencies  # ステップ3: 必要なライブラリをインストール
+    - name: 依存関係インストール  # ステップ3: 必要なライブラリをインストール
       run: |  # シェルコマンドを実行
         python -m pip install --upgrade pip  # pipを最新版にアップグレード
         pip install gspread google-auth python-dotenv  # Google Sheets接続に必要なライブラリをインストール
     
-    - name: Run Connection Test  # ステップ4: 接続テストを実行
+    - name: 接続テスト実行  # ステップ4: 接続テストを実行
       env:  # 環境変数の設定
         TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # テスト環境用の認証情報
         GITHUB_ACTIONS: 'true'  # GitHub Actions環境であることを示すフラグ
@@ -38,13 +38,13 @@ jobs:  # 実行するジョブ（作業）の定義
         echo "🔍 Google Sheets接続テストを実行（テスト環境）"  # 実行開始メッセージを表示
         python tst/auth_tests/test_google_sheets_ci.py  # テストスクリプトを実行
         
-    - name: Test Result  # ステップ5: テスト成功時の処理
+    - name: テスト成功  # ステップ5: テスト成功時の処理
       if: success()  # 前のステップが成功した場合のみ実行
       run: |  # 成功メッセージを表示
         echo "✅ Google Sheets接続テスト成功"  # 成功マークを表示
         echo "テスト環境のGoogle Sheetsへの接続が確認されました"  # 詳細メッセージ
         
-    - name: Test Failed  # ステップ6: テスト失敗時の処理
+    - name: テスト失敗  # ステップ6: テスト失敗時の処理
       if: failure()  # 前のステップが失敗した場合のみ実行
       run: |  # エラーメッセージを表示
         echo "❌ Google Sheets接続テスト失敗"  # 失敗マークを表示
