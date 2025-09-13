@@ -44,12 +44,9 @@ async def test_discord_bot(env=Environment.PRD):
         return False
     
     print(f"✅ トークン: 設定済み")
-    if channel_ids:  # チャンネルIDが設定されている場合
-        print(f"📍 監視対象VCチャンネル: {len(channel_ids)}個")
-        for ch_id in channel_ids:
-            print(f"   - {ch_id}")
-    else:  # チャンネルIDが設定されていない場合
-        print(f"⚠️ 監視対象VCチャンネル: 未設定（全チャンネル表示モード）")
+    print(f"📍 監視対象VCチャンネル: {len(channel_ids)}個")
+    for ch_id in channel_ids:
+        print(f"   - {ch_id}")
     
     # Botクライアント設定
     intents = discord.Intents.default()
