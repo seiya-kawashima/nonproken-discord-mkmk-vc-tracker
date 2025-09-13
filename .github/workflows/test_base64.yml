@@ -53,7 +53,7 @@ jobs:
         echo "✅ Base64認証テスト成功"
         echo "Google SheetsへのBase64認証が正常に動作しています"
         
-    - name: Test Failed
+    - name: テスト失敗
       if: failure()
       run: |
         echo "❌ Base64認証テスト失敗"
