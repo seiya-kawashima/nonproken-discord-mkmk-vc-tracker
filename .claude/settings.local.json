@@ -34,7 +34,8 @@
       "Bash(TEST_DISCORD_BOT_TOKEN=test_token_test TEST_ALLOWED_VOICE_CHANNEL_IDS=789,012 TEST_GOOGLE_SERVICE_ACCOUNT_JSON=test_service_account.json python test_config.py 1)",
       "Bash(cat:*)",
       "Bash(touch:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
