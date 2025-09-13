@@ -36,7 +36,7 @@ jobs:  # 実行するジョブ（作業）の定義
         GH_TOKEN: ${{ github.token }}  # GitHub CLIで使用するトークン（Secrets一覧取得用）
       run: |  # テストスクリプトを実行
         echo "🔍 Google Sheets接続テストを実行（テスト環境）"  # 実行開始メッセージを表示
-        python tests/auth_tests/test_google_sheets_ci.py  # テストスクリプトを実行
+        python tst/auth_tests/test_google_sheets_ci.py  # テストスクリプトを実行
         
     - name: Test Result  # ステップ5: テスト成功時の処理
       if: success()  # 前のステップが成功した場合のみ実行
