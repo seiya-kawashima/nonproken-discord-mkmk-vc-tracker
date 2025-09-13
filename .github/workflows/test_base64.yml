@@ -45,7 +45,7 @@ jobs:
         GITHUB_ACTIONS: 'true'
       run: |
         echo "🔐 Base64認証テストを実行（テスト環境）"
-        python test_base64_auth.py --env 1
+        python tst/test_base64_auth.py --env 1
         
     - name: Test Result Success
       if: success()
