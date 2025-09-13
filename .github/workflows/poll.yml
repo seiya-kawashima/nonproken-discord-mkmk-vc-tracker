@@ -1,4 +1,4 @@
-name: Discord VC Polling
+name: Discord VC 定期監視
 
 on:
   schedule:
