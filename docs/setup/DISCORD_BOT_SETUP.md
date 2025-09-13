@@ -158,11 +158,29 @@ DISCORD_BOT_TOKEN=あなたのトークンをここに貼り付け
 
 ### テスト環境（GitHub）
 
-GitHub Secretsに`TST_DISCORD_BOT_TOKEN`として保存
+GitHub Secretsに設定：
+- `TST_DISCORD_BOT_TOKEN` - Botトークン
+- `TST_ALLOWED_VOICE_CHANNEL_IDS` - 監視対象VCチャンネルID（カンマ区切り）
+
+**設定手順**：
+1. GitHubリポジトリ → Settings → Secrets and variables → Actions
+2. 「New repository secret」をクリック
+3. Nameに`TST_DISCORD_BOT_TOKEN`、Secretにトークンを入力
+4. 同様に`TST_ALLOWED_VOICE_CHANNEL_IDS`も設定
+   - 例: `1234567890123456789,9876543210987654321`
 
 ### 本番環境（GitHub）
 
-GitHub Secretsに`DISCORD_BOT_TOKEN`として保存
+GitHub Secretsに設定：
+- `DISCORD_BOT_TOKEN` - Botトークン
+- `ALLOWED_VOICE_CHANNEL_IDS` - 監視対象VCチャンネルID（カンマ区切り）
+
+**設定手順**：
+1. GitHubリポジトリ → Settings → Secrets and variables → Actions
+2. 「New repository secret」をクリック
+3. Nameに`DISCORD_BOT_TOKEN`、Secretにトークンを入力
+4. 同様に`ALLOWED_VOICE_CHANNEL_IDS`も設定
+   - 例: `1234567890123456789,9876543210987654321`
 
 ## ✅ 動作確認
 
