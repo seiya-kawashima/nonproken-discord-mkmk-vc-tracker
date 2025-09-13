@@ -163,7 +163,7 @@ def test_google_sheets_connection():
         print(f"\n❌ エラー: スプレッドシート '{sheet_name}' が見つかりません")
         print("\n確認事項:")
         print("1. スプレッドシート名が正しいか確認")
-        print(f"   期待されるシート名: 'TST_VCトラッカー'")
+        print(f"   期待されるシート名: 'VCトラッカー'")
         print("2. サービスアカウントに共有されているか確認:")
         print("   - Google Sheetsで「共有」ボタンをクリック")
         print("   - サービスアカウントのメールアドレスを追加")

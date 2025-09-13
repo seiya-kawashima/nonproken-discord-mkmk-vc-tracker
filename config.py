@@ -34,12 +34,8 @@ class Environment(IntEnum):
 class EnvConfig:
     """環境変数の設定を管理するクラス"""
     
-    # スプレッドシート名（環境ごとに固定）
-    SHEET_NAMES = {
-        Environment.PRD: 'VCトラッカー',  # 本番用シート名
-        Environment.TST: 'TST_VCトラッカー',  # テスト用シート名
-        Environment.DEV: 'DEV_VCトラッカー'  # 開発用シート名
-    }
+    # スプレッドシート名（全環境共通）
+    SHEET_NAME = 'VCトラッカー'  # 全環境で同じシート名を使用
     
     @classmethod
     def get_env_var_name(cls, base_name, env=Environment.PRD):
@@ -166,8 +162,8 @@ class EnvConfig:
         """
         env_name = cls.get_environment_name(env)
         
-        # 環境ごとに固定のシート名を使用
-        sheet_name = cls.SHEET_NAMES[env]
+        # 全環境で同じシート名を使用
+        sheet_name = cls.SHEET_NAME
         
         # 環境に応じた環境変数名を取得
         json_key = cls.get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON', env)
