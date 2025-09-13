@@ -21,7 +21,7 @@ on:
 jobs:
   test-discord-bot:
     runs-on: ubuntu-latest
-    name: Discord Bot接続テスト
+    name: Discord Bot 接続テスト
     
     steps:
     - name: コードをチェックアウト
