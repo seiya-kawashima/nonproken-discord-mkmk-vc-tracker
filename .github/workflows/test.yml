@@ -79,8 +79,8 @@ jobs:
     - name: Run integration test (Discord)
       if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'discord_only'
       env:
-        TEST_DISCORD_BOT_TOKEN: ${{ secrets.TEST_DISCORD_BOT_TOKEN }}
-        TEST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TEST_ALLOWED_VOICE_CHANNEL_IDS }}
+        TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}
+        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}
         LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}
       run: |
         echo "Testing Discord connection..."
