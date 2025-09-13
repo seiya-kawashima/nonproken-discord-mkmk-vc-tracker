@@ -1,4 +1,4 @@
-name: Test Base64 Authentication
+name: Base64認証テスト
 
 on:
   # 手動実行を許可
@@ -13,24 +13,24 @@ on:
 jobs:
   test-base64:
     runs-on: ubuntu-latest
-    name: Test Google Sheets Base64 Auth
+    name: Google Sheets Base64認証テスト
     
     steps:
-    - name: Checkout code
+    - name: コードをチェックアウト
       uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Pythonセットアップ
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
     
-    - name: Install dependencies
+    - name: 依存関係インストール
       run: |
         python -m pip install --upgrade pip
         pip install gspread google-auth python-dotenv
     
-    - name: Check environment variables
+    - name: 環境変数チェック
       run: |
         echo "🔍 環境変数チェック"
         if [ -n "${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}" ]; then
@@ -39,7 +39,7 @@ jobs:
           echo "  ❌ TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: 未設定"
         fi
     
-    - name: Run Base64 Authentication Test
+    - name: Base64認証テスト実行
       env:
         TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
         GITHUB_ACTIONS: 'true'
@@ -47,7 +47,7 @@ jobs:
         echo "🔐 Base64認証テストを実行（テスト環境）"
         python tst/test_base64_auth.py --env 1
         
-    - name: Test Result Success
+    - name: テスト成功
       if: success()
       run: |
         echo "✅ Base64認証テスト成功"
