@@ -90,8 +90,8 @@ import os
 from src.discord_client import DiscordVCPoller
 
 async def test_discord():
-    token = os.getenv('TEST_DISCORD_BOT_TOKEN')
-    channel_ids = os.getenv('TEST_ALLOWED_VOICE_CHANNEL_IDS', '').split(',')
+    token = os.getenv('TST_DISCORD_BOT_TOKEN')
+    channel_ids = os.getenv('TST_ALLOWED_VOICE_CHANNEL_IDS', '').split(',')
     client = DiscordVCPoller(token, channel_ids)
     try:
         members = await client.get_vc_members()
