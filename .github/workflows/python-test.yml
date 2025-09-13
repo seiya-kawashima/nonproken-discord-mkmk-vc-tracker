@@ -16,22 +16,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Python ${{ matrix.python-version }} セットアップ
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Install dependencies
+    - name: 依存関係インストール
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-test.txt
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     
-    - name: Run tests with coverage
+    - name: カバレッジ付きテスト実行
       run: |
         pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term tst/
     
-    - name: Upload coverage to Codecov
+    - name: Codecovにカバレッジをアップロード
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
@@ -39,12 +39,12 @@ jobs:
         name: codecov-umbrella
         fail_ci_if_error: false  # トークンなしでも失敗しないように
     
-    - name: Archive coverage reports
+    - name: カバレッジレポートをアーカイブ
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report-${{ matrix.python-version }}
         path: htmlcov/
     
-    - name: Check coverage threshold
+    - name: カバレッジ闾値チェック
       run: |
         coverage report --show-missing --fail-under=83  # カバーされていない行番号も表示（一時的に83%に下げる）
