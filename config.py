@@ -15,19 +15,19 @@ load_dotenv()
 class Environment(IntEnum):
     """環境の定義
     
-    0: PRODUCTION - 本番環境
-    1: TEST - テスト環境
-    2: DEVELOPMENT - 開発環境
+    0: PRD - 本番環境
+    1: TST - テスト環境
+    2: DEV - 開発環境
     """
-    PRODUCTION = 0  # 本番環境（デフォルト）
-    TEST = 1        # テスト環境
-    DEVELOPMENT = 2  # 開発環境
+    PRD = 0  # 本番環境（デフォルト）
+    TST = 1  # テスト環境
+    DEV = 2  # 開発環境
     
     @classmethod
     def from_value(cls, value):
         """数値から環境を取得"""
         if value is None:
-            return cls.PRODUCTION  # デフォルトは本番
+            return cls.PRD  # デフォルトは本番
         return cls(value)
 
 
@@ -36,13 +36,13 @@ class EnvConfig:
     
     # スプレッドシート名（環境ごとに固定）
     SHEET_NAMES = {
-        Environment.PRODUCTION: 'VCトラッカー',  # 本番用シート名
-        Environment.TEST: 'テスト用VCトラッカー',  # テスト用シート名
-        Environment.DEVELOPMENT: '開発VCトラッカー'  # 開発用シート名
+        Environment.PRD: 'VCトラッカー',  # 本番用シート名
+        Environment.TST: 'TST_VCトラッカー',  # テスト用シート名
+        Environment.DEV: 'DEV_VCトラッカー'  # 開発用シート名
     }
     
     @classmethod
-    def get_env_var_name(cls, base_name, env=Environment.PRODUCTION):
+    def get_env_var_name(cls, base_name, env=Environment.PRD):
         """環境に応じた環境変数名を取得
         
         Args:
@@ -52,8 +52,10 @@ class EnvConfig:
         Returns:
             str: 環境に応じた環境変数名
         """
-        if env == Environment.TEST:
-            return f'TEST_{base_name}'
+        if env == Environment.TST:
+            return f'TST_{base_name}'
+        elif env == Environment.DEV:
+            return f'DEV_{base_name}'
         return base_name
     
     # GitHub Actions環境の判定
@@ -100,35 +102,35 @@ class EnvConfig:
             Environment: 環境の列挙型
         """
         if env_arg is None:
-            return Environment.PRODUCTION
+            return Environment.PRD
         try:
             return Environment(int(env_arg))
         except (ValueError, TypeError):
             raise ValueError(f"無効な環境指定: {env_arg}. 0(本番), 1(テスト), 2(開発)のいずれかを指定してください")
     
     @classmethod
-    def get_environment_name(cls, env=Environment.PRODUCTION):
+    def get_environment_name(cls, env=Environment.PRD):
         """環境名を取得
         
         Args:
-            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
+            env: 環境（Environment.PRD/TST/DEV）
             
         Returns:
             str: 環境名
         """
-        if env == Environment.TEST:
+        if env == Environment.TST:
             return "テスト環境"
-        elif env == Environment.DEVELOPMENT:
+        elif env == Environment.DEV:
             return "開発環境"
         else:
             return "本番環境"
     
     @classmethod
-    def get_discord_config(cls, env=Environment.PRODUCTION):
+    def get_discord_config(cls, env=Environment.PRD):
         """Discord関連の設定を取得
         
         Args:
-            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
+            env: 環境（Environment.PRD/TST/DEV）
         
         Returns:
             dict: Discord設定の辞書
@@ -153,11 +155,11 @@ class EnvConfig:
         }
     
     @classmethod
-    def get_google_sheets_config(cls, env=Environment.PRODUCTION):
+    def get_google_sheets_config(cls, env=Environment.PRD):
         """Google Sheets関連の設定を取得
         
         Args:
-            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
+            env: 環境（Environment.PRD/TST/DEV）
         
         Returns:
             dict: Google Sheets設定の辞書
@@ -189,11 +191,11 @@ class EnvConfig:
         }
     
     @classmethod
-    def get_slack_config(cls, env=Environment.PRODUCTION):
+    def get_slack_config(cls, env=Environment.PRD):
         """Slack関連の設定を取得（オプション）
         
         Args:
-            env: 環境（Environment.PRODUCTION/TEST/DEVELOPMENT）
+            env: 環境（Environment.PRD/TST/DEV）
         
         Returns:
             dict: Slack設定の辞書（設定がない場合はNone値を含む）
