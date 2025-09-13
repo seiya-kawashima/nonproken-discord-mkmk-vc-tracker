@@ -130,7 +130,7 @@ else:
 - [ ] VCチャンネルIDを設定
 
 ### テスト環境のセットアップ
-- [ ] GitHub Secretsに`TEST_DISCORD_BOT_TOKEN`を設定
+- [ ] GitHub Secretsに`TST_DISCORD_BOT_TOKEN`を設定
 - [ ] GitHub Secretsに`TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`を設定
 - [ ] GitHub Secretsに`TEST_GOOGLE_SHEET_NAME`を設定
 - [ ] GitHub Secretsに`TEST_ALLOWED_VOICE_CHANNEL_IDS`を設定
