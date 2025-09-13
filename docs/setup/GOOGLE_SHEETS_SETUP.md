@@ -232,7 +232,7 @@ GOOGLE_SHEET_NAME=VC_Tracker_Test
 4. **GitHub Secretsに登録**：
    - GitHubリポジトリの「Settings」→「Secrets and variables」→「Actions」
    - 「New repository secret」をクリック
-   - Name: `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`（テスト用）
+   - Name: `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`（テスト用）
    - Secret: コピーした文字列を貼り付け
    - 「Add secret」をクリック
 
@@ -273,7 +273,7 @@ Google Sheets CI/CD 接続テスト
 
 📋 環境変数チェック:
   TEST_GOOGLE_SHEET_NAME: ✅ テスト用VCトラッカー
-  TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ✅ 設定済み
+  TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ✅ 設定済み
 
 🔐 Base64認証情報をデコード中...
   ✅ デコード成功
@@ -370,7 +370,7 @@ python tests/auth_tests/test_google_sheets_ci.py
 
 **症状**：
 ```
-❗ 設定エラー: テスト環境環境用の環境変数 TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 が設定されていません
+❗ 設定エラー: テスト環境環境用の環境変数 TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 が設定されていません
 ```
 
 **原因**：
@@ -381,7 +381,7 @@ GitHub Secretsに必要な環境変数が設定されていない
 2. 左メニューの「Secrets and variables」→「Actions」をクリック
 3. 「New repository secret」をクリック
 4. 以下を設定：
-   - Name: `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
+   - Name: `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
    - Value: Base64エンコードされたサービスアカウントJSON
 
 #### 4. 「FileNotFoundError: service_account.json」
