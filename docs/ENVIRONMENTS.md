@@ -7,7 +7,7 @@
 | 環境 | 用途 | トリガー | 使用するSecrets |
 |------|------|----------|-----------------|
 | **開発環境（Local）** | ローカル開発・デバッグ | 手動実行 | `.env`ファイル |
-| **テスト環境（Test）** | CI/CD自動テスト | PR作成・develop push | `TEST_`プレフィックス付きSecrets |
+| **テスト環境（Test）** | CI/CD自動テスト | PR作成・develop push | `TST_`プレフィックス付きSecrets |
 | **本番環境（Production）** | 実運用 | スケジュール・main push | プレフィックスなしSecrets |
 
 ## 📝 開発環境（ローカル）
@@ -61,12 +61,11 @@ python poll_once.py
 
 | Secret名 | 説明 | 例 |
 |----------|------|-----|
-| `TEST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン | テストサーバー専用Bot |
-| `TEST_GOOGLE_SHEET_NAME` | テスト用スプレッドシート名 | VC_Tracker_Test |
-| `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | テスト用サービスアカウント | テスト用シートのみアクセス可 |
-| `TEST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID | テストサーバーのVC |
-| `TEST_SLACK_BOT_TOKEN` | テスト用Slackトークン | テストワークスペース用 |
-| `TEST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル | #test-notifications |
+| `TST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン | テストサーバー専用Bot |
+| `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | テスト用サービスアカウント | テスト用シートのみアクセス可 |
+| `TST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID | テストサーバーのVC |
+| `TST_SLACK_BOT_TOKEN` | テスト用Slackトークン | テストワークスペース用 |
+| `TST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル | #test-notifications |
 
 ### テスト実行方法
 
