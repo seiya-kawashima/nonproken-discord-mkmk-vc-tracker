@@ -72,38 +72,29 @@ async def test_discord_bot(env=Environment.PRD):
             print(f"     VCチャンネル数: {len(voice_channels)}")
             
             # 監視対象チャンネルの確認
-            if channel_ids:  # チャンネルIDが設定されている場合
-                print("     監視対象VC:")
-                found_any = False
-                for ch_id_str in channel_ids:
-                    if ch_id_str:
-                        try:
-                            ch_id = int(ch_id_str)
-                            channel = guild.get_channel(ch_id)
-                            if channel:
-                                print(f"       ✅ {channel.name} (ID: {ch_id})")
-                                if hasattr(channel, 'members'):
-                                    print(f"          現在のメンバー数: {len(channel.members)}")
-                                    if channel.members:
-                                        print("          メンバー:")
-                                        for member in channel.members[:5]:  # 最初の5人まで表示
-                                            print(f"            - {member.display_name}")
-                                        if len(channel.members) > 5:
-                                            print(f"            ... 他{len(channel.members) - 5}名")
-                                found_any = True
-                        except ValueError:
-                            print(f"       ⚠️ 無効なチャンネルID: {ch_id_str}")
+            print("     監視対象VC:")
+            found_any = False
+            for ch_id_str in channel_ids:
+                if ch_id_str:
+                    try:
+                        ch_id = int(ch_id_str)
+                        channel = guild.get_channel(ch_id)
+                        if channel:
+                            print(f"       ✅ {channel.name} (ID: {ch_id})")
+                            if hasattr(channel, 'members'):
+                                print(f"          現在のメンバー数: {len(channel.members)}")
+                                if channel.members:
+                                    print("          メンバー:")
+                                    for member in channel.members[:5]:  # 最初の5人まで表示
+                                        print(f"            - {member.display_name}")
+                                    if len(channel.members) > 5:
+                                        print(f"            ... 他{len(channel.members) - 5}名")
+                            found_any = True
+                    except ValueError:
+                        print(f"       ⚠️ 無効なチャンネルID: {ch_id_str}")
 
-                if not found_any:
-                    print("       ❌ このサーバーに監視対象VCが見つかりません")
-            else:  # チャンネルIDが未設定の場合、全VCチャンネルを表示
-                print("     全VCチャンネル（監視対象未設定）:")
-                for vc in voice_channels[:10]:  # 最初の10個まで表示
-                    print(f"       📢 {vc.name} (ID: {vc.id})")
-                    if hasattr(vc, 'members') and vc.members:
-                        print(f"          現在のメンバー数: {len(vc.members)}")
-                if len(voice_channels) > 10:
-                    print(f"       ... 他{len(voice_channels) - 10}個のVCチャンネル")
+            if not found_any:
+                print("       ❌ このサーバーに監視対象VCが見つかりません")
         
         connection_success = True
         await client.close()
