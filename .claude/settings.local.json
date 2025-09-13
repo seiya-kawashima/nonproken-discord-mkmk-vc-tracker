@@ -35,7 +35,8 @@
       "Bash(cat:*)",
       "Bash(touch:*)",
       "Bash(cp:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
