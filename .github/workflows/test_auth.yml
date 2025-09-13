@@ -1,52 +1,52 @@
-name: Google Sheets Connection Test
+name: Google Sheets Connection Test  # ワークフローの名前（GitHubのActionsタブに表示される）
 
-on:
+on:  # このワークフローが実行されるタイミングの設定
   # 手動実行を許可
-  workflow_dispatch:
+  workflow_dispatch:  # GitHubのActionsタブから手動で実行できるようにする設定
   
   # PRとpush時に必ず実行
-  pull_request:
-    branches: [main, master]
-  push:
-    branches: [main, master]
+  pull_request:  # プルリクエストが作成・更新されたときに実行
+    branches: [main, master]  # main/masterブランチへのPRのみ対象
+  push:  # コードがプッシュされたときに実行
+    branches: [main, master]  # main/masterブランチへのプッシュのみ対象
 
-jobs:
-  test-connection:
-    runs-on: ubuntu-latest
-    name: Test Google Sheets Connection
+jobs:  # 実行するジョブ（作業）の定義
+  test-connection:  # ジョブの名前（任意の名前をつけられる）
+    runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
+    name: Test Google Sheets Connection  # ジョブの表示名
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    steps:  # ジョブ内で実行するステップ（手順）の定義
+    - name: Checkout code  # ステップ1: コードを取得
+      uses: actions/checkout@v4  # GitHubが提供するコード取得アクションを使用
     
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+    - name: Set up Python  # ステップ2: Python環境をセットアップ
+      uses: actions/setup-python@v5  # Pythonセットアップ用の公式アクションを使用
+      with:  # アクションへの設定
+        python-version: '3.11'  # Python 3.11を使用
     
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install gspread google-auth python-dotenv
+    - name: Install dependencies  # ステップ3: 必要なライブラリをインストール
+      run: |  # シェルコマンドを実行
+        python -m pip install --upgrade pip  # pipを最新版にアップグレード
+        pip install gspread google-auth python-dotenv  # Google Sheets接続に必要なライブラリをインストール
     
-    - name: Run Connection Test
-      env:
-        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
-        GITHUB_ACTIONS: 'true'
-      run: |
-        echo "🔍 Google Sheets接続テストを実行（テスト環境）"
-        python tests/auth_tests/test_google_sheets_ci.py
+    - name: Run Connection Test  # ステップ4: 接続テストを実行
+      env:  # 環境変数の設定
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # GitHub Secretsから認証情報を取得
+        GITHUB_ACTIONS: 'true'  # GitHub Actions環境であることを示すフラグ
+      run: |  # テストスクリプトを実行
+        echo "🔍 Google Sheets接続テストを実行（テスト環境）"  # 実行開始メッセージを表示
+        python tests/auth_tests/test_google_sheets_ci.py  # テストスクリプトを実行
         
-    - name: Test Result
-      if: success()
-      run: |
-        echo "✅ Google Sheets接続テスト成功"
-        echo "テスト環境のGoogle Sheetsへの接続が確認されました"
+    - name: Test Result  # ステップ5: テスト成功時の処理
+      if: success()  # 前のステップが成功した場合のみ実行
+      run: |  # 成功メッセージを表示
+        echo "✅ Google Sheets接続テスト成功"  # 成功マークを表示
+        echo "テスト環境のGoogle Sheetsへの接続が確認されました"  # 詳細メッセージ
         
-    - name: Test Failed
-      if: failure()
-      run: |
-        echo "❌ Google Sheets接続テスト失敗"
-        echo "GitHub Secretsの設定を確認してください:"
-        echo "  - GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"
-        exit 1
+    - name: Test Failed  # ステップ6: テスト失敗時の処理
+      if: failure()  # 前のステップが失敗した場合のみ実行
+      run: |  # エラーメッセージを表示
+        echo "❌ Google Sheets接続テスト失敗"  # 失敗マークを表示
+        echo "GitHub Secretsの設定を確認してください:"  # 対処法を案内
+        echo "  - GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"  # 確認すべき設定名
+        exit 1  # エラーコード1で終了（失敗を明示）
