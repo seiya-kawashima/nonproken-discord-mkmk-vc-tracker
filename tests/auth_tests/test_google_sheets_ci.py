@@ -13,6 +13,7 @@ import json
 import base64
 import tempfile
 from datetime import datetime
+import subprocess
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
@@ -20,6 +21,28 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 import gspread
 from google.oauth2.service_account import Credentials
 from config import EnvConfig, Environment
+
+
+def get_github_secrets_list():
+    """設定されているGitHub Secretsの一覧を取得
+    
+    Returns:
+        list: Secrets名のリスト（取得できない場合は空リスト）
+    """
+    try:
+        # gh CLIを使用してSecrets一覧を取得
+        result = subprocess.run(
+            ['gh', 'secret', 'list', '--json', 'name'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            secrets = json.loads(result.stdout)
+            return [s['name'] for s in secrets]
+    except (subprocess.TimeoutExpired, subprocess.SubprocessError, json.JSONDecodeError, FileNotFoundError):
+        pass
+    return []
 
 
 def test_google_sheets_connection():
@@ -38,6 +61,21 @@ def test_google_sheets_connection():
         config = EnvConfig.get_google_sheets_config(Environment.TEST)
     except ValueError as e:
         print(f"\n❗ 設定エラー: {e}")
+        
+        # GitHub Actions環境の場合はSecrets一覧を表示
+        if is_github:
+            print("\n🔑 現在設定されているGitHub Secrets:")
+            secrets_list = get_github_secrets_list()
+            if secrets_list:
+                for secret in secrets_list:
+                    print(f"  - {secret}")
+            else:
+                print("  (一覧を取得できませんでした)")
+            
+            print("\n💡 必要なSecrets:")
+            print("  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
+            print("\n※ TEST_プレフィックス付きの環境変数が必要です")
+        
         sys.exit(1)
     sheet_name = config['sheet_name']
     service_account_json = config['service_account_json']
@@ -125,10 +163,22 @@ def test_google_sheets_connection():
         print(f"\n❌ エラー: スプレッドシート '{sheet_name}' が見つかりません")
         print("\n確認事項:")
         print("1. スプレッドシート名が正しいか確認")
+        print(f"   期待されるシート名: 'テスト用VCトラッカー'")
         print("2. サービスアカウントに共有されているか確認:")
         print("   - Google Sheetsで「共有」ボタンをクリック")
         print("   - サービスアカウントのメールアドレスを追加")
         print("   - 「編集者」権限を付与")
+        
+        # GitHub Actions環境の場合はSecrets一覧を表示
+        if is_github:
+            print("\n🔑 現在設定されているGitHub Secrets:")
+            secrets_list = get_github_secrets_list()
+            if secrets_list:
+                for secret in secrets_list:
+                    print(f"  - {secret}")
+            else:
+                print("  (一覧を取得できませんでした)")
+        
         sys.exit(1)
         
     except gspread.exceptions.APIError as e:
@@ -136,12 +186,38 @@ def test_google_sheets_connection():
         print("\n確認事項:")
         print("1. Google Sheets APIが有効化されているか")
         print("2. サービスアカウントの権限が正しいか")
+        
+        # GitHub Actions環境の場合はSecrets一覧を表示
+        if is_github:
+            print("\n🔑 現在設定されているGitHub Secrets:")
+            secrets_list = get_github_secrets_list()
+            if secrets_list:
+                for secret in secrets_list:
+                    print(f"  - {secret}")
+            else:
+                print("  (一覧を取得できませんでした)")
+        
         sys.exit(1)
         
     except Exception as e:
         print(f"\n❌ 予期しないエラー: {e}")
         import traceback
         traceback.print_exc()
+        
+        # GitHub Actions環境の場合はSecrets一覧を表示
+        if is_github:
+            print("\n🔑 現在設定されているGitHub Secrets:")
+            secrets_list = get_github_secrets_list()
+            if secrets_list:
+                for secret in secrets_list:
+                    print(f"  - {secret}")
+            else:
+                print("  (一覧を取得できませんでした)")
+            
+            print("\n💡 必要なSecrets:")
+            print("  - TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64")
+            print("\n※ テスト環境ではTEST_プレフィックス付きの環境変数が必要です")
+        
         sys.exit(1)
         
     finally:
