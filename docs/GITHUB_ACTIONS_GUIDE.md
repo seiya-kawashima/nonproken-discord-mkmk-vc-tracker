@@ -96,7 +96,7 @@ git push
 → **対処**: スプレッドシートの共有設定を確認
 
 ```
-❗ 設定エラー: テスト環境環境用の環境変数 TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 が設定されていません
+❗ 設定エラー: テスト環境環境用の環境変数 TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 が設定されていません
 ```
 → **意味**: 必要な設定（Secrets）が足りません
 → **対処**: GitHub Secretsを設定する必要があります
@@ -120,7 +120,7 @@ git push
 緑色の「New repository secret」ボタンをクリック
 
 #### 4. 必要な情報を入力
-- **Name**: `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
+- **Name**: `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
 - **Secret**: Base64エンコードされた認証情報
 
 #### 5. Add secretをクリック
@@ -181,7 +181,7 @@ git push
 まずは以下を確認してください：
 1. Google Sheetsに「テスト用VCトラッカー」という名前のスプレッドシートを作成したか
 2. サービスアカウントに編集権限を付与したか
-3. GitHub Secretsに`TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`を設定したか
+3. GitHub Secretsに`TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`を設定したか
 
 ---
 
