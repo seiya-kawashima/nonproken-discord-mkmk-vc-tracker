@@ -45,7 +45,7 @@ jobs:
         TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}
       run: |
         echo "🤖 Discord Bot接続テスト（テスト環境）"
-        python test_discord_bot.py --test
+        python tst/test_discord_bot.py --test
 
     - name: Run Discord Bot Test (Production Environment)
       if: github.event.inputs.environment == 'production'
@@ -55,7 +55,7 @@ jobs:
       run: |
         echo "🤖 Discord Bot接続テスト（本番環境）"
         echo "⚠️ 注意: 本番環境のBotをテストしています"
-        python test_discord_bot.py
+        python tst/test_discord_bot.py
     
     - name: Test Success Summary
       if: success()
