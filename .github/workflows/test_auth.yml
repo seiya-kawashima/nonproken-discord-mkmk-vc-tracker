@@ -31,7 +31,7 @@ jobs:  # 実行するジョブ（作業）の定義
     
     - name: Run Connection Test  # ステップ4: 接続テストを実行
       env:  # 環境変数の設定
-        TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # テスト環境用の認証情報
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # テスト環境用の認証情報
         GITHUB_ACTIONS: 'true'  # GitHub Actions環境であることを示すフラグ
         GH_TOKEN: ${{ github.token }}  # GitHub CLIで使用するトークン（Secrets一覧取得用）
       run: |  # テストスクリプトを実行
