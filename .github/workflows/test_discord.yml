@@ -1,87 +1,95 @@
-name: Discord Bot 接続テスト
+# ========================================
+# Discord Bot 接続テスト ワークフロー
+# ========================================
+# 概要: Discord Botがサーバーに正しく接続できるかをテストする
+#       手動実行専用で、テスト環境と本番環境を選択可能
+#       Botトークンの有効性、VCチャンネルへのアクセス、メンバー情報取得を確認
+# ========================================
 
-on:
+name: Discord Bot 接続テスト  # GitHub Actionsのワークフロー名（Actions画面で表示される名前）
+
+on:  # このワークフローが実行されるタイミングの定義
   # 手動実行を許可
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'テスト環境を選択'
-        required: true
-        default: 'test'
-        type: choice
-        options:
-          - test
-          - production
-      debug_mode:
-        description: 'デバッグモード'
-        required: false
-        default: false
-        type: boolean
+  workflow_dispatch:  # GitHub Actions画面から手動で実行できるようにする設定
+    inputs:  # 手動実行時に選択できるパラメータの定義
+      environment:  # 環境選択パラメータ
+        description: 'テスト環境を選択'  # パラメータの説明文
+        required: true  # 必須パラメータとして設定
+        default: 'test'  # デフォルト値はテスト環境
+        type: choice  # ドロップダウンで選択できるタイプ
+        options:  # 選択肢の定義
+          - test  # テスト環境
+          - production  # 本番環境
+      debug_mode:  # デバッグモードパラメータ
+        description: 'デバッグモード'  # パラメータの説明文
+        required: false  # オプショナルパラメータ
+        default: false  # デフォルトはOFF
+        type: boolean  # チェックボックスタイプ
 
-jobs:
-  test-discord-bot:
-    runs-on: ubuntu-latest
-    name: Discord Bot 接続テスト
-    
-    steps:
-    - name: コードをチェックアウト
-      uses: actions/checkout@v4
-    
-    - name: Pythonセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-    
-    - name: 依存関係インストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install discord.py python-dotenv
+jobs:  # 実行するジョブ（作業単位）の定義
+  test-discord-bot:  # ジョブID（一意の識別子）
+    runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
+    name: Discord Bot 接続テスト  # ジョブの表示名
 
-    - name: Discord Botテスト実行（テスト環境）
-      if: github.event.inputs.environment == 'test'
-      env:
-        TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}
-        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}
-      run: |
-        echo "🤖 Discord Bot接続テスト（テスト環境）"
-        python tst/test_discord_bot.py --test
+    steps:  # ジョブ内で実行するステップ（作業手順）の定義
+    - name: コードをチェックアウト  # ステップ1: リポジトリのコードを取得
+      uses: actions/checkout@v4  # GitHub公式のチェックアウトアクションv4を使用
 
-    - name: Discord Botテスト実行（本番環境）
-      if: github.event.inputs.environment == 'production'
-      env:
-        DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
-      run: |
-        echo "🤖 Discord Bot接続テスト（本番環境）"
-        echo "⚠️ 注意: 本番環境のBotをテストしています"
-        python tst/test_discord_bot.py
-    
-    - name: テスト成功サマリー
-      if: success()
-      run: |
-        echo "✅ Discord Bot接続テスト成功"
-        echo ""
-        echo "確認項目:"
-        echo "  ✅ Botトークンの有効性"
-        echo "  ✅ サーバーへの接続"
-        echo "  ✅ VCチャンネルへのアクセス"
-        echo "  ✅ メンバー情報の取得"
-    
-    - name: テスト失敗サマリー
-      if: failure()
-      run: |
-        echo "❌ Discord Bot接続テスト失敗"
-        echo ""
-        echo "トラブルシューティング:"
-        echo "1. GitHub Secretsの設定を確認"
-        echo "   - テスト環境: TST_DISCORD_BOT_TOKEN"
-        echo "   - 本番環境: DISCORD_BOT_TOKEN"
-        echo ""
-        echo "2. Botの権限を確認"
-        echo "   - SERVER MEMBERS INTENT が有効か"
-        echo "   - Botがサーバーに追加されているか"
-        echo ""
-        echo "3. トークンの有効性を確認"
-        echo "   - Discord Developer Portalで再生成が必要かも"
-        exit 1
+    - name: Pythonセットアップ  # ステップ2: Python環境の準備
+      uses: actions/setup-python@v5  # Python公式のセットアップアクションv5を使用
+      with:  # アクションのパラメータ設定
+        python-version: '3.11'  # Python 3.11を使用
+        cache: 'pip'  # pipの依存関係をキャッシュして高速化
+
+    - name: 依存関係インストール  # ステップ3: 必要なPythonパッケージをインストール
+      run: |  # シェルコマンドを実行
+        python -m pip install --upgrade pip  # pipを最新版にアップグレード
+        pip install discord.py python-dotenv  # Discord接続用ライブラリをインストール
+
+    - name: Discord Botテスト実行（テスト環境）  # ステップ4a: テスト環境でのテスト実行
+      if: github.event.inputs.environment == 'test'  # environment入力が'test'の場合のみ実行
+      env:  # 環境変数の設定
+        TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}  # テスト用Botトークン（GitHub Secretsから取得）
+        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}  # テスト用VCチャンネルID（GitHub Secretsから取得）
+      run: |  # シェルコマンドを実行
+        echo "🤖 Discord Bot接続テスト（テスト環境）"  # 実行開始メッセージを表示
+        python tst/test_discord_bot.py --test  # テスト環境用のPythonスクリプトを実行
+
+    - name: Discord Botテスト実行（本番環境）  # ステップ4b: 本番環境でのテスト実行
+      if: github.event.inputs.environment == 'production'  # environment入力が'production'の場合のみ実行
+      env:  # 環境変数の設定
+        DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}  # 本番用Botトークン（GitHub Secretsから取得）
+        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}  # 本番用VCチャンネルID（GitHub Secretsから取得）
+      run: |  # シェルコマンドを実行
+        echo "🤖 Discord Bot接続テスト（本番環境）"  # 実行開始メッセージを表示
+        echo "⚠️ 注意: 本番環境のBotをテストしています"  # 警告メッセージを表示
+        python tst/test_discord_bot.py  # 本番環境用のPythonスクリプトを実行
+
+    - name: テスト成功サマリー  # ステップ5: テスト成功時の処理
+      if: success()  # 前のステップが成功した場合のみ実行
+      run: |  # シェルコマンドを実行
+        echo "✅ Discord Bot接続テスト成功"  # 成功メッセージを表示
+        echo ""  # 空行を挿入
+        echo "確認項目:"  # 確認項目のヘッダー
+        echo "  ✅ Botトークンの有効性"  # トークンチェック完了
+        echo "  ✅ サーバーへの接続"  # サーバー接続チェック完了
+        echo "  ✅ VCチャンネルへのアクセス"  # VCアクセスチェック完了
+        echo "  ✅ メンバー情報の取得"  # メンバー情報取得チェック完了
+
+    - name: テスト失敗サマリー  # ステップ6: テスト失敗時の処理
+      if: failure()  # 前のステップが失敗した場合のみ実行
+      run: |  # シェルコマンドを実行
+        echo "❌ Discord Bot接続テスト失敗"  # 失敗メッセージを表示
+        echo ""  # 空行を挿入
+        echo "トラブルシューティング:"  # トラブルシューティングのヘッダー
+        echo "1. GitHub Secretsの設定を確認"  # 対処法1
+        echo "   - テスト環境: TST_DISCORD_BOT_TOKEN"  # テスト環境の確認項目
+        echo "   - 本番環境: DISCORD_BOT_TOKEN"  # 本番環境の確認項目
+        echo ""  # 空行を挿入
+        echo "2. Botの権限を確認"  # 対処法2
+        echo "   - SERVER MEMBERS INTENT が有効か"  # 権限確認項目1
+        echo "   - Botがサーバーに追加されているか"  # 権限確認項目2
+        echo ""  # 空行を挿入
+        echo "3. トークンの有効性を確認"  # 対処法3
+        echo "   - Discord Developer Portalで再生成が必要かも"  # トークン再生成の提案
+        exit 1  # エラーコード1で終了（失敗を明示）
