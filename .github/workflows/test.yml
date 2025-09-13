@@ -114,8 +114,8 @@ asyncio.run(test_discord())
 import os
 from src.sheets_client import SheetsClient
 
-sheet_name = os.getenv('TEST_GOOGLE_SHEET_NAME')
-service_account = os.getenv('TEST_GOOGLE_SERVICE_ACCOUNT_JSON')
+sheet_name = os.getenv('TST_GOOGLE_SHEET_NAME')
+service_account = os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON')
 
 client = SheetsClient(service_account, sheet_name)
 try:
