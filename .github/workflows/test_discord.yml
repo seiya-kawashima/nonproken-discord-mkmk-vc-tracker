@@ -24,21 +24,21 @@ jobs:
     name: Discord Bot接続テスト
     
     steps:
-    - name: Checkout code
+    - name: コードをチェックアウト
       uses: actions/checkout@v4
     
-    - name: Set up Python
+    - name: Pythonセットアップ
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         cache: 'pip'
     
-    - name: Install dependencies
+    - name: 依存関係インストール
       run: |
         python -m pip install --upgrade pip
         pip install discord.py python-dotenv
 
-    - name: Run Discord Bot Test (Test Environment)
+    - name: Discord Botテスト実行（テスト環境）
       if: github.event.inputs.environment == 'test'
       env:
         TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}
@@ -47,7 +47,7 @@ jobs:
         echo "🤖 Discord Bot接続テスト（テスト環境）"
         python tst/test_discord_bot.py --test
 
-    - name: Run Discord Bot Test (Production Environment)
+    - name: Discord Botテスト実行（本番環境）
       if: github.event.inputs.environment == 'production'
       env:
         DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
@@ -57,7 +57,7 @@ jobs:
         echo "⚠️ 注意: 本番環境のBotをテストしています"
         python tst/test_discord_bot.py
     
-    - name: Test Success Summary
+    - name: テスト成功サマリー
       if: success()
       run: |
         echo "✅ Discord Bot接続テスト成功"
@@ -68,7 +68,7 @@ jobs:
         echo "  ✅ VCチャンネルへのアクセス"
         echo "  ✅ メンバー情報の取得"
     
-    - name: Test Failed Summary
+    - name: テスト失敗サマリー
       if: failure()
       run: |
         echo "❌ Discord Bot接続テスト失敗"
