@@ -171,38 +171,94 @@ GitHub Secretsに`DISCORD_BOT_TOKEN`として保存
 - Discordサーバーのメンバーリストを確認
 - Botが「オンライン」になっていればOK
 
-### 2. 簡単なテストコード
+### 2. GitHub Actionsでの動作確認
 
+#### 手動実行による確認
+
+1. **GitHub ActionsでDiscord Bot接続テストを実行**
+   - リポジトリの「Actions」タブを開く
+   - 「Test Environment」ワークフローを選択
+   - 「Run workflow」をクリック
+   - test_typeで「discord_only」を選択
+   - 「Run workflow」ボタンをクリック
+
+2. **実行結果の確認**
+   ```
+   ✓ Discord connection successful. Found X members
+   ```
+   このメッセージが表示されれば成功
+
+#### ローカルでのテストコード
+
+`test_discord_bot.py`として保存:
 ```python
 import discord
 import asyncio
 import os
+import sys
 from dotenv import load_dotenv
 
+# .envファイルを読み込み
 load_dotenv()
 
-intents = discord.Intents.default()
-intents.members = True
-intents.guilds = True
-
-client = discord.Client(intents=intents)
-
-@client.event
-async def on_ready():
-    print(f'✅ Botが正常に起動しました: {client.user}')
+async def test_discord_bot():
+    """Discord Bot接続テスト"""
     
-    # サーバー一覧を表示
-    for guild in client.guilds:
-        print(f'📍 接続済みサーバー: {guild.name} (ID: {guild.id})')
+    # 環境に応じてトークンを取得
+    if '--test' in sys.argv:
+        token = os.getenv('TST_DISCORD_BOT_TOKEN')
+        env_name = 'テスト環境'
+    else:
+        token = os.getenv('DISCORD_BOT_TOKEN')
+        env_name = '本番環境'
     
-    await client.close()
+    if not token:
+        print(f'❌ エラー: {env_name}のトークンが設定されていません')
+        return False
+    
+    # Botクライアント設定
+    intents = discord.Intents.default()
+    intents.members = True
+    intents.guilds = True
+    
+    client = discord.Client(intents=intents)
+    
+    @client.event
+    async def on_ready():
+        print(f'✅ Botが正常に起動しました: {client.user}')
+        print(f'📊 環境: {env_name}')
+        
+        # サーバー一覧を表示
+        for guild in client.guilds:
+            print(f'📍 接続済みサーバー: {guild.name} (ID: {guild.id})')
+            print(f'   メンバー数: {guild.member_count}')
+        
+        await client.close()
+    
+    try:
+        await client.start(token)
+    except discord.LoginFailure:
+        print('❌ ログイン失敗: トークンが無効です')
+        return False
+    except Exception as e:
+        print(f'❌ エラー: {e}')
+        return False
+    
+    return True
 
-# トークンを環境変数から取得
-token = os.getenv('DISCORD_BOT_TOKEN')
-if token:
-    client.run(token)
-else:
-    print('❌ エラー: DISCORD_BOT_TOKEN が設定されていません')
+if __name__ == '__main__':
+    # 実行
+    success = asyncio.run(test_discord_bot())
+    sys.exit(0 if success else 1)
+```
+
+**実行方法**:
+```bash
+# 本番環境のテスト
+python test_discord_bot.py
+
+# テスト環境のテスト
+python test_discord_bot.py --test
 ```
 
 ## 🚨 トラブルシューティング
