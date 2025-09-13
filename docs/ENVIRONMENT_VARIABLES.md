@@ -29,17 +29,17 @@ SLACK_CHANNEL_ID=your_slack_channel_id
 ### 2. テスト環境（GitHub Actions）
 
 **設定場所**: GitHub Secrets  
-**プレフィックス**: `TEST_`を付ける  
+**プレフィックス**: `TST_`を付ける  
 **用途**: Pull Request時の自動テスト
 
 | 変数名 | 説明 |
 |--------|------|
-| `TEST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン |
-| `TEST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID |
-| `TEST_GOOGLE_SHEET_NAME` | テスト用スプレッドシート名 |
-| `TEST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | Base64エンコードされた認証JSON |
-| `TEST_SLACK_BOT_TOKEN` | テスト用Slack Botトークン |
-| `TEST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル |
+| `TST_DISCORD_BOT_TOKEN` | テスト用Discord Botトークン |
+| `TST_ALLOWED_VOICE_CHANNEL_IDS` | テスト用VCチャンネルID |
+| `TST_GOOGLE_SHEET_NAME` | テスト用スプレッドシート名 |
+| `TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` | Base64エンコードされた認証JSON |
+| `TST_SLACK_BOT_TOKEN` | テスト用Slack Botトークン |
+| `TST_SLACK_CHANNEL_ID` | テスト用Slackチャンネル |
 
 ### 3. 本番環境（GitHub Actions）
 
@@ -63,7 +63,7 @@ SLACK_CHANNEL_ID=your_slack_channel_id
 ```python
 # 例: Google Sheets名の読み込み
 sheet_name = (
-    os.getenv('TEST_GOOGLE_SHEET_NAME') or  # 1. テスト環境（最優先）
+    os.getenv('TST_GOOGLE_SHEET_NAME') or  # 1. テスト環境（最優先）
     os.getenv('GOOGLE_SHEET_NAME')           # 2. 本番/開発環境
 )
 ```
