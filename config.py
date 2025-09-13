@@ -138,12 +138,12 @@ class EnvConfig:
         channel_ids_key = cls.get_env_var_name('ALLOWED_VOICE_CHANNEL_IDS', env)
         
         token = cls.get_required(token_key, env_name)  # 必須値として取得
-        channel_ids_str = cls.get_required(channel_ids_key, env_name)  # 必須値として取得
-        
+        channel_ids_str = cls.get(channel_ids_key, '')  # オプション値として取得（空文字列をデフォルト）
+
         # チャンネルIDのリストに変換
-        channel_ids = [id.strip() for id in channel_ids_str.split(',') if id.strip()]
-        if not channel_ids:
-            raise ValueError(f"{env_name}環境用のチャンネルIDが正しく設定されていません")
+        channel_ids = []
+        if channel_ids_str:  # 値が設定されている場合のみ処理
+            channel_ids = [id.strip() for id in channel_ids_str.split(',') if id.strip()]
         
         return {
             'token': token,
