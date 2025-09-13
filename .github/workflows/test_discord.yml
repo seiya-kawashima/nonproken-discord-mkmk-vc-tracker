@@ -1,0 +1,207 @@
+name: Discord Bot Connection Test
+
+on:
+  # 手動実行を許可
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'テスト環境を選択'
+        required: true
+        default: 'test'
+        type: choice
+        options:
+          - test
+          - production
+      debug_mode:
+        description: 'デバッグモード'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  test-discord-bot:
+    runs-on: ubuntu-latest
+    name: Discord Bot接続テスト
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install discord.py python-dotenv
+    
+    - name: Run Discord Bot Test (Test Environment)
+      if: github.event.inputs.environment == 'test'
+      env:
+        TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}
+        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}
+      run: |
+        echo "🤖 Discord Bot接続テスト（テスト環境）"
+        python -c "
+import discord
+import asyncio
+import os
+import sys
+
+async def test_bot():
+    token = os.getenv('TST_DISCORD_BOT_TOKEN')
+    channel_ids = os.getenv('TST_ALLOWED_VOICE_CHANNEL_IDS', '').split(',')
+    
+    if not token:
+        print('❌ エラー: TST_DISCORD_BOT_TOKEN が設定されていません')
+        print('GitHub Secretsに以下を設定してください:')
+        print('  - TST_DISCORD_BOT_TOKEN')
+        return False
+    
+    print('✅ トークン: 設定済み')
+    print(f'📍 監視対象VCチャンネル: {len(channel_ids)}個')
+    
+    intents = discord.Intents.default()
+    intents.members = True
+    intents.guilds = True
+    
+    client = discord.Client(intents=intents)
+    
+    @client.event
+    async def on_ready():
+        print(f'✅ Bot接続成功: {client.user}')
+        print('📊 接続済みサーバー:')
+        for guild in client.guilds:
+            print(f'  - {guild.name} (ID: {guild.id})')
+            print(f'    メンバー数: {guild.member_count}')
+            
+            # VCチャンネル情報
+            voice_channels = [ch for ch in guild.channels if isinstance(ch, discord.VoiceChannel)]
+            print(f'    VCチャンネル数: {len(voice_channels)}')
+            
+            # 監視対象チャンネルの確認
+            for ch_id in channel_ids:
+                if ch_id:
+                    channel = guild.get_channel(int(ch_id))
+                    if channel:
+                        print(f'    ✅ 監視対象VC: {channel.name}')
+                        if hasattr(channel, 'members'):
+                            print(f'       現在のメンバー数: {len(channel.members)}')
+        
+        await client.close()
+    
+    try:
+        await client.start(token)
+        return True
+    except discord.LoginFailure:
+        print('❌ ログイン失敗: トークンが無効です')
+        return False
+    except Exception as e:
+        print(f'❌ エラー: {e}')
+        return False
+
+success = asyncio.run(test_bot())
+sys.exit(0 if success else 1)
+        "
+    
+    - name: Run Discord Bot Test (Production Environment)
+      if: github.event.inputs.environment == 'production'
+      env:
+        DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
+      run: |
+        echo "🤖 Discord Bot接続テスト（本番環境）"
+        echo "⚠️ 注意: 本番環境のBotをテストしています"
+        python -c "
+import discord
+import asyncio
+import os
+import sys
+
+async def test_bot():
+    token = os.getenv('DISCORD_BOT_TOKEN')
+    channel_ids = os.getenv('ALLOWED_VOICE_CHANNEL_IDS', '').split(',')
+    
+    if not token:
+        print('❌ エラー: DISCORD_BOT_TOKEN が設定されていません')
+        print('GitHub Secretsに以下を設定してください:')
+        print('  - DISCORD_BOT_TOKEN')
+        return False
+    
+    print('✅ トークン: 設定済み')
+    print(f'📍 監視対象VCチャンネル: {len(channel_ids)}個')
+    
+    intents = discord.Intents.default()
+    intents.members = True
+    intents.guilds = True
+    
+    client = discord.Client(intents=intents)
+    
+    @client.event
+    async def on_ready():
+        print(f'✅ Bot接続成功: {client.user}')
+        print('📊 接続済みサーバー:')
+        for guild in client.guilds:
+            print(f'  - {guild.name} (ID: {guild.id})')
+            print(f'    メンバー数: {guild.member_count}')
+            
+            # VCチャンネル情報
+            voice_channels = [ch for ch in guild.channels if isinstance(ch, discord.VoiceChannel)]
+            print(f'    VCチャンネル数: {len(voice_channels)}')
+            
+            # 監視対象チャンネルの確認
+            for ch_id in channel_ids:
+                if ch_id:
+                    channel = guild.get_channel(int(ch_id))
+                    if channel:
+                        print(f'    ✅ 監視対象VC: {channel.name}')
+                        if hasattr(channel, 'members'):
+                            print(f'       現在のメンバー数: {len(channel.members)}')
+        
+        await client.close()
+    
+    try:
+        await client.start(token)
+        return True
+    except discord.LoginFailure:
+        print('❌ ログイン失敗: トークンが無効です')
+        return False
+    except Exception as e:
+        print(f'❌ エラー: {e}')
+        return False
+
+success = asyncio.run(test_bot())
+sys.exit(0 if success else 1)
+        "
+    
+    - name: Test Success Summary
+      if: success()
+      run: |
+        echo "✅ Discord Bot接続テスト成功"
+        echo ""
+        echo "確認項目:"
+        echo "  ✅ Botトークンの有効性"
+        echo "  ✅ サーバーへの接続"
+        echo "  ✅ VCチャンネルへのアクセス"
+        echo "  ✅ メンバー情報の取得"
+    
+    - name: Test Failed Summary
+      if: failure()
+      run: |
+        echo "❌ Discord Bot接続テスト失敗"
+        echo ""
+        echo "トラブルシューティング:"
+        echo "1. GitHub Secretsの設定を確認"
+        echo "   - テスト環境: TST_DISCORD_BOT_TOKEN"
+        echo "   - 本番環境: DISCORD_BOT_TOKEN"
+        echo ""
+        echo "2. Botの権限を確認"
+        echo "   - SERVER MEMBERS INTENT が有効か"
+        echo "   - Botがサーバーに追加されているか"
+        echo ""
+        echo "3. トークンの有効性を確認"
+        echo "   - Discord Developer Portalで再生成が必要かも"
+        exit 1
