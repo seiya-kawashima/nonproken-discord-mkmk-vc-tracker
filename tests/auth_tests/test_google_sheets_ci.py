@@ -124,7 +124,10 @@ def test_google_sheets_connection():
         print(f"\n📊 Google Sheets '{sheet_name}' に接続中...")
         
         # 認証
-        SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+        SCOPES = [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive'
+        ]
         creds = Credentials.from_service_account_file(auth_file, scopes=SCOPES)
         client = gspread.authorize(creds)
         
