@@ -272,13 +272,13 @@ Google Sheets CI/CD 接続テスト
 実行環境: GitHub Actions
 
 📋 環境変数チェック:
-  TST_GOOGLE_SHEET_NAME: ✅ TST_VCトラッカー
+  シート名: ✅ VCトラッカー
   TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ✅ 設定済み
 
 🔐 Base64認証情報をデコード中...
   ✅ デコード成功
 
-📊 Google Sheets 'TST_VCトラッカー' に接続中...
+📊 Google Sheets 'VCトラッカー' に接続中...
   ✅ 接続成功
 
 ✏️ テストデータを書き込み中...
@@ -332,7 +332,7 @@ python tests/auth_tests/test_google_sheets_ci.py
 
 環境ごとのスプレッドシート名：
 - 本番環境: `VCトラッカー`
-- テスト環境: `TST_VCトラッカー`
+- 全環境共通: `VCトラッカー`
 - 開発環境: `開発VCトラッカー`
 
 共有手順：
@@ -353,7 +353,7 @@ python tests/auth_tests/test_google_sheets_ci.py
 
 **症状**：
 ```
-❌ エラー: スプレッドシート 'TST_VCトラッカー' が見つかりません
+❌ エラー: スプレッドシート 'VCトラッカー' が見つかりません
 ```
 
 **原因**：
