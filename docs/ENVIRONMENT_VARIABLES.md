@@ -108,7 +108,7 @@ is_github_actions = os.getenv('GITHUB_ACTIONS') == 'true'
 # テスト環境かどうか
 is_test_env = bool(
     os.getenv('TEST_GOOGLE_SHEET_NAME') or 
-    os.getenv('TEST_DISCORD_BOT_TOKEN')
+    os.getenv('TST_DISCORD_BOT_TOKEN')
 )
 
 # 環境名の取得
