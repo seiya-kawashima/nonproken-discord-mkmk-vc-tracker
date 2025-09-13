@@ -1,4 +1,4 @@
-name: Google Sheets Connection Test  # ワークフローの名前（GitHubのActionsタブに表示される）
+name: Google Sheets 接続テスト  # ワークフローの名前（GitHubのActionsタブに表示される）
 
 on:  # このワークフローが実行されるタイミングの設定
   # 手動実行を許可
