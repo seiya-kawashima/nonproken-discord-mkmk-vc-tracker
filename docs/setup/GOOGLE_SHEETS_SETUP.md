@@ -386,7 +386,26 @@ python tests/auth_tests/test_google_sheets_ci.py
 - Google Sheetsで正確な名前のスプレッドシートを作成
 - サービスアカウントのメールアドレスに「編集者」権限で共有
 
-#### 3. 「環境変数が設定されていません」エラー
+#### 3. 「Google Drive API has not been used」エラー
+
+**症状**：
+```
+❌ Google API エラー: APIError: [403]: Google Drive API has not been used in project XXX before or it is disabled.
+```
+
+**原因**：
+Google Drive APIが有効化されていない
+
+**対処**：
+1. エラーメッセージ内のリンクをクリック、または[Google Cloud Console](https://console.cloud.google.com)にアクセス
+2. 「APIとサービス」→「ライブラリ」を選択
+3. 「Google Drive API」を検索して有効化
+4. 「Google Sheets API」も同様に有効化されているか確認
+5. 有効化後、数分待ってから再度実行
+
+⚠️ **重要**：Google SheetsはGoogle Drive上で動作するため、両方のAPIが必要です
+
+#### 4. 「環境変数が設定されていません」エラー
 
 **症状**：
 ```
