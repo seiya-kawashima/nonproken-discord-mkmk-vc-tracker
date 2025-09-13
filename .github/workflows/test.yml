@@ -10,9 +10,10 @@ on:
       - '.gitignore'
       - 'LICENSE'
   
-  # プッシュ時に自動実行（develop, featureブランチ）
+  # プッシュ時に自動実行（master, develop, featureブランチ）
   push:
-    branches: 
+    branches:
+      - master
       - develop
       - 'feature/**'
     paths-ignore:
