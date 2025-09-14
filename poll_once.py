@@ -102,7 +102,9 @@ async def main(env_arg=None):
         
         # 2. Google Drive上のCSVに記録
         logger.info("Connecting to Google Drive...")  # 接続開始ログ
-        csv_client = DriveCSVClient(service_account_json)  # CSVクライアント作成
+        # Google Drive設定からフォルダパスを取得
+        drive_folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker/csv')  # フォルダパス取得
+        csv_client = DriveCSVClient(service_account_json, drive_folder_path)  # CSVクライアント作成（フォルダパス指定）
         csv_client.connect()  # 接続
 
         logger.info("Recording presence data to CSV...")  # 記録開始ログ
