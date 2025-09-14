@@ -257,6 +257,7 @@ class EnvConfig:
 
         return {  # 辞書形式で設定を返す
             'folder_path': folder_path,  # Google Drive上のフォルダパス（階層構造）
+            'env_name': env.name,  # 環境名（PRD/TST/DEV）をファイル名に使用
             'service_account_json': service_account_json,  # JSONファイルパス
             'service_account_json_base64': service_account_json_base64  # Base64形式の認証情報
         }
