@@ -317,6 +317,7 @@ class DriveCSVClient:
                 row['user_id']: row  # user_idをキーとする
                 for row in existing_data  # 既存データをループ
                 if row.get('datetime_jst', '').startswith(today_jst)  # 今日の日付のデータを抽出
+            }  # 辞書の閉じ括弧
 
             new_count = 0  # 新規追加カウンタ
             update_count = 0  # 更新カウンタ
