@@ -22,11 +22,12 @@
 discord.py==2.3.2  # Discord Botを作成するためのライブラリ（VCメンバー取得、サーバー接続用）
 
 # ====================
-# Google Sheets関連
+# Google Drive/Sheets関連
 # ====================
 gspread==6.1.0  # Google Sheetsを操作するためのライブラリ（スプレッドシートの読み書き用）
 google-auth==2.29.0  # Google APIの認証を行うライブラリ（サービスアカウント認証用）
 google-auth-oauthlib==1.2.0  # OAuth2.0認証をサポートするライブラリ（より高度な認証方式用）
+google-api-python-client==2.134.0  # Google Drive APIを使用するためのライブラリ（CSVファイル管理用）
 
 # ====================
 # Slack関連（オプション）
