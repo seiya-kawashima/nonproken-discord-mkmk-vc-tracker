@@ -121,7 +121,7 @@ def test_google_sheets_connection():
     
     # Google Sheetsへの接続テスト
     try:
-        print(f"\n📊 Google Sheets '{sheet_name}' に接続中...")
+        print(f"\n📊 Google Sheetsファイル '{spreadsheet_name}' に接続中...")
         
         # 認証
         SCOPES = [
