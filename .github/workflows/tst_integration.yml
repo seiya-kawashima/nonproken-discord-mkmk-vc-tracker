@@ -75,11 +75,14 @@ jobs:  # 実行するジョブの定義
       run: |  # シェルコマンドを実行
         echo "📋 環境変数チェック:"  # チェック開始メッセージ
 
+        MISSING_VARS=""
+
         # Discord Bot Token
         if [ -n "${{ secrets.TST_DISCORD_BOT_TOKEN }}" ]; then
           echo "  ✅ TST_DISCORD_BOT_TOKEN: 設定済み"
         else
           echo "  ❌ TST_DISCORD_BOT_TOKEN: 未設定"
+          MISSING_VARS="$MISSING_VARS TST_DISCORD_BOT_TOKEN"
         fi
 
         # VCチャンネルID
@@ -87,6 +90,7 @@ jobs:  # 実行するジョブの定義
           echo "  ✅ TST_ALLOWED_VOICE_CHANNEL_IDS: 設定済み"
         else
           echo "  ❌ TST_ALLOWED_VOICE_CHANNEL_IDS: 未設定"
+          MISSING_VARS="$MISSING_VARS TST_ALLOWED_VOICE_CHANNEL_IDS"
         fi
 
         # Google Sheets名
@@ -94,6 +98,18 @@ jobs:  # 実行するジョブの定義
           echo "  ✅ TST_GOOGLE_SHEET_NAME: ${{ secrets.TST_GOOGLE_SHEET_NAME }}"
         else
           echo "  ❌ TST_GOOGLE_SHEET_NAME: 未設定"
+          echo ""
+          echo "⚠️ TST_GOOGLE_SHEET_NAMEが設定されていません！"
+          echo "GitHub Secretsに以下を設定してください："
+          echo "  - 名前: TST_GOOGLE_SHEET_NAME"
+          echo "  - 値: テスト用のGoogle Sheets名（例: VCトラッカー_テスト）"
+          MISSING_VARS="$MISSING_VARS TST_GOOGLE_SHEET_NAME"
+        fi
+
+        if [ -n "$MISSING_VARS" ]; then
+          echo ""
+          echo "⚠️ 警告: 必須の環境変数が設定されていません:$MISSING_VARS"
+          echo "テストは失敗する可能性があります"
         fi
 
     - name: 統合テスト実行  # ステップ6: メインの統合テストを実行
