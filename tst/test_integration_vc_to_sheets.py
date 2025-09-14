@@ -132,7 +132,6 @@ async def test_vc_to_sheets_integration_with_poll_once():
     env_vars = {
         'TST_DISCORD_BOT_TOKEN': os.getenv('TST_DISCORD_BOT_TOKEN'),
         'TST_ALLOWED_VOICE_CHANNEL_IDS': os.getenv('TST_ALLOWED_VOICE_CHANNEL_IDS'),
-        'TST_GOOGLE_SHEET_NAME': os.getenv('TST_GOOGLE_SHEET_NAME'),
         'TST_GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON'),
         'TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64': os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64')
     }
@@ -146,8 +145,13 @@ async def test_vc_to_sheets_integration_with_poll_once():
         else:
             print(f"  {key}: ❌ 未設定")
 
-    # 必須環境変数のチェック
-    required_vars = ['TST_DISCORD_BOT_TOKEN', 'TST_ALLOWED_VOICE_CHANNEL_IDS', 'TST_GOOGLE_SHEET_NAME']
+    # config.pyから設定値を取得
+    from src.config import EnvConfig, Environment
+    sheets_config = EnvConfig.get_google_sheets_config(Environment.TST)
+    print(f"  TST_GOOGLE_SHEET_NAME: ✅ {sheets_config['sheet_name']} (config.pyで設定)")
+
+    # 必須環境変数のチェック（TST_GOOGLE_SHEET_NAMEは除外）
+    required_vars = ['TST_DISCORD_BOT_TOKEN', 'TST_ALLOWED_VOICE_CHANNEL_IDS']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
 
     if missing_vars:
