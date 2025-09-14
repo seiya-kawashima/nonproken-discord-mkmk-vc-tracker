@@ -165,9 +165,9 @@ async def test_vc_to_sheets_integration_with_poll_once():
     with patch.object(SheetsClient, 'upsert_presence', mock_upsert_presence):
         with patch.object(SlackNotifier, 'send_login_notification', mock_send_login_notification):
             try:
-                    # テスト環境（env=1）でpoll_once.main()を実行
-                    await poll_once_main(env_arg=1)
-                    print("✅ poll_once.main()が正常に完了")
+                # テスト環境（env=1）でpoll_once.main()を実行
+                await poll_once_main(env_arg=1)
+                print("✅ poll_once.main()が正常に完了")
 
                 except Exception as e:
                     print(f"❌ poll_once.main()実行エラー: {e}")
