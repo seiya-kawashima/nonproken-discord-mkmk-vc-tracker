@@ -24,24 +24,26 @@ on:  # このワークフローが実行されるタイミングの定義
         default: 'true'  # デフォルトは削除する
         type: boolean  # チェックボックスタイプ
 
-  # PRとpush時に実行
-  pull_request:  # プルリクエスト作成・更新時に実行
-    branches: [main, master]  # main/masterブランチへのPRのみ対象
-    paths:  # 以下のファイルが変更された場合のみ実行
-      - 'src/drive_csv_client.py'  # CSVクライアント
-      - 'src/discord_client.py'  # Discordクライアント
-      - 'poll_once.py'  # メインスクリプト
-      - 'config.py'  # 設定ファイル
-      - 'requirements.txt'  # 依存関係
-      - '.github/workflows/tst_csv_integration.yml'  # このワークフロー自体
-  push:  # コードプッシュ時に実行
-    branches: [main, master]  # main/masterブランチへのプッシュのみ対象
-    paths:  # 以下のファイルが変更された場合のみ実行
-      - 'src/drive_csv_client.py'
-      - 'src/discord_client.py'
-      - 'poll_once.py'
-      - 'config.py'
-      - 'requirements.txt'
+  # 現在はサービスアカウントの制限により手動実行のみ
+  # PRとpush時の自動実行は一時的に無効化
+  # （Service Accounts do not have storage quotaエラーの解決が必要）
+  # pull_request:  # プルリクエスト作成・更新時に実行
+  #   branches: [main, master]  # main/masterブランチへのPRのみ対象
+  #   paths:  # 以下のファイルが変更された場合のみ実行
+  #     - 'src/drive_csv_client.py'  # CSVクライアント
+  #     - 'src/discord_client.py'  # Discordクライアント
+  #     - 'poll_once.py'  # メインスクリプト
+  #     - 'config.py'  # 設定ファイル
+  #     - 'requirements.txt'  # 依存関係
+  #     - '.github/workflows/tst_csv_integration.yml'  # このワークフロー自体
+  # push:  # コードプッシュ時に実行
+  #   branches: [main, master]  # main/masterブランチへのプッシュのみ対象
+  #   paths:  # 以下のファイルが変更された場合のみ実行
+  #     - 'src/drive_csv_client.py'
+  #     - 'src/discord_client.py'
+  #     - 'poll_once.py'
+  #     - 'config.py'
+  #     - 'requirements.txt'
 
 jobs:  # 実行するジョブの定義
   csv-integration-test:  # ジョブID
