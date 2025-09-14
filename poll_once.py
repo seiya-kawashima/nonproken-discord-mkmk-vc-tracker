@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))  # srcディ�
 
 from config import EnvConfig, Environment  # 環境変数設定モジュールと環境列挙型
 from src.discord_client import DiscordVCPoller  # Discord VCポーリングクラス
-from src.sheets_client import SheetsClient  # Google Sheetsクライアント
+from src.drive_csv_client import DriveCSVClient  # Google Drive CSVクライアント
 from src.slack_notifier import SlackNotifier  # Slack通知クライアント
 
 # ロギング設定
