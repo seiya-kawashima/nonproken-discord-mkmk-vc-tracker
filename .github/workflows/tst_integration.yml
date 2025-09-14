@@ -93,18 +93,8 @@ jobs:  # 実行するジョブの定義
           MISSING_VARS="$MISSING_VARS TST_ALLOWED_VOICE_CHANNEL_IDS"
         fi
 
-        # Google Sheets名
-        if [ -n "${{ secrets.TST_GOOGLE_SHEET_NAME }}" ]; then
-          echo "  ✅ TST_GOOGLE_SHEET_NAME: ${{ secrets.TST_GOOGLE_SHEET_NAME }}"
-        else
-          echo "  ❌ TST_GOOGLE_SHEET_NAME: 未設定"
-          echo ""
-          echo "⚠️ TST_GOOGLE_SHEET_NAMEが設定されていません！"
-          echo "GitHub Secretsに以下を設定してください："
-          echo "  - 名前: TST_GOOGLE_SHEET_NAME"
-          echo "  - 値: テスト用のGoogle Sheets名（例: VCトラッカー_テスト）"
-          MISSING_VARS="$MISSING_VARS TST_GOOGLE_SHEET_NAME"
-        fi
+        # Google Sheets名（config.pyで設定済み）
+        echo "  ✅ TST_GOOGLE_SHEET_NAME: config.pyで'VCトラッカー_テスト'として設定済み"
 
         if [ -n "$MISSING_VARS" ]; then
           echo ""
@@ -117,7 +107,7 @@ jobs:  # 実行するジョブの定義
         # テスト環境用の設定
         TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}  # Discord Botトークン
         TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}  # 監視対象VCチャンネルID
-        TST_GOOGLE_SHEET_NAME: ${{ secrets.TST_GOOGLE_SHEET_NAME }}  # Google Sheets名
+        # TST_GOOGLE_SHEET_NAMEはconfig.pyで設定済み（'VCトラッカー_テスト'）
         TST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json  # 認証用JSONファイルパス
         TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}  # Slack Botトークン（オプション）
         TST_SLACK_CHANNEL_ID: ${{ secrets.TST_SLACK_CHANNEL_ID }}  # SlackチャンネルID（オプション）
