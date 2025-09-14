@@ -54,8 +54,10 @@ class EnvConfig:
     セキュリティ的に重要な情報を安全に扱うための仕組みです
     """
 
-    # スプレッドシート名（全環境共通で使用する定数）
-    SHEET_NAME = 'VCトラッカー'  # Google Sheetsのシート名（全環境で同じ名前を使用）
+    # スプレッドシート名（環境ごとに異なる名前を使用可能）
+    PRD_SHEET_NAME = 'VCトラッカー'  # 本番環境のGoogle Sheetsのシート名
+    TST_SHEET_NAME = 'VCトラッカー_テスト'  # テスト環境のGoogle Sheetsのシート名
+    DEV_SHEET_NAME = 'VCトラッカー_開発'  # 開発環境のGoogle Sheetsのシート名
 
     @classmethod  # クラスメソッド（インスタンスを作らずに使えるメソッド）
     def get_env_var_name(cls, base_name, env=Environment.PRD):  # 環境に応じた変数名を作るメソッド
