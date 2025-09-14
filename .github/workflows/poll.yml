@@ -7,49 +7,53 @@
 #       手動実行も可能で、デバッグモード付き
 # ========================================
 
-name: Discord VC 定期監視
+name: Discord VC 定期監視  # GitHub Actionsのワークフロー名（Actions画面で表示される名前）
 
-on:
-  schedule:
+on:  # このワークフローが実行されるタイミングの定義
+  schedule:  # 定期的な自動実行の設定
     # 日本時間で毎日 9:00, 15:00, 21:00 に実行
     # UTC時間で 0:00, 6:00, 12:00
-    - cron: '0 0,6,12 * * *'
-  
-  # 手動実行も可能にする
-  workflow_dispatch:
-    inputs:
-      debug_enabled:
-        description: 'Run with debug logging'
-        required: false
-        default: 'false'
+    - cron: '0 0,6,12 * * *'  # cron形式：分 時 日 月 曜日（*は全て）
+    # cron形式の説明：
+    # - '0': 0分（毎時の0分）
+    # - '0,6,12': UTC時間の0時、6時、12時
+    # - '* * *': 毎日、毎月、全曜日
 
-jobs:
-  poll:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10  # タイムアウト設定
+  # 手動実行も可能にする
+  workflow_dispatch:  # GitHub Actions画面から手動で実行できるようにする設定
+    inputs:  # 手動実行時に選択できるパラメータの定義
+      debug_enabled:  # デバッグモードパラメータ
+        description: 'デバッグログを有効化'  # パラメータの説明文
+        required: false  # オプショナルパラメータ（必須ではない）
+        default: 'false'  # デフォルトはOFF（通常モード）
+
+jobs:  # 実行するジョブ（作業単位）の定義
+  poll:  # ジョブID（一意の識別子）
+    runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
+    timeout-minutes: 10  # 10分でタイムアウト（無限ループ防止）
     
-    steps:
-    - name: コードをチェックアウト
-      uses: actions/checkout@v4
-    
-    - name: Pythonセットアップ
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'  # pip依存関係をキャッシュ
-    
-    - name: 依存関係インストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: サービスアカウントJSON作成
-      env:
-        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
-      run: |
-        echo "$GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json
-        # セキュリティ: ファイル権限を制限
-        chmod 600 service_account.json
+    steps:  # ジョブ内で実行するステップ（作業手順）の定義
+    - name: コードをチェックアウト  # ステップ1: リポジトリのコードを取得
+      uses: actions/checkout@v4  # GitHub公式のチェックアウトアクションv4を使用
+
+    - name: Pythonセットアップ  # ステップ2: Python環境の準備
+      uses: actions/setup-python@v5  # Python公式のセットアップアクションv5を使用
+      with:  # アクションのパラメータ設定
+        python-version: '3.11'  # Python 3.11を使用
+        cache: 'pip'  # pipの依存関係をキャッシュして高速化
+
+    - name: 依存関係インストール  # ステップ3: 必要なPythonパッケージをインストール
+      run: |  # シェルコマンドを実行
+        python -m pip install --upgrade pip  # pipを最新版にアップグレード
+        pip install -r requirements.txt  # requirements.txtに記載されたパッケージをインストール
+
+    - name: サービスアカウントJSON作成  # ステップ4: Google認証用のJSONファイルを作成
+      env:  # 環境変数の設定
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # Base64形式の認証情報（GitHub Secretsから取得）
+      run: |  # シェルコマンドを実行
+        echo "$GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json  # Base64をデコードしてJSONファイルに保存
+        # セキュリティ: ファイル権限を制限（所有者のみ読み書き可能）
+        chmod 600 service_account.json  # 600 = 所有者のみ読み書き可能
     
     - name: 機密情報をマスク
       run: |
