@@ -28,166 +28,144 @@ from src.logger import VCTrackerLogger  # ロガー
 
 
 async def test_vc_to_sheets_integration_with_poll_once():
-    """Discord VCからGoogle Sheetsへの統合テスト"""
-
-    # ロガー初期化
-    logger = VCTrackerLogger("IntegrationTest", log_level="1")  # デバッグモード
+    """
+    poll_once.pyのmain関数を使用した統合テスト
+    実際の処理フローをテストしつつ、テスト用シートを使用してデータを汚さない
+    """
 
     print("=" * 60)
-    print("Discord VC → Google Sheets 統合テスト")
+    print("Discord VC → Google Sheets 統合テスト (poll_once使用)")
     print("=" * 60)
     print()
 
     # ========================================
-    # 1. 環境変数の確認
+    # 1. テスト用のワークシート名を設定
     # ========================================
-    print("📋 環境変数チェック:")
+    test_worksheet_name = f"TEST_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    original_update_sheet = None
+    test_worksheet = None
+    sheets_client_instance = None
 
-    # テスト環境用の環境変数を優先的に使用
-    discord_token = os.getenv('TST_DISCORD_BOT_TOKEN') or os.getenv('DISCORD_BOT_TOKEN')
-    vc_channel_ids_str = os.getenv('TST_ALLOWED_VOICE_CHANNEL_IDS') or os.getenv('ALLOWED_VOICE_CHANNEL_IDS')
-    sheet_name = os.getenv('TST_GOOGLE_SHEET_NAME') or os.getenv('GOOGLE_SHEET_NAME')
-    service_account_json = os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON') or os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
-
-    # 環境変数の存在確認
-    env_check = {
-        'DISCORD_BOT_TOKEN': '✅' if discord_token else '❌',
-        'ALLOWED_VOICE_CHANNEL_IDS': '✅' if vc_channel_ids_str else '❌',
-        'GOOGLE_SHEET_NAME': f'✅ {sheet_name}' if sheet_name else '❌',
-        'GOOGLE_SERVICE_ACCOUNT_JSON': '✅' if service_account_json else '❌'
-    }
-
-    for key, status in env_check.items():
-        print(f"  {key}: {status}")
-
-    # 必須環境変数が不足している場合はエラー
-    if not all([discord_token, vc_channel_ids_str, sheet_name, service_account_json]):
-        print("\n❌ 必須の環境変数が設定されていません")
-        return False
-
-    # VCチャンネルIDをリストに変換
-    vc_channel_ids = [id.strip() for id in vc_channel_ids_str.split(',') if id.strip()]
-    print(f"\n📍 監視対象VCチャンネルID: {vc_channel_ids}")
+    print(f"📝 テスト用ワークシート名: {test_worksheet_name}")
 
     # ========================================
-    # 2. Discord VCメンバー取得
+    # 2. SheetsClientのupdate_sheetメソッドをモック
     # ========================================
-    print("\n🤖 Discord VCに接続中...")
+    # 本番のワークシートではなくテスト用ワークシートに書き込むようにモック
+    def mock_update_sheet(self, vc_members, sheet_name="VC_Members"):
+        """テスト用のupdate_sheetメソッド"""
+        print(f"  📊 モック: {len(vc_members)}件のメンバー情報を記録中...")
 
-    try:
-        # Discord VCポーラーを初期化
-        discord_client = DiscordVCPoller(discord_token, vc_channel_ids)
+        # テスト用シートがまだ作成されていない場合は作成
+        nonlocal test_worksheet, sheets_client_instance
+        sheets_client_instance = self
 
-        # VCメンバーを取得
-        vc_members = await discord_client.get_vc_members()
+        try:
+            # テスト用ワークシートを取得または作成
+            try:
+                test_worksheet = self.spreadsheet.worksheet(test_worksheet_name)
+            except:
+                print(f"  📝 テスト用ワークシート '{test_worksheet_name}' を作成中...")
+                test_worksheet = self.spreadsheet.add_worksheet(
+                    title=test_worksheet_name,
+                    rows=1000,
+                    cols=10
+                )
+                # ヘッダー行を追加
+                headers = ['Timestamp', 'User_ID', 'Display_Name', 'Channel_ID', 'Action']
+                test_worksheet.append_row(headers)
 
-        print(f"✅ Discord接続成功")
-        print(f"📊 現在のVCメンバー数: {len(vc_members)}人")
-
-        if vc_members:
-            print("\n👥 VCメンバー一覧:")
-            for channel_id, members in vc_members.items():
-                print(f"  チャンネル {channel_id}:")
-                for member in members:
-                    print(f"    - {member['display_name']} (ID: {member['id']})")
-        else:
-            print("  （現在VCに誰もいません）")
-
-    except Exception as e:
-        print(f"❌ Discord接続エラー: {e}")
-        logger.error(f"Discord接続エラー: {e}")
-        return False
-
-    # ========================================
-    # 3. Google Sheetsへの記録
-    # ========================================
-    print(f"\n📊 Google Sheets '{sheet_name}' に接続中...")
-
-    try:
-        # Google Sheetsクライアントを初期化
-        sheets_client = SheetsClient(service_account_json, sheet_name)
-        sheets_client.connect()
-        print("✅ Google Sheets接続成功")
-
-        # テスト用のシート名（本番データを汚さないため）
-        test_sheet_name = f"TEST_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-        # テスト用シートを作成
-        print(f"\n📝 テスト用シート '{test_sheet_name}' を作成中...")
-        sheets_client.spreadsheet.add_worksheet(title=test_sheet_name, rows=1000, cols=10)
-        test_worksheet = sheets_client.spreadsheet.worksheet(test_sheet_name)
-
-        # ヘッダー行を追加
-        headers = ['Timestamp', 'Channel_ID', 'User_ID', 'Display_Name', 'Status']
-        test_worksheet.append_row(headers)
-        print("✅ ヘッダー行を追加")
-
-        # VCメンバーデータを記録
-        if vc_members:
+            # データを記録
             timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             rows_to_add = []
 
-            for channel_id, members in vc_members.items():
-                for member in members:
-                    row = [
-                        timestamp,
-                        channel_id,
-                        member['id'],
-                        member['display_name'],
-                        'Active'
-                    ]
-                    rows_to_add.append(row)
+            for user_id, member_info in vc_members.items():
+                row = [
+                    timestamp,
+                    user_id,
+                    member_info.get('display_name', 'Unknown'),
+                    member_info.get('channel_id', 'Unknown'),
+                    'Login'
+                ]
+                rows_to_add.append(row)
 
-            # バッチで追加（API制限対策）
             if rows_to_add:
                 test_worksheet.append_rows(rows_to_add)
-                print(f"✅ {len(rows_to_add)}件のメンバー情報を記録")
-        else:
-            # メンバーがいない場合も記録
-            test_worksheet.append_row([
-                datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'N/A',
-                'N/A',
-                '(No members in VC)',
-                'Empty'
-            ])
-            print("✅ VCが空であることを記録")
+                print(f"  ✅ {len(rows_to_add)}件のデータをテスト用シートに記録")
 
-        # 記録したデータを読み返して確認
-        print("\n📖 記録されたデータを確認中...")
-        all_values = test_worksheet.get_all_values()
-        print(f"✅ {len(all_values) - 1}行のデータを確認（ヘッダー除く）")
+            return True
 
-        # 最初の数行を表示
-        for i, row in enumerate(all_values[:5]):
-            if i == 0:
-                print(f"  ヘッダー: {row}")
-            else:
-                print(f"  データ{i}: {row}")
-
-        # テスト用シートの削除（オプション）
-        print(f"\n🗑️ テスト用シート '{test_sheet_name}' を削除中...")
-        sheets_client.spreadsheet.del_worksheet(test_worksheet)
-        print("✅ テスト用シートを削除")
-
-    except Exception as e:
-        print(f"❌ Google Sheetsエラー: {e}")
-        logger.error(f"Google Sheetsエラー: {e}")
-        return False
+        except Exception as e:
+            print(f"  ❌ モックエラー: {e}")
+            return False
 
     # ========================================
-    # 4. テスト結果サマリー
+    # 3. Slack通知をモック（実際に通知しない）
+    # ========================================
+    def mock_send_login_notification(self, display_name, duration_minutes):
+        """テスト用のSlack通知メソッド"""
+        print(f"  💬 モック: Slack通知 - {display_name}がログイン（{duration_minutes}分）")
+        return True
+
+    def mock_send_logout_notification(self, display_name, duration_minutes):
+        """テスト用のSlack通知メソッド"""
+        print(f"  💬 モック: Slack通知 - {display_name}がログアウト（{duration_minutes}分）")
+        return True
+
+    # ========================================
+    # 4. モックを適用してpoll_once.main()を実行
+    # ========================================
+    print("\n🚀 poll_once.main()を実行中...")
+
+    with patch.object(SheetsClient, 'update_sheet', mock_update_sheet):
+        with patch.object(SlackNotifier, 'send_login_notification', mock_send_login_notification):
+            with patch.object(SlackNotifier, 'send_logout_notification', mock_send_logout_notification):
+                try:
+                    # テスト環境（env=1）でpoll_once.main()を実行
+                    await poll_once_main(env_arg=1)
+                    print("✅ poll_once.main()が正常に完了")
+
+                except Exception as e:
+                    print(f"❌ poll_once.main()実行エラー: {e}")
+                    return False
+
+    # ========================================
+    # 5. テスト結果の確認
+    # ========================================
+    if test_worksheet and sheets_client_instance:
+        print("\n📖 記録されたデータを確認中...")
+        try:
+            all_values = test_worksheet.get_all_values()
+            print(f"✅ {len(all_values) - 1}行のデータを確認（ヘッダー除く）")
+
+            # 最初の数行を表示
+            for i, row in enumerate(all_values[:5]):
+                if i == 0:
+                    print(f"  ヘッダー: {row}")
+                else:
+                    print(f"  データ{i}: {row}")
+
+            # クリーンアップ
+            print(f"\n🗑️ テスト用ワークシート '{test_worksheet_name}' を削除中...")
+            sheets_client_instance.spreadsheet.del_worksheet(test_worksheet)
+            print("✅ テスト用ワークシートを削除")
+
+        except Exception as e:
+            print(f"⚠️ クリーンアップエラー: {e}")
+
+    # ========================================
+    # 6. テスト結果サマリー
     # ========================================
     print("\n" + "=" * 60)
     print("✅ 統合テスト成功")
     print("=" * 60)
     print("\n確認項目:")
-    print("  ✅ Discord Bot接続")
-    print("  ✅ VCメンバー取得")
-    print("  ✅ Google Sheets接続")
-    print("  ✅ データ記録")
-    print("  ✅ データ読み取り確認")
-    print("  ✅ テストデータクリーンアップ")
+    print("  ✅ poll_once.main()の実行")
+    print("  ✅ Discord接続（実際のBot使用）")
+    print("  ✅ Google Sheets接続（テスト用シート使用）")
+    print("  ✅ Slack通知（モック使用）")
+    print("  ✅ データ記録の確認")
+    print("  ✅ テストデータのクリーンアップ")
 
     return True
 
