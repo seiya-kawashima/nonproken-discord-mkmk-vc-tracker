@@ -1,0 +1,144 @@
+# ========================================
+# Discord VC → Google Sheets 統合テスト ワークフロー
+# ========================================
+# 概要: 実際のDiscord VCメンバーを取得してGoogle Sheetsに記録する統合テスト
+#       poll_once.pyのmain関数を使用して本番環境に近い形でテスト
+#       テスト用シートを使用してデータを汚さずに動作確認
+#       手動実行、PR作成時、コードプッシュ時に自動実行される
+# ========================================
+
+name: 統合テスト（VC→Sheets）  # GitHub Actionsのワークフロー名
+
+on:  # このワークフローが実行されるタイミングの定義
+  # 手動実行を許可
+  workflow_dispatch:  # GitHub Actions画面から手動で実行可能
+    inputs:  # 手動実行時のパラメータ
+      debug_mode:  # デバッグモードパラメータ
+        description: 'デバッグログを有効化'  # パラメータの説明
+        required: false  # オプショナル
+        default: 'true'  # デフォルトはデバッグON
+        type: boolean  # チェックボックスタイプ
+
+  # PRとpush時に実行
+  pull_request:  # プルリクエスト作成・更新時に実行
+    branches: [main, master]  # main/masterブランチへのPRのみ対象
+    paths:  # 以下のファイルが変更された場合のみ実行
+      - 'src/**'  # ソースコード
+      - 'tst/**'  # テストコード
+      - 'poll_once.py'  # メインスクリプト
+      - 'requirements.txt'  # 依存関係
+  push:  # コードプッシュ時に実行
+    branches: [main, master]  # main/masterブランチへのプッシュのみ対象
+    paths:  # 以下のファイルが変更された場合のみ実行
+      - 'src/**'
+      - 'tst/**'
+      - 'poll_once.py'
+      - 'requirements.txt'
+
+jobs:  # 実行するジョブの定義
+  integration-test:  # ジョブID
+    runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
+    timeout-minutes: 10  # 10分でタイムアウト（無限ループ防止）
+    name: Discord VC → Google Sheets 統合テスト  # ジョブの表示名
+
+    steps:  # ジョブ内で実行するステップの定義
+    - name: コードをチェックアウト  # ステップ1: リポジトリのコードを取得
+      uses: actions/checkout@v4  # GitHub公式のチェックアウトアクションv4を使用
+
+    - name: Pythonセットアップ  # ステップ2: Python環境の準備
+      uses: actions/setup-python@v5  # Python公式のセットアップアクションv5を使用
+      with:  # アクションのパラメータ
+        python-version: '3.11'  # Python 3.11を使用
+        cache: 'pip'  # pipの依存関係をキャッシュして高速化
+
+    - name: 依存関係インストール  # ステップ3: 必要なPythonパッケージをインストール
+      run: |  # シェルコマンドを実行
+        python -m pip install --upgrade pip  # pipを最新版にアップグレード
+        pip install -r requirements.txt  # 本番用の依存関係をインストール
+        pip install pytest pytest-asyncio pytest-cov  # テスト用ライブラリを追加インストール
+
+    - name: サービスアカウントJSON作成  # ステップ4: Google認証用のJSONファイルを作成
+      env:  # 環境変数の設定
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # Base64形式の認証情報
+      run: |  # シェルコマンドを実行
+        echo "🔐 Google認証情報をデコード中..."  # 処理開始メッセージ
+        echo "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json  # Base64をデコードしてファイルに保存
+        chmod 600 service_account.json  # ファイル権限を制限（セキュリティ対策）
+
+    - name: 環境変数チェック  # ステップ5: 必要な環境変数が設定されているか確認
+      run: |  # シェルコマンドを実行
+        echo "📋 環境変数チェック:"  # チェック開始メッセージ
+
+        # Discord Bot Token
+        if [ -n "${{ secrets.TST_DISCORD_BOT_TOKEN }}" ]; then
+          echo "  ✅ TST_DISCORD_BOT_TOKEN: 設定済み"
+        else
+          echo "  ❌ TST_DISCORD_BOT_TOKEN: 未設定"
+        fi
+
+        # VCチャンネルID
+        if [ -n "${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}" ]; then
+          echo "  ✅ TST_ALLOWED_VOICE_CHANNEL_IDS: 設定済み"
+        else
+          echo "  ❌ TST_ALLOWED_VOICE_CHANNEL_IDS: 未設定"
+        fi
+
+        # Google Sheets名
+        if [ -n "${{ secrets.TST_GOOGLE_SHEET_NAME }}" ]; then
+          echo "  ✅ TST_GOOGLE_SHEET_NAME: ${{ secrets.TST_GOOGLE_SHEET_NAME }}"
+        else
+          echo "  ❌ TST_GOOGLE_SHEET_NAME: 未設定"
+        fi
+
+    - name: 統合テスト実行  # ステップ6: メインの統合テストを実行
+      env:  # 環境変数の設定
+        # テスト環境用の設定
+        TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}  # Discord Botトークン
+        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}  # 監視対象VCチャンネルID
+        TST_GOOGLE_SHEET_NAME: ${{ secrets.TST_GOOGLE_SHEET_NAME }}  # Google Sheets名
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json  # 認証用JSONファイルパス
+        TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}  # Slack Botトークン（オプション）
+        TST_SLACK_CHANNEL_ID: ${{ secrets.TST_SLACK_CHANNEL_ID }}  # SlackチャンネルID（オプション）
+        LOG_LEVEL: ${{ github.event.inputs.debug_mode == 'true' && '1' || '2' }}  # ログレベル設定
+        PYTHONPATH: ${{ github.workspace }}  # Pythonパスを設定
+      run: |  # シェルコマンドを実行
+        echo "🚀 Discord VC → Google Sheets 統合テストを実行中..."  # 実行開始メッセージ
+        python tst/test_integration_vc_to_sheets.py  # 統合テストスクリプトを実行
+
+    - name: テスト成功サマリー  # ステップ7: テスト成功時の処理
+      if: success()  # 前のステップが成功した場合のみ実行
+      run: |  # シェルコマンドを実行
+        echo "✅ 統合テスト成功"  # 成功メッセージ
+        echo ""  # 空行
+        echo "確認項目:"  # 確認項目のヘッダー
+        echo "  ✅ Discord Bot接続（実際のBot使用）"  # Discord接続確認
+        echo "  ✅ VCメンバー取得"  # メンバー取得確認
+        echo "  ✅ Google Sheets接続（テスト用シート使用）"  # Sheets接続確認
+        echo "  ✅ データ記録（モック使用）"  # データ記録確認
+        echo "  ✅ Slack通知（モック使用）"  # Slack通知確認
+        echo "  ✅ poll_once.main()の正常動作"  # メイン関数の動作確認
+
+    - name: テスト失敗サマリー  # ステップ8: テスト失敗時の処理
+      if: failure()  # 前のステップが失敗した場合のみ実行
+      run: |  # シェルコマンドを実行
+        echo "❌ 統合テスト失敗"  # 失敗メッセージ
+        echo ""  # 空行
+        echo "トラブルシューティング:"  # トラブルシューティングのヘッダー
+        echo "1. GitHub Secretsの設定を確認"  # 対処法1
+        echo "   - TST_DISCORD_BOT_TOKEN"  # Discord設定
+        echo "   - TST_ALLOWED_VOICE_CHANNEL_IDS"  # VCチャンネル設定
+        echo "   - TST_GOOGLE_SHEET_NAME"  # Sheets名設定
+        echo "   - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"  # 認証情報設定
+        echo ""  # 空行
+        echo "2. Google APIの有効化を確認"  # 対処法2
+        echo "   - Google Drive API"  # Drive API
+        echo "   - Google Sheets API"  # Sheets API
+        echo ""  # 空行
+        echo "3. Discord Botの権限を確認"  # 対処法3
+        echo "   - SERVER MEMBERS INTENTが有効か"  # 権限確認
+        exit 1  # エラーコード1で終了
+
+    - name: クリーンアップ  # ステップ9: 後処理（機密ファイルの削除）
+      if: always()  # 成功・失敗に関わらず常に実行
+      run: |  # シェルコマンドを実行
+        rm -f service_account.json  # Google認証用JSONファイルを削除（セキュリティ対策）
