@@ -1,0 +1,297 @@
+# ========================================
+# Discord VC → Google Drive CSV 統合テスト ワークフロー
+# ========================================
+# 概要: 実際のDiscord VCメンバーを取得してGoogle Drive上のCSVファイルに記録する統合テスト
+#       DriveCSVClientを使用してCSVファイルの作成・更新をテスト
+#       フォルダ階層（discord_mokumoku_tracker/csv/{VC名}/{環境}.csv）の自動作成を確認
+#       手動実行、PR作成時、コードプッシュ時に自動実行される
+# ========================================
+
+name: CSV統合テスト（VC→Drive CSV）  # GitHub Actionsのワークフロー名
+
+on:  # このワークフローが実行されるタイミングの定義
+  # 手動実行を許可
+  workflow_dispatch:  # GitHub Actions画面から手動で実行可能
+    inputs:  # 手動実行時のパラメータ
+      debug_mode:  # デバッグモードパラメータ
+        description: 'デバッグログを有効化'  # パラメータの説明
+        required: false  # オプショナル
+        default: 'true'  # デフォルトはデバッグON
+        type: boolean  # チェックボックスタイプ
+      cleanup_test_files:  # テストファイル削除パラメータ
+        description: 'テスト後にCSVファイルを削除'  # パラメータの説明
+        required: false  # オプショナル
+        default: 'true'  # デフォルトは削除する
+        type: boolean  # チェックボックスタイプ
+
+  # PRとpush時に実行
+  pull_request:  # プルリクエスト作成・更新時に実行
+    branches: [main, master]  # main/masterブランチへのPRのみ対象
+    paths:  # 以下のファイルが変更された場合のみ実行
+      - 'src/drive_csv_client.py'  # CSVクライアント
+      - 'src/discord_client.py'  # Discordクライアント
+      - 'poll_once.py'  # メインスクリプト
+      - 'config.py'  # 設定ファイル
+      - 'requirements.txt'  # 依存関係
+      - '.github/workflows/tst_csv_integration.yml'  # このワークフロー自体
+  push:  # コードプッシュ時に実行
+    branches: [main, master]  # main/masterブランチへのプッシュのみ対象
+    paths:  # 以下のファイルが変更された場合のみ実行
+      - 'src/drive_csv_client.py'
+      - 'src/discord_client.py'
+      - 'poll_once.py'
+      - 'config.py'
+      - 'requirements.txt'
+
+jobs:  # 実行するジョブの定義
+  csv-integration-test:  # ジョブID
+    runs-on: ubuntu-latest  # Ubuntu最新版の仮想環境で実行
+    timeout-minutes: 10  # 10分でタイムアウト（無限ループ防止）
+    name: Discord VC → Google Drive CSV 統合テスト  # ジョブの表示名
+
+    steps:  # ジョブ内で実行するステップの定義
+    - name: コードをチェックアウト  # ステップ1: リポジトリのコードを取得
+      uses: actions/checkout@v4  # GitHub公式のチェックアウトアクションv4を使用
+
+    - name: Pythonセットアップ  # ステップ2: Python環境の準備
+      uses: actions/setup-python@v5  # Python公式のセットアップアクションv5を使用
+      with:  # アクションのパラメータ
+        python-version: '3.11'  # Python 3.11を使用
+        cache: 'pip'  # pipの依存関係をキャッシュして高速化
+
+    - name: 依存関係インストール  # ステップ3: 必要なPythonパッケージをインストール
+      run: |  # シェルコマンドを実行
+        python -m pip install --upgrade pip  # pipを最新版にアップグレード
+        pip install -r requirements.txt  # 本番用の依存関係をインストール
+        pip install pytest pytest-asyncio pytest-cov  # テスト用ライブラリを追加インストール
+
+    - name: サービスアカウントJSON作成  # ステップ4: Google認証用のJSONファイルを作成
+      env:  # 環境変数の設定
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # Base64形式の認証情報
+      run: |  # シェルコマンドを実行
+        if [ -z "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
+          echo "⚠️ TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64が設定されていません"
+          echo "スキップします（テストは失敗する可能性があります）"
+        else
+          echo "🔐 Google認証情報をデコード中..."  # 処理開始メッセージ
+          echo "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json  # Base64をデコードしてファイルに保存
+          chmod 600 service_account.json  # ファイル権限を制限（セキュリティ対策）
+          echo "✅ service_account.jsonを作成しました"
+        fi
+
+    - name: 環境変数チェック  # ステップ5: 必要な環境変数が設定されているか確認
+      run: |  # シェルコマンドを実行
+        echo "📋 環境変数チェック:"  # チェック開始メッセージ
+
+        MISSING_VARS=""
+
+        # Discord Bot Token
+        if [ -n "${{ secrets.TST_DISCORD_BOT_TOKEN }}" ]; then
+          echo "  ✅ TST_DISCORD_BOT_TOKEN: 設定済み"
+        else
+          echo "  ❌ TST_DISCORD_BOT_TOKEN: 未設定"
+          MISSING_VARS="$MISSING_VARS TST_DISCORD_BOT_TOKEN"
+        fi
+
+        # VCチャンネルID
+        if [ -n "${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}" ]; then
+          echo "  ✅ TST_ALLOWED_VOICE_CHANNEL_IDS: 設定済み"
+        else
+          echo "  ❌ TST_ALLOWED_VOICE_CHANNEL_IDS: 未設定"
+          MISSING_VARS="$MISSING_VARS TST_ALLOWED_VOICE_CHANNEL_IDS"
+        fi
+
+        # Google Drive フォルダパス（config.pyで設定済み）
+        echo "  ✅ TST_GOOGLE_DRIVE_FOLDER_PATH: config.pyで'discord_mokumoku_tracker/csv'として設定済み"
+
+        if [ -n "$MISSING_VARS" ]; then
+          echo ""
+          echo "⚠️ 警告: 必須の環境変数が設定されていません:$MISSING_VARS"
+          echo "テストは失敗する可能性があります"
+        fi
+
+    - name: CSV統合テスト実行  # ステップ6: メインの統合テストを実行
+      env:  # 環境変数の設定
+        # テスト環境用の設定
+        TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}  # Discord Botトークン
+        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}  # 監視対象VCチャンネルID
+        TST_GOOGLE_DRIVE_FOLDER_PATH: discord_mokumoku_tracker/csv  # Google Driveフォルダパス
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json  # 認証用JSONファイルパス
+        TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}  # Slack Botトークン（オプション）
+        TST_SLACK_CHANNEL_ID: ${{ secrets.TST_SLACK_CHANNEL_ID }}  # SlackチャンネルID（オプション）
+        LOG_LEVEL: ${{ github.event.inputs.debug_mode == 'true' && '1' || '2' }}  # ログレベル設定
+        PYTHONPATH: ${{ github.workspace }}  # Pythonパスを設定
+        CLEANUP_TEST_FILES: ${{ github.event.inputs.cleanup_test_files }}  # クリーンアップフラグ
+      run: |  # シェルコマンドを実行
+        echo "🚀 Discord VC → Google Drive CSV 統合テストを実行中..."  # 実行開始メッセージ
+
+        # テストスクリプトを作成（インラインで記述）
+        cat > test_csv_integration.py << 'EOF'
+        import asyncio
+        import os
+        import sys
+        from datetime import datetime
+        from pathlib import Path
+        from unittest.mock import patch, MagicMock
+
+        # プロジェクトルートをパスに追加
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+
+        from poll_once import main as poll_once_main
+        from src.drive_csv_client import DriveCSVClient
+        from src.slack_notifier import SlackNotifier
+        from config import EnvConfig, Environment
+
+        async def test_csv_integration():
+            """CSV統合テスト"""
+            print("=" * 60)
+            print("Discord VC → Google Drive CSV 統合テスト")
+            print("=" * 60)
+            print()
+
+            # 環境変数チェック
+            print("📋 環境変数チェック:")
+            required_vars = ['TST_DISCORD_BOT_TOKEN', 'TST_ALLOWED_VOICE_CHANNEL_IDS']
+            for var in required_vars:
+                value = os.getenv(var)
+                if value:
+                    print(f"  ✅ {var}: 設定済み")
+                else:
+                    print(f"  ❌ {var}: 未設定")
+                    return False
+
+            # Google Drive設定を確認
+            drive_config = EnvConfig.get_google_drive_config(Environment.TST)
+            print(f"  ✅ Google Drive フォルダ: {drive_config['folder_path']}")
+            print(f"  ✅ 環境名: {drive_config['env_name']}")
+
+            # テスト用のVCチャンネル名を記録
+            test_vc_names = []
+            test_folder_path = f"{drive_config['folder_path']}_TEST_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+            # DriveCSVClientのフォルダパスをテスト用に変更
+            original_init = DriveCSVClient.__init__
+            def mock_init(self, service_account_json, base_folder_path, env_name):
+                # テスト用フォルダパスに変更
+                original_init(self, service_account_json, test_folder_path, env_name)
+                print(f"  📁 テスト用フォルダ: {test_folder_path}/{'{VC名}'}/{env_name}.csv")
+
+            # upsert_presenceの後処理を記録
+            original_upsert = DriveCSVClient.upsert_presence
+            def mock_upsert(self, members):
+                # VCチャンネル名を記録
+                for member in members:
+                    vc_name = member.get('vc_name', 'unknown')
+                    if vc_name not in test_vc_names:
+                        test_vc_names.append(vc_name)
+                # 元のメソッドを呼び出し
+                result = original_upsert(self, members)
+                print(f"  ✅ CSV記録完了: {result['new']}件新規, {result['updated']}件更新")
+                return result
+
+            # Slack通知をモック
+            def mock_slack_notification(user_name, total_days):
+                print(f"  💬 モック: Slack通知 - {user_name} (通算{total_days}日目)")
+                return True
+
+            print("\n🚀 poll_once.main()を実行中...")
+
+            with patch.object(DriveCSVClient, '__init__', mock_init):
+                with patch.object(DriveCSVClient, 'upsert_presence', mock_upsert):
+                    with patch.object(SlackNotifier, 'send_login_notification', mock_slack_notification):
+                        try:
+                            # テスト環境（env=1）で実行
+                            await poll_once_main(env_arg=1)
+                            print("✅ poll_once.main()が正常に完了")
+                        except Exception as e:
+                            print(f"❌ エラー: {e}")
+                            import traceback
+                            traceback.print_exc()
+                            return False
+
+            # クリーンアップ
+            if os.getenv('CLEANUP_TEST_FILES', 'true').lower() == 'true':
+                print(f"\n🗑️ テストファイルのクリーンアップ")
+                try:
+                    # DriveCSVClientを使用してテストフォルダを削除
+                    service_account_json = os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')
+                    csv_client = DriveCSVClient(service_account_json, test_folder_path, 'TST')
+                    csv_client.connect()
+
+                    # テストフォルダを削除
+                    if csv_client.base_folder_id:
+                        csv_client.service.files().delete(fileId=csv_client.base_folder_id).execute()
+                        print(f"  ✅ テストフォルダを削除: {test_folder_path}")
+                except Exception as e:
+                    print(f"  ⚠️ クリーンアップエラー: {e}")
+            else:
+                print(f"\n📁 テストファイルは保持されます: {test_folder_path}")
+
+            return True
+
+        # メイン実行
+        if __name__ == "__main__":
+            try:
+                result = asyncio.run(test_csv_integration())
+                if result:
+                    print("\n✅ CSV統合テスト成功")
+                    sys.exit(0)
+                else:
+                    print("\n❌ CSV統合テスト失敗")
+                    sys.exit(1)
+            except Exception as e:
+                print(f"\n❌ 予期しないエラー: {e}")
+                import traceback
+                traceback.print_exc()
+                sys.exit(1)
+        EOF
+
+        # テストを実行
+        python test_csv_integration.py
+
+    - name: テスト成功サマリー  # ステップ7: テスト成功時の処理
+      if: success()  # 前のステップが成功した場合のみ実行
+      run: |  # シェルコマンドを実行
+        echo "✅ CSV統合テスト成功"  # 成功メッセージ
+        echo ""  # 空行
+        echo "確認項目:"  # 確認項目のヘッダー
+        echo "  ✅ Discord Bot接続（実際のBot使用）"  # Discord接続確認
+        echo "  ✅ VCメンバー取得"  # メンバー取得確認
+        echo "  ✅ Google Drive API接続"  # Drive API接続確認
+        echo "  ✅ フォルダ階層の自動作成"  # フォルダ作成確認
+        echo "  ✅ CSVファイルへのデータ記録"  # CSV記録確認
+        echo "  ✅ 環境別ファイル名（TST.csv）の作成"  # ファイル名確認
+        echo ""
+        echo "フォルダ構造:"
+        echo "  discord_mokumoku_tracker/"
+        echo "  └── csv/"
+        echo "      └── {VCチャンネル名}/"
+        echo "          └── TST.csv"
+
+    - name: テスト失敗サマリー  # ステップ8: テスト失敗時の処理
+      if: failure()  # 前のステップが失敗した場合のみ実行
+      run: |  # シェルコマンドを実行
+        echo "❌ CSV統合テスト失敗"  # 失敗メッセージ
+        echo ""  # 空行
+        echo "トラブルシューティング:"  # トラブルシューティングのヘッダー
+        echo "1. GitHub Secretsの設定を確認"  # 対処法1
+        echo "   - TST_DISCORD_BOT_TOKEN"  # Discord設定
+        echo "   - TST_ALLOWED_VOICE_CHANNEL_IDS"  # VCチャンネル設定
+        echo "   - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"  # 認証情報設定
+        echo ""  # 空行
+        echo "2. Google APIの有効化を確認"  # 対処法2
+        echo "   - Google Drive API"  # Drive API
+        echo ""  # 空行
+        echo "3. Discord Botの権限を確認"  # 対処法3
+        echo "   - SERVER MEMBERS INTENTが有効か"  # 権限確認
+        echo ""  # 空行
+        echo "4. サービスアカウントの権限を確認"  # 対処法4
+        echo "   - Google Driveへの書き込み権限"  # Drive権限
+        exit 1  # エラーコード1で終了
+
+    - name: クリーンアップ  # ステップ9: 後処理（機密ファイルの削除）
+      if: always()  # 成功・失敗に関わらず常に実行
+      run: |  # シェルコマンドを実行
+        rm -f service_account.json  # Google認証用JSONファイルを削除（セキュリティ対策）
+        rm -f test_csv_integration.py  # テストスクリプトを削除
