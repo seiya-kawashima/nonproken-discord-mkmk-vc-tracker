@@ -12,34 +12,28 @@ Discord の特定ボイスチャンネルで
 
 * **対象VC限定**で入室者をチェック
 * **毎日4:00–7:00 JSTの間、30分ごと**にスナップショットを取得
-* その日、1回でも在室が確認できたユーザーを **ログイン日（TRUE）** としてスプレッドシートに記録
+* その日、1回でも在室が確認できたユーザーを **ログイン日（TRUE）** としてGoogle Drive上のCSVファイルに記録
 * ログインしたユーザーを **Slackに自動通知**
 * 通算ログイン日数を管理し、**100日ごとの節目にお祝い通知**
 
 ---
 
-## シート設計
+## データ設計
 
-### `daily_presence` シート
+### CSV ファイル構造
+
+* **Google Drive上の`VC_Tracker_Data`フォルダに保存**
+* VCチャンネルごとに個別のCSVファイル（例：`general-voice.csv`）
 
 | 列 | 名称          | 例                  |
 | - | ----------- | ------------------ |
-| A | `date_jst`  | 2025-09-11         |
-| B | `guild_id`  | 123456789012345678 |
-| C | `user_id`   | 111111111111111111 |
-| D | `user_name` | kawashima#1234     |
-| E | `present`   | TRUE               |
+| A | `date_jst`  | 2025/9/11          |
+| B | `user_id`   | 111111111111111111 |
+| C | `user_name` | kawashima#1234     |
+| D | `present`   | TRUE               |
 
-* `(date_jst, guild_id, user_id)` の組み合わせで **一意**
+* `(date_jst, user_id)` の組み合わせで **一意**
 * すでに TRUE の場合は更新不要（Upsert方式）
-
-### ログイン日数集計例
-
-* 通算ログイン日数：
-
-  ```excel
-  =COUNTIF(FILTER(E:E, C:C=[user_id]), TRUE)
-  ```
 
 ---
 
@@ -59,7 +53,8 @@ Discord の特定ボイスチャンネルで
 
 * Google Cloud でサービスアカウントを作成
 * JSON キーファイルを取得
-* スプレッドシートをサービスアカウントのメールに **編集者権限で共有**
+* Google Drive APIを有効化
+* **CSVファイルの保存用フォルダが自動作成される**（手動共有不要）
 
 ### Slack 側（通知用）
 
@@ -94,7 +89,6 @@ Discord の特定ボイスチャンネルで
 |---|---|---|
 | `DISCORD_BOT_TOKEN` | Discord Botのトークン | Discord Developer Portal → Bot → Token |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | サービスアカウントJSON | **Base64エンコードして登録** |
-| `GOOGLE_SHEET_NAME` | スプレッドシート名 | Googleスプレッドシートのタイトル |
 | `ALLOWED_VOICE_CHANNEL_IDS` | 対象VC ID（カンマ区切り） | Discord → VCチャンネル右クリック → IDをコピー |
 | `SLACK_BOT_TOKEN` | Slack Bot のトークン | Slack API → OAuth & Permissions → Bot User OAuth Token |
 | `SLACK_CHANNEL_ID` | 通知先チャンネルのID | Slackチャンネル → 詳細 → チャンネルID |
@@ -156,7 +150,6 @@ jobs:
           python poll_once.py
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-          GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
           ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
           GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -169,7 +162,7 @@ jobs:
 
 1. Discord Gatewayに一時接続
 2. `ALLOWED_VOICE_CHANNEL_IDS` の在室メンバー一覧を取得
-3. 今日のJST日付で `daily_presence` にUpsert（present=TRUE）
+3. 今日のJST日付でGoogle Drive上のCSVファイルにUpsert（present=TRUE）
 4. ユーザーごとの通算ログイン日数を計算
 5. Slackへ通知：
 
@@ -191,7 +184,7 @@ jobs:
 ### メリット
 
 * ✅ サーバー不要 → **完全無料**運用（GitHub Actions枠内）
-* ✅ スプレッドシートで履歴・通算管理
+* ✅ Google Drive上のCSVファイルで履歴・通算管理（シート共有不要）
 * ✅ Slack通知でゲーミフィケーション（節目お祝い）
 
 ### デメリット
@@ -204,7 +197,7 @@ jobs:
 ## まとめ
 
 * **GitHub Actions** により無料で運用可能
-* **Google Sheets** でログイン履歴を保持
+* **Google Drive（CSV）** でログイン履歴を保持
 * **Slack通知** で日次報告＋節目祝い
 * 継続参加を促進するシンプルな仕組み
 
@@ -224,7 +217,8 @@ jobs:
 * **Python 3.11+**
 * 主要ライブラリ:
   - `discord.py` - Discord Bot開発
-  - `gspread` - Google Sheetsアクセス
+  - `google-api-python-client` - Google Drive APIアクセス
+  - `google-auth` - Google認証
   - `slack-sdk` - Slack通知
   - `python-dotenv` - 環境変数管理
 
@@ -299,7 +293,6 @@ pip install -r requirements.txt -r requirements-test.txt
 ```env
 DISCORD_BOT_TOKEN=your_discord_bot_token
 GOOGLE_SERVICE_ACCOUNT_JSON=service_account.json
-GOOGLE_SHEET_NAME=your_sheet_name
 ALLOWED_VOICE_CHANNEL_IDS=111111111111111111,222222222222222222
 SLACK_BOT_TOKEN=xoxb-your-slack-token
 SLACK_CHANNEL_ID=C1234567890
