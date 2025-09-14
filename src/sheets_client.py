@@ -77,45 +77,74 @@ class SheetsClient:
         Returns:
             処理結果（新規追加数、更新数）
         """  # メソッドの説明
-        if not self.worksheet:  # ワークシートが未接続の場合
+        if not self.sheet:  # スプレッドシートが未接続の場合
             raise RuntimeError("Not connected to Google Sheets")  # エラーを発生
 
         # JSTの今日の日付を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
         today_jst = datetime.now(jst).strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
-        
-        # 既存データを取得
-        all_values = self.worksheet.get_all_records()  # 全レコードを取得
-        
-        # 今日のデータを抽出
-        today_data = {  # 今日のデータを辞書形式で保存
-            (row['guild_id'], row['user_id']): row  # (guild_id, user_id)をキーとする
-            for row in all_values  # 全レコードをループ
-            if row.get('date_jst') == today_jst  # 今日の日付のみ抽出
-        }
-        
-        new_count = 0  # 新規追加カウンタ
-        update_count = 0  # 更新カウンタ
-        rows_to_append = []  # 追加する行のリスト
-        
+
+        # VC名でグループ化
+        vc_groups = {}  # VC名ごとにメンバーを分類
         for member in members:  # メンバーリストをループ
-            key = (member['guild_id'], member['user_id'])  # キーを作成
-            
-            if key not in today_data:  # 今日のデータに存在しない場合
-                # 新規追加
-                row = [  # 新しい行データ
-                    today_jst,  # 日付
-                    member['guild_id'],  # ギルドID
-                    member['user_id'],  # ユーザーID
-                    member['user_name'],  # ユーザー名
-                    'TRUE'  # 出席フラグ
-                ]
-                rows_to_append.append(row)  # 追加リストに追加
-                new_count += 1  # カウンタ増加
-                logger.info(f"New presence: {member['user_name']} on {today_jst}")  # 新規追加をログ出力
-            else:
-                # 既にTRUEの場合は更新不要
-                if today_data[key].get('present') != 'TRUE':  # まだTRUEでない場合
+            vc_name = member.get('vc_name', 'unknown')  # VC名を取得
+            if vc_name not in vc_groups:  # まだリストがない場合
+                vc_groups[vc_name] = []  # 新しいリストを作成
+            vc_groups[vc_name].append(member)  # メンバーを追加
+
+        total_new_count = 0  # 全体の新規追加カウンタ
+        total_update_count = 0  # 全体の更新カウンタ
+
+        # VC名ごとにワークシートを作成・更新
+        for vc_name, vc_members in vc_groups.items():  # VC名ごとにループ
+            # ワークシート名を作成（シート名に使えない文字を置換）
+            sheet_name = vc_name.replace('/', '_').replace('\\', '_')  # スラッシュとバックスラッシュを置換
+
+            # ワークシートを取得または作成
+            try:
+                worksheet = self.sheet.worksheet(sheet_name)  # 既存のワークシートを取得
+            except gspread.WorksheetNotFound:  # ワークシートが存在しない場合
+                worksheet = self.sheet.add_worksheet(  # 新規作成
+                    title=sheet_name,  # シート名
+                    rows=1000,  # 初期行数
+                    cols=4  # 初期列数（A-D）
+                )
+                # ヘッダー行を設定
+                headers = ['date_jst', 'user_id', 'user_name', 'present']  # ヘッダー定義（guild_id削除）
+                worksheet.update('A1:D1', [headers])  # ヘッダーを書き込み
+                logger.info(f"Created worksheet: {sheet_name}")  # 作成完了をログ出力
+
+            # 既存データを取得
+            all_values = worksheet.get_all_records()  # 全レコードを取得
+
+            # 今日のデータを抽出
+            today_data = {  # 今日のデータを辞書形式で保存
+                row['user_id']: row  # user_idをキーとする
+                for row in all_values  # 全レコードをループ
+                if row.get('date_jst') == today_jst  # 今日の日付のみ抽出
+            }
+
+            new_count = 0  # 新規追加カウンタ
+            update_count = 0  # 更新カウンタ
+            rows_to_append = []  # 追加する行のリスト
+
+            for member in vc_members:  # VCメンバーリストをループ
+                user_id = member['user_id']  # ユーザーID
+
+                if user_id not in today_data:  # 今日のデータに存在しない場合
+                    # 新規追加
+                    row = [  # 新しい行データ
+                        today_jst,  # 日付
+                        member['user_id'],  # ユーザーID
+                        member['user_name'],  # ユーザー名
+                        'TRUE'  # 出席フラグ
+                    ]
+                    rows_to_append.append(row)  # 追加リストに追加
+                    new_count += 1  # カウンタ増加
+                    logger.info(f"New presence in {vc_name}: {member['user_name']} on {today_jst}")  # 新規追加をログ出力
+                else:
+                    # 既にTRUEの場合は更新不要
+                    if today_data[user_id].get('present') != 'TRUE':  # まだTRUEでない場合
                     # 該当行を探して更新（本来はより効率的な方法を使うべき）
                     update_count += 1  # カウンタ増加
                     logger.info(f"Would update presence: {member['user_name']} on {today_jst}")  # 更新をログ出力
