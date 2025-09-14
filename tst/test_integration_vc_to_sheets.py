@@ -169,10 +169,10 @@ async def test_vc_to_sheets_integration_with_poll_once():
                 await poll_once_main(env_arg=1)
                 print("✅ poll_once.main()が正常に完了")
             except Exception as e:
-                    print(f"❌ poll_once.main()実行エラー: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    return False
+                print(f"❌ poll_once.main()実行エラー: {e}")
+                import traceback
+                traceback.print_exc()
+                return False
 
     # ========================================
     # 5. テスト結果の確認
