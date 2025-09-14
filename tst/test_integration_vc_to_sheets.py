@@ -124,6 +124,34 @@ async def test_vc_to_sheets_integration_with_poll_once():
     # ========================================
     print("\n🚀 poll_once.main()を実行中...")
 
+    # 環境変数の確認
+    print("\n📋 環境変数チェック:")
+    env_vars = {
+        'TST_DISCORD_BOT_TOKEN': os.getenv('TST_DISCORD_BOT_TOKEN'),
+        'TST_ALLOWED_VOICE_CHANNEL_IDS': os.getenv('TST_ALLOWED_VOICE_CHANNEL_IDS'),
+        'TST_GOOGLE_SHEET_NAME': os.getenv('TST_GOOGLE_SHEET_NAME'),
+        'TST_GOOGLE_SERVICE_ACCOUNT_JSON': os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON'),
+        'TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64': os.getenv('TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64')
+    }
+
+    for key, value in env_vars.items():
+        if value:
+            if 'TOKEN' in key or 'BASE64' in key:
+                print(f"  {key}: ✅ (設定済み)")
+            else:
+                print(f"  {key}: ✅ {value}")
+        else:
+            print(f"  {key}: ❌ 未設定")
+
+    # 必須環境変数のチェック
+    required_vars = ['TST_DISCORD_BOT_TOKEN', 'TST_ALLOWED_VOICE_CHANNEL_IDS', 'TST_GOOGLE_SHEET_NAME']
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    if missing_vars:
+        print(f"\n❌ 必須環境変数が不足しています: {', '.join(missing_vars)}")
+        print("テストをスキップします")
+        return False
+
     with patch.object(SheetsClient, 'update_sheet', mock_update_sheet):
         with patch.object(SlackNotifier, 'send_login_notification', mock_send_login_notification):
             with patch.object(SlackNotifier, 'send_logout_notification', mock_send_logout_notification):
@@ -134,6 +162,8 @@ async def test_vc_to_sheets_integration_with_poll_once():
 
                 except Exception as e:
                     print(f"❌ poll_once.main()実行エラー: {e}")
+                    import traceback
+                    traceback.print_exc()
                     return False
 
     # ========================================
