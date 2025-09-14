@@ -99,13 +99,13 @@ async def main(env_arg=None):
         
         logger.info(f"Found {len(vc_members)} members in VCs")  # メンバー数ログ
         
-        # 2. Google Sheetsに記録
-        logger.info("Connecting to Google Sheets...")  # 接続開始ログ
-        sheets_client = SheetsClient(service_account_json, sheet_name)  # Sheetsクライアント作成
-        sheets_client.connect()  # 接続
-        
-        logger.info("Recording presence data...")  # 記録開始ログ
-        result = sheets_client.upsert_presence(vc_members)  # 出席データ記録
+        # 2. Google Drive上のCSVに記録
+        logger.info("Connecting to Google Drive...")  # 接続開始ログ
+        csv_client = DriveCSVClient(service_account_json)  # CSVクライアント作成
+        csv_client.connect()  # 接続
+
+        logger.info("Recording presence data to CSV...")  # 記録開始ログ
+        result = csv_client.upsert_presence(vc_members)  # 出席データ記録
         logger.info(f"Recorded: {result['new']} new, {result['updated']} updated")  # 記録結果ログ
         
         # 3. Slack通知（設定されている場合）
