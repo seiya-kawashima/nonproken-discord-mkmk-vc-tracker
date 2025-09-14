@@ -177,7 +177,7 @@ jobs:  # 実行するジョブの定義
             def mock_init(self, service_account_json, base_folder_path, env_name):
                 # テスト用フォルダパスに変更
                 original_init(self, service_account_json, test_folder_path, env_name)
-                print(f"  📁 テスト用フォルダ: {test_folder_path}/{'{VC名}'}/{env_name}.csv")
+                print(f"  📁 テスト用フォルダ: {test_folder_path}/{{VC名}}/{env_name}.csv")
 
             # upsert_presenceの後処理を記録
             original_upsert = DriveCSVClient.upsert_presence
