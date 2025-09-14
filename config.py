@@ -237,13 +237,12 @@ class EnvConfig:
         Returns:
             dict: Google Drive設定の辞書
         """
-        from datetime import datetime  # 日時取得用
-
-        # 現在の年月を取得（YYYY/MM形式）
-        current_year_month = datetime.now().strftime('%Y/%m')  # 例: 2025/01
+        # 環境名を取得（PRD/TST/DEV）
+        env_name_short = env.name  # 環境の短縮名（PRD/TST/DEV）
 
         # デフォルトのフォルダ階層パス
-        default_folder_path = f"VC_Tracker_Data/{current_year_month}"  # 例: VC_Tracker_Data/2025/01
+        # discord_mokumoku_tracker/csv/{環境名} の形式
+        default_folder_path = f"discord_mokumoku_tracker/csv/{env_name_short}"  # 例: discord_mokumoku_tracker/csv/PRD
 
         # 環境に応じたフォルダパスの環境変数名を取得
         folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
