@@ -164,13 +164,40 @@ def test_google_sheets_connection():
         
     except gspread.exceptions.SpreadsheetNotFound:
         print(f"\n❌ エラー: スプレッドシート '{sheet_name}' が見つかりません")
-        print("\n確認事項:")
-        print("1. スプレッドシート名が正しいか確認")
-        print(f"   期待されるシート名: 'VCトラッカー'")
-        print("2. サービスアカウントに共有されているか確認:")
-        print("   - Google Sheetsで「共有」ボタンをクリック")
-        print("   - サービスアカウントのメールアドレスを追加")
-        print("   - 「編集者」権限を付与")
+        print("\n🔍 エラー原因の切り分け:")
+
+        # 原因1: スプレッドシート名の確認
+        print("\n【原因1】スプレッドシート名が間違っている可能性")
+        print(f"  現在の設定: '{sheet_name}'")
+        print(f"  期待される名前の例:")
+        print(f"    - 'VCトラッカー_TST' (テスト環境用)")
+        print(f"    - 'VCトラッカー' (環境区別なし)")
+        print(f"  ✅ 対処法: Google Driveで実際のスプレッドシート名を確認")
+
+        # 原因2: サービスアカウントへの共有
+        print("\n【原因2】サービスアカウントに共有されていない可能性")
+
+        # サービスアカウントのメールアドレスを取得して表示
+        try:
+            if auth_file and os.path.exists(auth_file):
+                with open(auth_file, 'r') as f:
+                    auth_data = json.load(f)
+                    client_email = auth_data.get('client_email', '不明')
+                    print(f"  サービスアカウント: {client_email}")
+            else:
+                print(f"  サービスアカウント: (メールアドレスを確認できません)")
+        except:
+            print(f"  サービスアカウント: (メールアドレスを取得できません)")
+
+        print(f"  ✅ 対処法:")
+        print(f"    1. Google Sheetsで対象のスプレッドシートを開く")
+        print(f"    2. 右上の「共有」ボタンをクリック")
+        print(f"    3. 上記のサービスアカウントのメールアドレスを追加")
+        print(f"    4. 「編集者」権限を付与して保存")
+
+        # 原因3: スプレッドシート自体が存在しない
+        print("\n【原因3】スプレッドシート自体が作成されていない可能性")
+        print(f"  ✅ 対処法: Google Driveで '{sheet_name}' という名前のスプレッドシートを新規作成")
         
         # GitHub Actions環境の場合はSecrets一覧を表示
         if is_github:
