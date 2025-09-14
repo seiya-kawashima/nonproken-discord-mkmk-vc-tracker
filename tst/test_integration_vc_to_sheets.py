@@ -17,14 +17,21 @@ from unittest.mock import patch, MagicMock  # モック用ライブラリ
 import tempfile  # 一時ファイル作成用
 
 # プロジェクトのルートディレクトリをパスに追加
-sys.path.insert(0, str(Path(__file__).parent.parent))
+project_root = str(Path(__file__).parent.parent)
+sys.path.insert(0, project_root)
+sys.path.insert(0, os.path.join(project_root, 'src'))
 
-# poll_once.pyのmain関数をインポート
-from poll_once import main as poll_once_main
-from src.discord_client import DiscordVCPoller  # Discord VC監視クライアント
-from src.sheets_client import SheetsClient  # Google Sheetsクライアント
-from src.slack_notifier import SlackNotifier  # Slack通知クライアント
-from src.logger import VCTrackerLogger  # ロガー
+# 必要なモジュールをインポート
+try:
+    from poll_once import main as poll_once_main
+    from src.discord_client import DiscordVCPoller  # Discord VC監視クライアント
+    from src.sheets_client import SheetsClient  # Google Sheetsクライアント
+    from src.slack_notifier import SlackNotifier  # Slack通知クライアント
+    from src.logger import VCTrackerLogger  # ロガー
+except ImportError as e:
+    print(f"❌ インポートエラー: {e}")
+    print(f"Python Path: {sys.path}")
+    sys.exit(1)
 
 
 async def test_vc_to_sheets_integration_with_poll_once():
