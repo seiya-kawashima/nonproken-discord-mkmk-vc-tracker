@@ -1,0 +1,240 @@
+name: Google Sheets 認証診断テスト
+
+on:
+  workflow_dispatch:  # 手動実行のみ
+    inputs:
+      test_type:
+        description: 'テストタイプ'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - api_check
+          - sheets_list
+          - create_test
+
+jobs:
+  診断テスト:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: コードをチェックアウト
+      uses: actions/checkout@v4
+
+    - name: Python環境をセットアップ
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: 依存関係をインストール
+      run: |
+        pip install gspread google-auth google-auth-oauthlib google-auth-httplib2
+
+    - name: サービスアカウントJSONを復元
+      env:
+        TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
+      run: |
+        echo "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json
+        echo "✅ サービスアカウントJSONファイルを作成しました"
+
+    - name: サービスアカウント情報を表示
+      run: |
+        echo "📋 サービスアカウント情報:"
+        python3 -c "
+        import json
+        with open('service_account.json', 'r') as f:
+            data = json.load(f)
+            print(f'  プロジェクトID: {data.get(\"project_id\", \"不明\")}')
+            print(f'  クライアントメール: {data.get(\"client_email\", \"不明\")}')
+            print(f'  プライベートキーID: {data.get(\"private_key_id\", \"不明\")[:8]}...')
+        "
+
+    - name: Google APIs有効化状態を確認
+      if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'api_check' }}
+      run: |
+        echo "🔍 Google APIs有効化状態を確認中..."
+        python3 << 'EOF'
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import json
+
+        # サービスアカウントの認証情報を読み込み
+        with open('service_account.json', 'r') as f:
+            creds_data = json.load(f)
+
+        # 必要なスコープを定義
+        scopes = [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive'
+        ]
+
+        try:
+            # 認証情報を作成
+            creds = Credentials.from_service_account_info(creds_data, scopes=scopes)
+            print("✅ 認証情報の作成に成功")
+
+            # gspreadクライアントを作成
+            client = gspread.authorize(creds)
+            print("✅ gspreadクライアントの作成に成功")
+
+            # APIへのアクセステスト（空のリストを取得）
+            try:
+                sheets = client.openall()
+                print(f"✅ Google Sheets APIへのアクセス成功（{len(sheets)}個のスプレッドシートを検出）")
+            except Exception as e:
+                if "Google Sheets API has not been used" in str(e):
+                    print("❌ Google Sheets APIが有効化されていません")
+                    print("   Google Cloud Consoleで有効化してください")
+                elif "Google Drive API has not been used" in str(e):
+                    print("❌ Google Drive APIが有効化されていません")
+                    print("   Google Cloud Consoleで有効化してください")
+                else:
+                    print(f"⚠️ API確認中にエラー: {e}")
+
+        except Exception as e:
+            print(f"❌ 認証エラー: {e}")
+            exit(1)
+        EOF
+
+    - name: アクセス可能なスプレッドシート一覧を表示
+      if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'sheets_list' }}
+      run: |
+        echo "📊 アクセス可能なスプレッドシート一覧:"
+        python3 << 'EOF'
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import json
+
+        # サービスアカウントの認証情報を読み込み
+        with open('service_account.json', 'r') as f:
+            creds_data = json.load(f)
+
+        # 必要なスコープを定義
+        scopes = [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive'
+        ]
+
+        try:
+            # 認証情報を作成
+            creds = Credentials.from_service_account_info(creds_data, scopes=scopes)
+
+            # gspreadクライアントを作成
+            client = gspread.authorize(creds)
+
+            # すべてのスプレッドシートを取得
+            sheets = client.openall()
+
+            if len(sheets) == 0:
+                print("⚠️ アクセス可能なスプレッドシートがありません")
+                print("   サービスアカウントにスプレッドシートを共有してください")
+            else:
+                print(f"✅ {len(sheets)}個のスプレッドシートが見つかりました:")
+                for sheet in sheets:
+                    print(f"   - {sheet.title} (ID: {sheet.id})")
+
+            # 特定のシートを探す
+            target_names = ['VCトラッカー_TST', 'VCトラッカー', 'VC_Tracker_Test']
+            print("\n🔍 ターゲットシートの検索:")
+            for name in target_names:
+                try:
+                    sheet = client.open(name)
+                    print(f"   ✅ '{name}' が見つかりました (ID: {sheet.id})")
+                except gspread.SpreadsheetNotFound:
+                    print(f"   ❌ '{name}' が見つかりません")
+                except Exception as e:
+                    print(f"   ⚠️ '{name}' 検索中にエラー: {e}")
+
+        except Exception as e:
+            print(f"❌ エラー: {e}")
+            exit(1)
+        EOF
+
+    - name: テストシートの作成と削除テスト
+      if: ${{ github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'create_test' }}
+      run: |
+        echo "🧪 テストシートの作成と削除テスト:"
+        python3 << 'EOF'
+        import gspread
+        from google.oauth2.service_account import Credentials
+        import json
+        from datetime import datetime
+
+        # サービスアカウントの認証情報を読み込み
+        with open('service_account.json', 'r') as f:
+            creds_data = json.load(f)
+
+        # 必要なスコープを定義
+        scopes = [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive'
+        ]
+
+        try:
+            # 認証情報を作成
+            creds = Credentials.from_service_account_info(creds_data, scopes=scopes)
+
+            # gspreadクライアントを作成
+            client = gspread.authorize(creds)
+
+            # テスト用シート名
+            test_sheet_name = f"TEST_TEMP_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+            try:
+                # 新しいスプレッドシートを作成
+                print(f"📝 テストシート '{test_sheet_name}' を作成中...")
+                sheet = client.create(test_sheet_name)
+                print(f"   ✅ 作成成功 (ID: {sheet.id})")
+
+                # データを書き込み
+                worksheet = sheet.sheet1
+                worksheet.update('A1', [['テスト', '成功'], ['Test', 'Success']])
+                print("   ✅ データ書き込み成功")
+
+                # データを読み取り
+                values = worksheet.get_all_values()
+                print(f"   ✅ データ読み取り成功: {values}")
+
+                # スプレッドシートを削除
+                client.del_spreadsheet(sheet.id)
+                print("   ✅ テストシート削除成功")
+
+            except Exception as e:
+                print(f"   ❌ テスト失敗: {e}")
+                # クリーンアップ試行
+                try:
+                    sheets = client.openall()
+                    for s in sheets:
+                        if s.title == test_sheet_name:
+                            client.del_spreadsheet(s.id)
+                            print("   🧹 クリーンアップ完了")
+                except:
+                    pass
+                exit(1)
+
+        except Exception as e:
+            print(f"❌ エラー: {e}")
+            exit(1)
+        EOF
+
+    - name: 診断結果サマリー
+      if: always()
+      run: |
+        echo "=========================================="
+        echo "📊 診断結果サマリー"
+        echo "=========================================="
+        echo ""
+        echo "✅ 成功した項目:"
+        echo "  - サービスアカウントJSONの復号化"
+        echo ""
+        echo "確認事項:"
+        echo "1. Google Cloud Consoleで以下のAPIが有効か確認:"
+        echo "   - Google Sheets API"
+        echo "   - Google Drive API"
+        echo ""
+        echo "2. スプレッドシート 'VCトラッカー_TST' が存在し、"
+        echo "   サービスアカウントに編集者権限で共有されているか確認"
+        echo ""
+        echo "3. サービスアカウントのプロジェクトが正しいか確認"
+        echo "=========================================="
