@@ -55,25 +55,25 @@ jobs:  # 実行するジョブ（作業単位）の定義
         # セキュリティ: ファイル権限を制限（所有者のみ読み書き可能）
         chmod 600 service_account.json  # 600 = 所有者のみ読み書き可能
     
-    - name: 機密情報をマスク
-      run: |
-        # GitHub Actionsのログで機密情報をマスク
-        echo "::add-mask::${{ secrets.DISCORD_BOT_TOKEN }}"
-        echo "::add-mask::${{ secrets.SLACK_BOT_TOKEN }}"
-        echo "::add-mask::${{ secrets.SLACK_CHANNEL_ID }}"
-    
-    - name: 監視スクリプト実行
-      env:
-        DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
-        GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
-        GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json
-        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-        TZ: Asia/Tokyo  # タイムゾーン設定
-        LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}  # デバッグモード対応
-      run: |
-        python poll_once.py
+    - name: 機密情報をマスク  # ステップ5: ログに機密情報が表示されないようにする
+      run: |  # シェルコマンドを実行
+        # GitHub Actionsのログで機密情報をマスク（***で表示される）
+        echo "::add-mask::${{ secrets.DISCORD_BOT_TOKEN }}"  # Discord Botトークンをマスク
+        echo "::add-mask::${{ secrets.SLACK_BOT_TOKEN }}"  # Slack Botトークンをマスク
+        echo "::add-mask::${{ secrets.SLACK_CHANNEL_ID }}"  # SlackチャンネルIDをマスク
+
+    - name: 監視スクリプト実行  # ステップ6: メインの監視処理を実行
+      env:  # 環境変数の設定（プログラムで使用する設定値）
+        DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}  # Discord Botトークン（GitHub Secretsから取得）
+        GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}  # Google Sheetsの名前（GitHub Secretsから取得）
+        GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json  # 認証用JSONファイルのパス
+        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}  # 監視対象のVCチャンネルID（カンマ区切り）
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}  # Slack Botトークン（オプション）
+        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}  # SlackチャンネルID（オプション）
+        TZ: Asia/Tokyo  # タイムゾーンを日本時間に設定
+        LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}  # デバッグモード: 1=詳細、2=通常
+      run: |  # シェルコマンドを実行
+        python poll_once.py  # VCメンバーを監視してGoogle Sheetsに記録するPythonスクリプトを実行
     
     - name: クリーンアップ
       if: always()  # 常に実行
