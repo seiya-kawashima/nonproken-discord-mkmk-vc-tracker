@@ -115,14 +115,9 @@ async def test_vc_to_sheets_integration_with_poll_once():
     # ========================================
     # 3. Slack通知をモック（実際に通知しない）
     # ========================================
-    def mock_send_login_notification(self, display_name, duration_minutes):
-        """テスト用のSlack通知メソッド"""
-        print(f"  💬 モック: Slack通知 - {display_name}がログイン（{duration_minutes}分）")
-        return True
-
-    def mock_send_logout_notification(self, display_name, duration_minutes):
-        """テスト用のSlack通知メソッド"""
-        print(f"  💬 モック: Slack通知 - {display_name}がログアウト（{duration_minutes}分）")
+    def mock_send_login_notification(user_name: str, total_days: int) -> bool:
+        """テスト用のSlack通知メソッド（ログイン用）"""
+        print(f"  💬 モック: Slack通知 - {user_name}がログイン（通算{total_days}日目）")
         return True
 
     # ========================================
