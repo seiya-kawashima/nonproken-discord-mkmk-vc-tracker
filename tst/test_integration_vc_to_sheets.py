@@ -146,7 +146,7 @@ async def test_vc_to_sheets_integration_with_poll_once():
             print(f"  {key}: ❌ 未設定")
 
     # config.pyから設定値を取得
-    from src.config import EnvConfig, Environment
+    from config import EnvConfig, Environment
     sheets_config = EnvConfig.get_google_sheets_config(Environment.TST)
     print(f"  TST_GOOGLE_SHEET_NAME: ✅ {sheets_config['sheet_name']} (config.pyで設定)")
 
