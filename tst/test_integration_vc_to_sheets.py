@@ -3,8 +3,8 @@
 """
 Discord VC → Google Sheets 統合テスト
 =====================================
-実際のDiscord VCメンバーを取得してGoogle Sheetsに記録するテスト
-本番環境に近い形でエンドツーエンドのテストを実施
+poll_once.pyのmain関数を利用して実際の処理フローをテスト
+必要に応じて一部をモック化して安全にテストを実施
 """
 
 import asyncio  # 非同期処理用ライブラリ
@@ -13,16 +13,21 @@ import sys  # システム関連の処理用
 from datetime import datetime  # 日時処理用
 import json  # JSON処理用
 from pathlib import Path  # ファイルパス処理用
+from unittest.mock import patch, MagicMock  # モック用ライブラリ
+import tempfile  # 一時ファイル作成用
 
 # プロジェクトのルートディレクトリをパスに追加
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# poll_once.pyのmain関数をインポート
+from poll_once import main as poll_once_main
 from src.discord_client import DiscordVCPoller  # Discord VC監視クライアント
 from src.sheets_client import SheetsClient  # Google Sheetsクライアント
+from src.slack_notifier import SlackNotifier  # Slack通知クライアント
 from src.logger import VCTrackerLogger  # ロガー
 
 
-async def test_vc_to_sheets_integration():
+async def test_vc_to_sheets_integration_with_poll_once():
     """Discord VCからGoogle Sheetsへの統合テスト"""
 
     # ロガー初期化
