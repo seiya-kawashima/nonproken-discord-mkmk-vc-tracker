@@ -17,6 +17,7 @@ class SheetsClient:
 
     SCOPES = [  # 必要なGoogle APIスコープ
         'https://www.googleapis.com/auth/spreadsheets',  # スプレッドシート読み書き権限
+        'https://www.googleapis.com/auth/drive',  # Google Drive権限（ファイル検索に必要）
     ]
 
     def __init__(self, service_account_json: str, sheet_name: str):
