@@ -62,9 +62,9 @@ async def test_vc_to_sheets_integration_with_poll_once():
     # 2. SheetsClientのupdate_sheetメソッドをモック
     # ========================================
     # 本番のワークシートではなくテスト用ワークシートに書き込むようにモック
-    def mock_update_sheet(self, vc_members, sheet_name="VC_Members"):
-        """テスト用のupdate_sheetメソッド"""
-        print(f"  📊 モック: {len(vc_members)}件のメンバー情報を記録中...")
+    def mock_upsert_presence(self, members):
+        """テスト用のupsert_presenceメソッド"""
+        print(f"  📊 モック: {len(members)}件のメンバー情報を記録中...")
 
         # テスト用シートがまだ作成されていない場合は作成
         nonlocal test_worksheet, sheets_client_instance
@@ -73,29 +73,31 @@ async def test_vc_to_sheets_integration_with_poll_once():
         try:
             # テスト用ワークシートを取得または作成
             try:
-                test_worksheet = self.spreadsheet.worksheet(test_worksheet_name)
+                test_worksheet = self.sheet.worksheet(test_worksheet_name)
             except:
                 print(f"  📝 テスト用ワークシート '{test_worksheet_name}' を作成中...")
-                test_worksheet = self.spreadsheet.add_worksheet(
+                test_worksheet = self.sheet.add_worksheet(
                     title=test_worksheet_name,
                     rows=1000,
                     cols=10
                 )
                 # ヘッダー行を追加
-                headers = ['Timestamp', 'User_ID', 'Display_Name', 'Channel_ID', 'Action']
+                headers = ['date_jst', 'guild_id', 'user_id', 'user_name', 'present']
                 test_worksheet.append_row(headers)
 
             # データを記録
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            from datetime import datetime, timezone, timedelta
+            jst = timezone(timedelta(hours=9))
+            today_jst = datetime.now(jst).strftime('%Y-%m-%d')
             rows_to_add = []
 
-            for user_id, member_info in vc_members.items():
+            for member in members:
                 row = [
-                    timestamp,
-                    user_id,
-                    member_info.get('display_name', 'Unknown'),
-                    member_info.get('channel_id', 'Unknown'),
-                    'Login'
+                    today_jst,
+                    member.get('guild_id', 'Unknown'),
+                    member.get('user_id', 'Unknown'),
+                    member.get('user_name', 'Unknown'),
+                    1  # present
                 ]
                 rows_to_add.append(row)
 
@@ -103,11 +105,12 @@ async def test_vc_to_sheets_integration_with_poll_once():
                 test_worksheet.append_rows(rows_to_add)
                 print(f"  ✅ {len(rows_to_add)}件のデータをテスト用シートに記録")
 
-            return True
+            # 戻り値を本物のメソッドと同じ形式にする
+            return {'new': len(rows_to_add), 'updated': 0}
 
         except Exception as e:
             print(f"  ❌ モックエラー: {e}")
-            return False
+            return {'new': 0, 'updated': 0}
 
     # ========================================
     # 3. Slack通知をモック（実際に通知しない）
@@ -159,7 +162,7 @@ async def test_vc_to_sheets_integration_with_poll_once():
         print("テストをスキップします")
         return False
 
-    with patch.object(SheetsClient, 'update_sheet', mock_update_sheet):
+    with patch.object(SheetsClient, 'upsert_presence', mock_upsert_presence):
         with patch.object(SlackNotifier, 'send_login_notification', mock_send_login_notification):
             with patch.object(SlackNotifier, 'send_logout_notification', mock_send_logout_notification):
                 try:
