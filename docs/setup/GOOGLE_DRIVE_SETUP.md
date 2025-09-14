@@ -139,7 +139,7 @@ GOOGLE_SERVICE_ACCOUNT_JSON=service_account.json
 3. **GitHub Secretsに登録**：
    - GitHubリポジトリの「Settings」→「Secrets and variables」→「Actions」
    - 「New repository secret」をクリック
-   - Name: `GOOGLE_SERVICE_ACCOUNT_JSON`
+   - Name: `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
    - Secret: コピーした文字列を貼り付け
    - 「Add secret」をクリック
 
