@@ -23,21 +23,23 @@ class VCMember:
     timestamp: datetime
 ```
 
-### 2. Google Sheets モジュール (`sheets_client.py`)
+### 2. Google Drive CSV モジュール (`drive_csv_client.py`)
 
-**責務**: スプレッドシート操作
+**責務**: Google Drive上のCSVファイル操作
 
 ```python
-class SheetsClient:
-    def __init__(self, credentials_path: str, sheet_name: str)
-    def upsert_presence(self, date_jst: str, members: list[VCMember])
-    def get_total_days(self, user_id: str) -> int
+class DriveCSVClient:
+    def __init__(self, service_account_json: str, folder_name: str = "VC_Tracker_Data")
+    def connect()
+    def upsert_presence(self, members: list[Dict[str, Any]]) -> Dict[str, int]
 ```
 
 **データ操作仕様**:
-- Upsert: `(date_jst, guild_id, user_id)` をキーとして存在確認
+- VCチャンネルごとに個別のCSVファイルを管理
+- Upsert: `(date_jst, user_id)` をキーとして存在確認
 - 存在する場合: スキップ（すでにTRUEなので更新不要）
 - 存在しない場合: 新規行追加（present=TRUE）
+- Google Drive上に`VC_Tracker_Data`フォルダを自動作成
 
 ### 3. Slack通知モジュール (`slack_notifier.py`)
 
@@ -58,8 +60,8 @@ class SlackNotifier:
 **処理フロー**:
 1. 環境変数読み込み
 2. Discord接続 → VCメンバー取得
-3. Google Sheets更新
-4. 通算日数計算
+3. Google Drive CSV更新
+4. 通算日数計算（CSVファイルから集計）
 5. Slack通知送信
 6. 終了
 
@@ -69,7 +71,7 @@ class SlackNotifier:
 - リトライ: 3回まで（指数バックオフ）
 - 最終失敗時: エラーログ出力、処理継続（次回実行に期待）
 
-### Google Sheets API エラー
+### Google Drive API エラー
 - Rate Limit: 60秒待機後リトライ
 - 認証エラー: 即座に終了（設定ミス）
 
@@ -79,7 +81,7 @@ class SlackNotifier:
 ## パフォーマンス考慮事項
 
 ### バッチ処理
-- Sheets API: `batch_update` で複数行を一括更新
+- Drive API: VCごとのCSVファイルを一括更新
 - Slack API: 複数ユーザーを1メッセージにまとめる
 
 ### キャッシュ
@@ -94,7 +96,7 @@ class SlackNotifier:
 
 ### 権限最小化
 - Discord Bot: 必要最小限のIntents
-- Google Sheets: 特定シートのみ編集権限
+- Google Drive: ファイルの作成・編集権限
 - Slack Bot: `chat:write` のみ
 
 ## テスト戦略
@@ -106,7 +108,7 @@ pytest tests/
 
 ### モック対象
 - Discord API レスポンス
-- Google Sheets API
+- Google Drive API
 - Slack API
 - 日時（固定値でテスト）
 
@@ -142,26 +144,25 @@ logging.basicConfig(
 ### スケーラビリティ
 - 複数サーバー対応: guild_id ごとに処理
 - 並列処理: asyncio で複数VCを同時監視
-- データベース移行: Sheets → PostgreSQL（大規模化時）
+- データベース移行: CSV → PostgreSQL（大規模化時）
 
-## データベース設計
+## CSVファイル設計
 
-### `daily_presence` テーブル
+### ファイル構成
+- **保存場所**: Google Drive上の`VC_Tracker_Data`フォルダ
+- **ファイル名**: `{VCチャンネル名}.csv` (例: `general-voice.csv`)
 
-| カラム | 型 | 説明 | 制約 |
+### CSVカラム構成
+
+| カラム | 型 | 説明 | 例 |
 |---|---|---|---|
-| date_jst | DATE | 日本時間の日付 | NOT NULL |
-| guild_id | VARCHAR(20) | DiscordサーバーID | NOT NULL |
-| user_id | VARCHAR(20) | DiscordユーザーID | NOT NULL |
-| user_name | VARCHAR(100) | ユーザー名#識別子 | NOT NULL |
-| present | BOOLEAN | ログイン有無 | DEFAULT TRUE |
-| created_at | TIMESTAMP | レコード作成日時 | DEFAULT NOW() |
-| updated_at | TIMESTAMP | レコード更新日時 | DEFAULT NOW() |
+| date_jst | STRING | 日本時間の日付 | 2025/9/11 |
+| user_id | STRING | DiscordユーザーID | 111111111111111111 |
+| user_name | STRING | ユーザー名#識別子 | kawashima#1234 |
+| present | STRING | ログイン有無 | TRUE |
 
-**インデックス**:
-- PRIMARY KEY: `(date_jst, guild_id, user_id)`
-- INDEX: `user_id` (通算日数集計用)
-- INDEX: `date_jst` (日別集計用)
+**ユニークキー**:
+- `(date_jst, user_id)` の組み合わせ
 
 ## API仕様
 
@@ -226,9 +227,9 @@ logging.basicConfig(
 ### requirements.txt
 ```
 discord.py==2.3.2
-gspread==6.0.0
+google-api-python-client==2.100.0
 google-auth==2.28.0
-google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.1.1
 slack-sdk==3.26.0
 python-dotenv==1.0.0
 pytz==2024.1
