@@ -82,7 +82,7 @@ class SheetsClient:
 
         # JSTの今日の日付を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
-        today_jst = datetime.now(jst).strftime('%Y-%m-%d')  # 今日の日付（YYYY-MM-DD形式）
+        today_jst = datetime.now(jst).strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
         
         # 既存データを取得
         all_values = self.worksheet.get_all_records()  # 全レコードを取得
@@ -162,7 +162,7 @@ class SheetsClient:
 
         # JSTの今日の日付を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
-        today_jst = datetime.now(jst).strftime('%Y-%m-%d')  # 今日の日付（YYYY-MM-DD形式）
+        today_jst = datetime.now(jst).strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
         
         # 全データを取得
         all_values = self.worksheet.get_all_records()  # 全レコードを取得
