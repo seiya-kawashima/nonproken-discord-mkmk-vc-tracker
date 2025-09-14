@@ -75,19 +75,19 @@ jobs:  # 実行するジョブ（作業単位）の定義
       run: |  # シェルコマンドを実行
         python poll_once.py  # VCメンバーを監視してGoogle Sheetsに記録するPythonスクリプトを実行
     
-    - name: クリーンアップ
-      if: always()  # 常に実行
-      run: |
-        # 機密ファイルを削除
-        rm -f service_account.json
-    
+    - name: クリーンアップ  # ステップ7: 後処理（機密ファイルの削除）
+      if: always()  # 成功・失敗に関わらず常に実行（セキュリティのため）
+      run: |  # シェルコマンドを実行
+        # 機密ファイルを削除（セキュリティ対策）
+        rm -f service_account.json  # Google認証用JSONファイルを削除
+
     # エラー通知（オプション）
-    - name: 失敗時に通知
-      if: failure()
-      env:
-        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
-      run: |
+    - name: 失敗時に通知  # ステップ8: エラー時にSlack通知（オプション）
+      if: failure()  # 前のステップが失敗した場合のみ実行
+      env:  # 環境変数の設定
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}  # Slack Botトークン（GitHub Secretsから取得）
+        SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}  # SlackチャンネルID（GitHub Secretsから取得）
+      run: |  # シェルコマンドを実行
         # エラー通知スクリプト（別途作成が必要）
-        echo "Polling failed at $(date)"
-        # python notify_error.py  # エラー通知スクリプトがある場合
+        echo "Polling failed at $(date)"  # エラー発生時刻を記録
+        # python notify_error.py  # エラー通知スクリプトがある場合はコメントを外して使用
