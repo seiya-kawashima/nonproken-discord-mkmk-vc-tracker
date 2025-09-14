@@ -46,6 +46,7 @@ async def main(env_arg=None):
     try:
         discord_config = EnvConfig.get_discord_config(env)  # Discord設定
         sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定
+        drive_config = EnvConfig.get_google_drive_config(env)  # Google Drive設定
         slack_config = EnvConfig.get_slack_config(env)  # Slack設定
     except ValueError as e:
         logger.error(f"設定エラー: {e}")  # 設定エラーをログ出力
