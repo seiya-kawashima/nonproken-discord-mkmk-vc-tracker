@@ -194,8 +194,17 @@ class EnvConfig:
         """
         env_name = cls.get_environment_name(env)  # 環境の日本語名を取得
 
-        # 全環境で同じシート名を使用
-        sheet_name = cls.SHEET_NAME  # 定数から取得（'VCトラッカー'）
+        # 環境に応じたシート名を使用
+        if env == Environment.TST:  # テスト環境の場合
+            sheet_name = cls.TST_SHEET_NAME  # テスト用のシート名を使用
+        elif env == Environment.DEV:  # 開発環境の場合
+            sheet_name = cls.DEV_SHEET_NAME  # 開発用のシート名を使用
+        else:  # 本番環境の場合
+            sheet_name = cls.PRD_SHEET_NAME  # 本番用のシート名を使用
+
+        # 環境変数で上書き可能（オプション）
+        sheet_name_key = cls.get_env_var_name('GOOGLE_SHEET_NAME', env)  # 環境変数名を作成
+        sheet_name = cls.get(sheet_name_key, sheet_name)  # 環境変数があれば上書き
 
         # 環境に応じた環境変数名を取得
         json_key = cls.get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON', env)  # JSONファイルパスの環境変数名
