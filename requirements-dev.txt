@@ -1,21 +1,45 @@
-# Development Dependencies
-# Install with: pip install -r requirements-dev.txt
-# This includes everything needed for local development
+# ========================================
+# 開発環境用 依存パッケージ定義ファイル (requirements-dev.txt)
+# ========================================
+# 概要: 開発者がローカル環境で開発する際に必要な全てのライブラリ
+#       本番用、テスト用、開発専用ツールを全て含む完全セット
+#
+# なぜこのファイルが必要？:
+#   - 開発者が必要な全てのツールを一度にインストールできる
+#   - ドキュメント生成、デバッグツール、開発補助ツールを含む
+#   - 新しい開発者がすぐに開発を始められる環境を提供
+#   - コードを書く前の準備（pre-commit）などの自動化ツールを含む
+#
+# 使い方:
+#   pip install -r requirements-dev.txt
+#   (これだけで開発に必要な全てがインストールされる)
+#
+# 含まれる内容:
+#   - requirements.txt (本番用)
+#   - requirements-tst.txt (テスト用)
+#   - 開発専用ツール
+# ========================================
 
-# Include production dependencies
--r requirements.txt
+# ====================
+# 他の要件ファイルを含める
+# ====================
+-r requirements.txt  # 本番環境用のライブラリを全て含める（Discord.py、gspreadなど）
+-r requirements-tst.txt  # テスト環境用のライブラリを全て含める（pytest、flake8など）
 
-# Include test dependencies
--r requirements-test.txt
+# ====================
+# ドキュメント生成ツール
+# ====================
+sphinx==7.2.6  # プロジェクトのドキュメントを自動生成するツール（HTML形式のマニュアル作成）
+sphinx-rtd-theme==2.0.0  # Sphinxの見やすいテーマ（Read the Docsスタイルのデザイン）
 
-# Documentation
-sphinx==7.2.6
-sphinx-rtd-theme==2.0.0
+# ====================
+# 開発補助ツール
+# ====================
+ipython==8.23.0  # 高機能な対話型Pythonシェル（デバッグや実験的なコード実行用）
+pre-commit==3.7.0  # コミット前に自動でコード品質チェックを実行（ミスを防ぐ）
 
-# Development Tools
-ipython==8.23.0
-pre-commit==3.7.0
-
-# Type Stubs
-types-pytz==2024.1.0.20240203
-types-requests==2.31.0.20240310
+# ====================
+# 型定義スタブ
+# ====================
+types-pytz==2024.1.0.20240203  # pytzライブラリの型定義ファイル（型チェックの精度向上）
+types-requests==2.31.0.20240310  # requestsライブラリの型定義ファイル（HTTPライブラリの型情報）
