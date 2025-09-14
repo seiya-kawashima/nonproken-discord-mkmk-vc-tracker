@@ -36,18 +36,20 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, folder_path: str = "VC_Tracker_Data"):
+    def __init__(self, service_account_json: str, base_folder_path: str = "discord_mokumoku_tracker/csv", env_name: str = "PRD"):
         """初期化処理
 
         Args:
             service_account_json: サービスアカウントJSONファイルパス
-            folder_path: Google Drive上のフォルダパス（階層構造対応）
-                        例: "VC_Tracker_Data/2025/01"
+            base_folder_path: Google Drive上のベースフォルダパス
+                             例: "discord_mokumoku_tracker/csv"
+            env_name: 環境名（PRD/TST/DEV）
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
-        self.folder_path = folder_path  # フォルダパス（階層構造）を保存
+        self.base_folder_path = base_folder_path  # ベースフォルダパスを保存
+        self.env_name = env_name  # 環境名を保存（ファイル名に使用）
         self.service = None  # Google Drive APIサービス
-        self.folder_id = None  # 最終フォルダID
+        self.vc_folder_ids = {}  # VCチャンネル名ごとのフォルダIDを保存
 
     def connect(self):
         """Google Drive APIに接続
@@ -66,24 +68,24 @@ class DriveCSVClient:
             # Google Drive APIサービスを構築
             self.service = build('drive', 'v3', credentials=creds)  # APIサービス作成
 
-            # フォルダ階層を検索または作成
-            self._ensure_folder_hierarchy()  # フォルダ階層の存在確認・作成
+            # ベースフォルダの存在確認・作成
+            self._ensure_base_folder()  # ベースフォルダの存在確認・作成
 
-            logger.info(f"Connected to Google Drive, folder path: {self.folder_path}")  # 接続成功をログ出力
+            logger.info(f"Connected to Google Drive, base folder: {self.base_folder_path}")  # 接続成功をログ出力
 
         except Exception as e:  # エラー発生時
             logger.error(f"Failed to connect to Google Drive: {e}")  # エラーをログ出力
             raise  # エラーを再発生
 
-    def _ensure_folder_hierarchy(self):
-        """フォルダ階層が存在しない場合は作成
+    def _ensure_base_folder(self):
+        """ベースフォルダ階層が存在しない場合は作成
 
-        Google Drive上にVC Trackerデータ用のフォルダ階層を作成します。
-        例: "VC_Tracker_Data/2025/01" の場合、
-        VC_Tracker_Data → 2025 → 01 の順に作成・確認します。
+        Google Drive上にベースフォルダ階層を作成します。
+        例: "discord_mokumoku_tracker/csv" の場合、
+        discord_mokumoku_tracker → csv の順に作成・確認します。
         """  # メソッドの説明
-        # フォルダパスを分割（例: "VC_Tracker_Data/2025/01" → ["VC_Tracker_Data", "2025", "01"]）
-        folder_names = self.folder_path.split('/')  # スラッシュで分割
+        # フォルダパスを分割
+        folder_names = self.base_folder_path.split('/')  # スラッシュで分割
         parent_id = None  # 親フォルダID（最初はルート）
 
         # 各階層のフォルダを順番に作成・確認
@@ -114,23 +116,66 @@ class DriveCSVClient:
 
             parent_id = folder_id  # 次の階層の親フォルダとして設定
 
-        # 最終的なフォルダIDを保存
-        self.folder_id = parent_id  # 最下層のフォルダIDを保存
-        logger.info(f"Folder hierarchy ready: {self.folder_path} (ID: {self.folder_id})")  # 階層準備完了をログ出力
+        # ベースフォルダIDを保存
+        self.base_folder_id = parent_id  # ベースフォルダIDを保存
+        logger.info(f"Base folder ready: {self.base_folder_path} (ID: {self.base_folder_id})")  # 階層準備完了をログ出力
+
+    def _ensure_vc_folder(self, vc_name: str) -> str:
+        """VCチャンネル用のフォルダを作成・取得
+
+        discord_mokumoku_tracker/csv/{VC名}/ のフォルダを作成します。
+        既に存在する場合はそのIDを返します。
+
+        Args:
+            vc_name: VCチャンネル名
+
+        Returns:
+            VCチャンネルフォルダのID
+        """  # メソッドの説明
+        # VCチャンネル名をフォルダ名として使用（スラッシュはアンダースコアに置換）
+        folder_name = vc_name.replace('/', '_').replace('\\', '_')  # フォルダ名作成
+
+        # キャッシュから取得
+        if folder_name in self.vc_folder_ids:  # 既にキャッシュにある場合
+            return self.vc_folder_ids[folder_name]  # キャッシュから返す
+
+        # フォルダを検索
+        query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{self.base_folder_id}' in parents and trashed=false"  # 検索クエリ
+        results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
+        items = results.get('files', [])  # 結果を取得
+
+        if items:  # フォルダが見つかった場合
+            folder_id = items[0]['id']  # フォルダIDを取得
+            logger.debug(f"Found existing VC folder: {folder_name} (ID: {folder_id})")  # 既存フォルダをログ出力
+        else:  # フォルダが見つからない場合
+            # フォルダを作成
+            file_metadata = {  # フォルダのメタデータ
+                'name': folder_name,  # フォルダ名
+                'mimeType': 'application/vnd.google-apps.folder',  # フォルダのMIMEタイプ
+                'parents': [self.base_folder_id]  # 親フォルダ
+            }
+            folder = self.service.files().create(body=file_metadata, fields='id').execute()  # フォルダ作成
+            folder_id = folder.get('id')  # フォルダIDを取得
+            logger.info(f"Created new VC folder: {folder_name} (ID: {folder_id})")  # 新規作成をログ出力
+
+        # キャッシュに保存
+        self.vc_folder_ids[folder_name] = folder_id  # キャッシュに保存
+        return folder_id  # フォルダIDを返す
 
     def _get_csv_file_id(self, vc_name: str) -> str:
         """CSVファイルのIDを取得（なければNone）
 
-        指定されたVCチャンネル名に対応するCSVファイルをGoogle Driveから検索し、
-        ファイルIDを返します。ファイルが存在しない場合はNoneを返します。
-        ファイル名にスラッシュやバックスラッシュが含まれる場合は
-        アンダースコアに置換して検索します。
+        discord_mokumoku_tracker/csv/{VC名}/{環境}.csv のファイルを検索します。
+        ファイル名は環境名.csv（例: PRD.csv, TST.csv, DEV.csv）となります。
         """  # メソッドの説明
-        # ファイル名を作成（VCチャンネル名.csv）
-        filename = f"{vc_name.replace('/', '_').replace('\\', '_')}.csv"  # ファイル名作成
+        # VCチャンネル用のフォルダIDを取得
+        vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
+
+        # ファイル名を作成（環境名.csv）
+        filename = f"{self.env_name}.csv"  # ファイル名作成（例: PRD.csv）
 
         # ファイルを検索
-        query = f"name='{filename}' and '{self.folder_id}' in parents and trashed=false"  # 検索クエリ
+        query = f"name='{filename}' and '{vc_folder_id}' in parents and trashed=false"  # 検索クエリ
         results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
         items = results.get('files', [])  # 結果を取得
 
@@ -162,13 +207,16 @@ class DriveCSVClient:
     def _upload_csv(self, vc_name: str, data: List[Dict[str, str]], file_id: str = None):
         """CSVファイルをアップロード（新規または更新）
 
-        VCチャンネルの参加者データをCSVファイルとしてGoogle Driveにアップロードします。
+        discord_mokumoku_tracker/csv/{VC名}/{環境}.csv にファイルを保存します。
         file_idが指定されている場合は既存ファイルを更新し、
         指定されていない場合は新規ファイルを作成します。
         CSVファイルはUTF-8 BOM付きで保存され、Excelでも正しく開けます。
         """  # メソッドの説明
-        # ファイル名を作成
-        filename = f"{vc_name.replace('/', '_').replace('\\', '_')}.csv"  # ファイル名作成
+        # VCチャンネル用のフォルダIDを取得
+        vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
+
+        # ファイル名を作成（環境名.csv）
+        filename = f"{self.env_name}.csv"  # ファイル名作成（例: PRD.csv）
 
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
@@ -195,7 +243,7 @@ class DriveCSVClient:
         else:  # 新規ファイルを作成
             file_metadata = {  # ファイルのメタデータ
                 'name': filename,  # ファイル名
-                'parents': [self.folder_id]  # 親フォルダ
+                'parents': [vc_folder_id]  # VCチャンネル用フォルダ
             }
             self.service.files().create(  # ファイル作成
                 body=file_metadata,
