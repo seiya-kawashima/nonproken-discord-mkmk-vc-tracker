@@ -77,12 +77,12 @@ def test_google_sheets_connection():
             print("\n※ TST_プレフィックス付きの環境変数が必要です")
         
         sys.exit(1)
-    sheet_name = config['sheet_name']
+    spreadsheet_name = config['sheet_name']  # スプレッドシートファイル名（Google Drive上のファイル名）
     service_account_json = config['service_account_json']
     service_account_json_base64 = config['service_account_json_base64']
-    
+
     print("\n📋 環境変数チェック:")
-    print(f"  TST_GOOGLE_SHEET_NAME: ✅ {sheet_name}")
+    print(f"  TST_GOOGLE_SHEET_NAME: ✅ {spreadsheet_name} (スプレッドシートファイル名)")
     print(f"  TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: {'✅ 設定済み' if service_account_json_base64 else '❌ 未設定'}")
     print(f"  TST_GOOGLE_SERVICE_ACCOUNT_JSON: {'✅ 設定済み' if service_account_json else '❌ 未設定'}")
     
