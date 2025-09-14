@@ -237,12 +237,9 @@ class EnvConfig:
         Returns:
             dict: Google Drive設定の辞書
         """
-        # 環境名を取得（PRD/TST/DEV）
-        env_name_short = env.name  # 環境の短縮名（PRD/TST/DEV）
-
         # デフォルトのフォルダ階層パス
-        # discord_mokumoku_tracker/csv/{環境名} の形式
-        default_folder_path = f"discord_mokumoku_tracker/csv/{env_name_short}"  # 例: discord_mokumoku_tracker/csv/PRD
+        # discord_mokumoku_tracker/csv の形式（VCチャンネル名は実行時に追加）
+        default_folder_path = "discord_mokumoku_tracker/csv"  # ベースフォルダパス
 
         # 環境に応じたフォルダパスの環境変数名を取得
         folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
