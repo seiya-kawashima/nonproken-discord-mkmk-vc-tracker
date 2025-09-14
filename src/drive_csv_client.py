@@ -36,7 +36,7 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, base_folder_path: str = "discord_mokumoku_tracker/csv", env_name: str = "PRD"):
+    def __init__(self, service_account_json: str, base_folder_path: str = "discord_mokumoku_tracker/csv", env_name: str = "PRD", shared_drive_id: str = None):
         """初期化処理
 
         Args:
@@ -44,10 +44,12 @@ class DriveCSVClient:
             base_folder_path: Google Drive上のベースフォルダパス
                              例: "discord_mokumoku_tracker/csv"
             env_name: 環境名（PRD/TST/DEV）
+            shared_drive_id: 共有ドライブID（オプション）
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
         self.base_folder_path = base_folder_path  # ベースフォルダパスを保存
         self.env_name = env_name  # 環境名を保存（ファイル名に使用）
+        self.shared_drive_id = shared_drive_id  # 共有ドライブIDを保存
         self.service = None  # Google Drive APIサービス
         self.vc_folder_ids = {}  # VCチャンネル名ごとのフォルダIDを保存
 
@@ -95,7 +97,13 @@ class DriveCSVClient:
             if parent_id:  # 親フォルダが指定されている場合
                 query += f" and '{parent_id}' in parents"  # 親フォルダ内で検索
 
-            results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
+            list_params = {'q': query, 'fields': 'files(id, name)'}  # 検索パラメータ
+            if self.shared_drive_id:  # 共有ドライブを使用する場合
+                list_params['supportsAllDrives'] = True  # 全ドライブ対応
+                list_params['includeItemsFromAllDrives'] = True  # 全ドライブから検索
+                list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
+                list_params['corpora'] = 'drive'  # 特定のドライブを検索
+            results = self.service.files().list(**list_params).execute()  # 検索実行
             items = results.get('files', [])  # 結果を取得
 
             if items:  # フォルダが見つかった場合
@@ -110,7 +118,10 @@ class DriveCSVClient:
                 if parent_id:  # 親フォルダが指定されている場合
                     file_metadata['parents'] = [parent_id]  # 親フォルダを設定
 
-                folder = self.service.files().create(body=file_metadata, fields='id').execute()  # フォルダ作成
+                create_params = {'body': file_metadata, 'fields': 'id'}  # 作成パラメータ
+                if self.shared_drive_id:  # 共有ドライブを使用する場合
+                    create_params['supportsAllDrives'] = True  # 全ドライブ対応
+                folder = self.service.files().create(**create_params).execute()  # フォルダ作成
                 folder_id = folder.get('id')  # フォルダIDを取得
                 logger.info(f"Created new folder: {folder_name} (ID: {folder_id})")  # 新規作成をログ出力
 
@@ -235,21 +246,20 @@ class DriveCSVClient:
         media = MediaFileUpload(temp_filename, mimetype='text/csv')  # アップロード用メディア作成
 
         if file_id:  # 既存ファイルを更新
-            self.service.files().update(  # ファイル更新
-                fileId=file_id,
-                media_body=media
-            ).execute()
+            update_params = {'fileId': file_id, 'media_body': media}  # 更新パラメータ
+            if self.shared_drive_id:  # 共有ドライブを使用する場合
+                update_params['supportsAllDrives'] = True  # 全ドライブ対応
+            self.service.files().update(**update_params).execute()  # ファイル更新
             logger.info(f"Updated CSV file: {filename}")  # 更新完了をログ出力
         else:  # 新規ファイルを作成
             file_metadata = {  # ファイルのメタデータ
                 'name': filename,  # ファイル名
                 'parents': [vc_folder_id]  # VCチャンネル用フォルダ
             }
-            self.service.files().create(  # ファイル作成
-                body=file_metadata,
-                media_body=media,
-                fields='id'
-            ).execute()
+            create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
+            if self.shared_drive_id:  # 共有ドライブを使用する場合
+                create_params['supportsAllDrives'] = True  # 全ドライブ対応
+            self.service.files().create(**create_params).execute()  # ファイル作成
             logger.info(f"Created new CSV file: {filename}")  # 作成完了をログ出力
 
         # 一時ファイルを削除
