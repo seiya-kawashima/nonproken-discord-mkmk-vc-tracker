@@ -158,9 +158,11 @@ class DriveCSVClient:
         if not self.service:  # APIサービスが未接続の場合
             raise RuntimeError("Not connected to Google Drive")  # エラーを発生
 
-        # JSTの今日の日付を取得
+        # JSTの今日の日付と時刻を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
-        today_jst = datetime.now(jst).strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
+        now_jst = datetime.now(jst)  # 現在のJST日時
+        today_jst = now_jst.strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
+        datetime_jst = now_jst.strftime('%Y/%-m/%-d %H:%M')  # 日付と時刻（YYYY/M/D HH:MM形式）
 
         # VC名でグループ化
         vc_groups = {}  # VC名ごとにメンバーを分類
