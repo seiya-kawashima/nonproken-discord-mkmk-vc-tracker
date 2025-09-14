@@ -228,6 +228,44 @@ class EnvConfig:
         }
 
     @classmethod  # クラスメソッド
+    def get_google_drive_config(cls, env=Environment.PRD):  # Google Drive関連の設定を取得
+        """Google Drive関連の設定を取得（CSVファイル保存先の設定）
+
+        Args:
+            env: 環境（Environment.PRD/TST/DEV）
+
+        Returns:
+            dict: Google Drive設定の辞書
+        """
+        from datetime import datetime  # 日時取得用
+
+        # 現在の年月を取得（YYYY/MM形式）
+        current_year_month = datetime.now().strftime('%Y/%m')  # 例: 2025/01
+
+        # デフォルトのフォルダ階層パス
+        default_folder_path = f"VC_Tracker_Data/{current_year_month}"  # 例: VC_Tracker_Data/2025/01
+
+        # 環境に応じたフォルダパスの環境変数名を取得
+        folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
+
+        # 環境変数から取得、なければデフォルトの階層パスを使用
+        folder_path = cls.get(folder_path_key, default_folder_path)  # フォルダパスを取得
+
+        # 環境に応じた認証情報の環境変数名を取得（Google Sheetsと同じ認証情報を使用）
+        json_key = cls.get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON', env)  # JSONファイルパスの環境変数名
+        base64_key = cls.get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64', env)  # Base64形式の環境変数名
+
+        # サービスアカウント認証情報を取得
+        service_account_json = cls.get(json_key, 'service_account.json')  # JSONファイルパス
+        service_account_json_base64 = cls.get(base64_key)  # Base64形式の認証情報
+
+        return {  # 辞書形式で設定を返す
+            'folder_path': folder_path,  # Google Drive上のフォルダパス（階層構造）
+            'service_account_json': service_account_json,  # JSONファイルパス
+            'service_account_json_base64': service_account_json_base64  # Base64形式の認証情報
+        }
+
+    @classmethod  # クラスメソッド
     def get_slack_config(cls, env=Environment.PRD):  # Slack関連の設定を取得
         """Slack関連の設定を取得（Slack通知はオプション機能）
 
