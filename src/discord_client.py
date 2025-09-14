@@ -33,7 +33,7 @@ class DiscordVCPoller:
         """VCに在室しているメンバー情報を取得
 
         Returns:
-            メンバー情報のリスト（guild_id, user_id, user_name含む）
+            メンバー情報のリスト（vc_name, user_id, user_name含む）
         """  # メソッドの説明
         @self.client.event
         async def on_ready():
