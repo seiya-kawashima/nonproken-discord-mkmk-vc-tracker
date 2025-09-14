@@ -61,9 +61,15 @@ jobs:  # 実行するジョブの定義
       env:  # 環境変数の設定
         TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}  # Base64形式の認証情報
       run: |  # シェルコマンドを実行
-        echo "🔐 Google認証情報をデコード中..."  # 処理開始メッセージ
-        echo "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json  # Base64をデコードしてファイルに保存
-        chmod 600 service_account.json  # ファイル権限を制限（セキュリティ対策）
+        if [ -z "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" ]; then
+          echo "⚠️ TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64が設定されていません"
+          echo "スキップします（テストは失敗する可能性があります）"
+        else
+          echo "🔐 Google認証情報をデコード中..."  # 処理開始メッセージ
+          echo "$TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64" | base64 -d > service_account.json  # Base64をデコードしてファイルに保存
+          chmod 600 service_account.json  # ファイル権限を制限（セキュリティ対策）
+          echo "✅ service_account.jsonを作成しました"
+        fi
 
     - name: 環境変数チェック  # ステップ5: 必要な環境変数が設定されているか確認
       run: |  # シェルコマンドを実行
