@@ -113,12 +113,12 @@ async def main(env_arg=None):
             logger.info("Sending Slack notifications...")  # 通知開始ログ
             slack_client = SlackNotifier(slack_token, slack_channel)  # Slackクライアント作成
             
-            # 各メンバーの通算日数を取得して通知
-            for member in vc_members:  # メンバーリストをループ
-                total_days = sheets_client.get_total_days(member['user_id'])  # 通算日数取得
-                
-                # 新規ログインの場合のみ通知（今回新規追加されたメンバー）
-                if result['new'] > 0:  # 新規メンバーがいる場合
+            # 新規メンバーの通知
+            if result['new'] > 0:  # 新規メンバーがいる場合
+                for member in vc_members:  # メンバーリストをループ
+                    # TODO: CSVから通算日数を取得する機能を実装
+                    total_days = 1  # 仮の値（CSVから取得する機能が必要）
+
                     success = slack_client.send_login_notification(  # ログイン通知送信
                         member['user_name'],  # ユーザー名
                         total_days  # 通算日数
