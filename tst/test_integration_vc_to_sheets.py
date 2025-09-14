@@ -178,7 +178,7 @@ def main():
 
     # 非同期処理を実行
     try:
-        result = asyncio.run(test_vc_to_sheets_integration())
+        result = asyncio.run(test_vc_to_sheets_integration_with_poll_once())
         if result:
             print("\n✅ すべてのテストが成功しました")
             sys.exit(0)
@@ -190,6 +190,8 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"\n❌ 予期しないエラー: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 
