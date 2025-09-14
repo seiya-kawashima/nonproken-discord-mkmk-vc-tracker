@@ -77,12 +77,12 @@ def test_google_sheets_connection():
             print("\n※ TST_プレフィックス付きの環境変数が必要です")
         
         sys.exit(1)
-    spreadsheet_name = config['sheet_name']  # スプレッドシートファイル名（Google Drive上のファイル名）
+    spreadspreadsheet_name = config['spreadsheet_name']  # スプレッドシートファイル名（Google Drive上のファイル名）
     service_account_json = config['service_account_json']
     service_account_json_base64 = config['service_account_json_base64']
 
     print("\n📋 環境変数チェック:")
-    print(f"  TST_GOOGLE_SHEET_NAME: ✅ {spreadsheet_name} (スプレッドシートファイル名)")
+    print(f"  TST_GOOGLE_SHEET_NAME: ✅ {spreadspreadsheet_name} (スプレッドシートファイル名)")
     print(f"  TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: {'✅ 設定済み' if service_account_json_base64 else '❌ 未設定'}")
     print(f"  TST_GOOGLE_SERVICE_ACCOUNT_JSON: {'✅ 設定済み' if service_account_json else '❌ 未設定'}")
     
@@ -121,7 +121,7 @@ def test_google_sheets_connection():
     
     # Google Sheetsへの接続テスト
     try:
-        print(f"\n📊 Google Sheetsファイル '{spreadsheet_name}' に接続中...")
+        print(f"\n📊 Google Sheetsファイル '{spreadspreadsheet_name}' に接続中...")
         
         # 認証
         SCOPES = [
@@ -132,7 +132,7 @@ def test_google_sheets_connection():
         client = gspread.authorize(creds)
         
         # スプレッドシートを開く
-        sheet = client.open(sheet_name)
+        sheet = client.open(spreadsheet_name)
         worksheet = sheet.get_worksheet(0)
         print("  ✅ 接続成功")
         
@@ -160,15 +160,15 @@ def test_google_sheets_connection():
         print("\n" + "=" * 70)
         print("✅ 接続テスト成功！")
         print("=" * 70)
-        print(f"スプレッドシート '{sheet_name}' への接続が確認されました")
+        print(f"スプレッドシート '{spreadsheet_name}' への接続が確認されました")
         
     except gspread.exceptions.SpreadsheetNotFound:
-        print(f"\n❌ エラー: スプレッドシートファイル '{sheet_name}' が見つかりません")
+        print(f"\n❌ エラー: スプレッドシートファイル '{spreadsheet_name}' が見つかりません")
         print("\n🔍 エラー原因の切り分け:")
 
         # 原因1: スプレッドシートファイル名の確認
         print("\n【原因1】スプレッドシートのファイル名が間違っている可能性")
-        print(f"  現在探しているファイル名: '{sheet_name}'")
+        print(f"  現在探しているファイル名: '{spreadsheet_name}'")
         print(f"  ※これはGoogle Drive上のファイル名です（シート内のタブ名ではありません）")
         print(f"  期待されるファイル名の例:")
         print(f"    - 'VCトラッカー_TST' (テスト環境用)")
@@ -198,7 +198,7 @@ def test_google_sheets_connection():
 
         # 原因3: スプレッドシートファイル自体が存在しない
         print("\n【原因3】スプレッドシートファイル自体が作成されていない可能性")
-        print(f"  ✅ 対処法: Google Driveで '{sheet_name}' という名前のスプレッドシートファイルを新規作成")
+        print(f"  ✅ 対処法: Google Driveで '{spreadsheet_name}' という名前のスプレッドシートファイルを新規作成")
         
         # GitHub Actions環境の場合はSecrets一覧を表示
         if is_github:
