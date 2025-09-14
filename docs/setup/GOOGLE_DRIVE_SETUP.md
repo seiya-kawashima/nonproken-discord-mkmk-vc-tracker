@@ -114,34 +114,12 @@ GOOGLE_SERVICE_ACCOUNT_JSON=service_account.json
 
 ### GitHub Actions用（Base64エンコード）
 
-**Base64エンコードとは？**
-- JSONファイルを安全な文字列に変換する方法
-- GitHub Secretsは1行のテキストしか保存できないため必要
+サービスアカウントのJSONファイルをGitHub Actionsで使用するには、Base64エンコードが必要です。
 
-1. **JSONファイルをBase64エンコード**：
+📖 **詳細な手順は[サービスアカウント Base64エンコード共通ガイド](SERVICE_ACCOUNT_BASE64.md)を参照してください。**
 
-   **Windows (PowerShell)の場合**：
-   ```powershell
-   # ファイルがあるフォルダに移動
-   cd C:\Users\ユーザー名\Downloads
-
-   # Base64エンコード
-   [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((Get-Content -Path "service_account.json" -Raw))) | Out-File "encoded.txt"
-   ```
-
-   **Mac/Linuxの場合**：
-   ```bash
-   base64 -i service_account.json | tr -d '\n' > encoded.txt
-   ```
-
-2. **encoded.txtの内容を全てコピー**
-
-3. **GitHub Secretsに登録**：
-   - GitHubリポジトリの「Settings」→「Secrets and variables」→「Actions」
-   - 「New repository secret」をクリック
-   - Name: `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`
-   - Secret: コピーした文字列を貼り付け
-   - 「Add secret」をクリック
+**クイックリファレンス**:
+- Secret名: `GOOGLE_SERVICE_ACCOUNT_JSON_BASE64`（本番用）
 
 ## ✅ 動作確認
 
