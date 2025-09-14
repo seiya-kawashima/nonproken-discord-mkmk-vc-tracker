@@ -55,11 +55,11 @@ class SheetsClient:
                 self.worksheet = self.sheet.add_worksheet(  # 新規作成
                     title='daily_presence',  # シート名
                     rows=1000,  # 初期行数
-                    cols=5  # 初期列数（A-E）
+                    cols=4  # 初期列数（A-D）
                 )
                 # ヘッダー行を設定
-                headers = ['date_jst', 'guild_id', 'user_id', 'user_name', 'present']  # ヘッダー定義
-                self.worksheet.update('A1:E1', [headers])  # ヘッダーを書き込み
+                headers = ['date_jst', 'user_id', 'user_name', 'present']  # ヘッダー定義（guild_id削除）
+                self.worksheet.update('A1:D1', [headers])  # ヘッダーを書き込み
                 logger.info("Created daily_presence worksheet with headers")  # 作成完了をログ出力
             
             logger.info(f"Connected to Google Sheets: {self.sheet_name}")  # 接続成功をログ出力
@@ -144,17 +144,19 @@ class SheetsClient:
                     logger.info(f"New presence in {vc_name}: {member['user_name']} on {today_jst}")  # 新規追加をログ出力
                 else:
                     # 既にTRUEの場合は更新不要
-                    if today_data[user_id].get('present') != 'TRUE':  # まだTRUEでない場合
-                    # 該当行を探して更新（本来はより効率的な方法を使うべき）
-                    update_count += 1  # カウンタ増加
-                    logger.info(f"Would update presence: {member['user_name']} on {today_jst}")  # 更新をログ出力
-        
-        # 新規データを一括追加
-        if rows_to_append:  # 追加データがある場合
-            self.worksheet.append_rows(rows_to_append)  # 一括追加
-            logger.info(f"Added {new_count} new presence records")  # 追加完了をログ出力
-        
-        return {"new": new_count, "updated": update_count}  # 処理結果を返す
+                        # 該当行を探して更新（本来はより効率的な方法を使うべき）
+                        update_count += 1  # カウンタ増加
+                        logger.info(f"Would update presence in {vc_name}: {member['user_name']} on {today_jst}")  # 更新をログ出力
+
+            # 新規データを一括追加
+            if rows_to_append:  # 追加データがある場合
+                worksheet.append_rows(rows_to_append)  # 一括追加
+                logger.info(f"Added {new_count} new presence records to {vc_name}")  # 追加完了をログ出力
+
+            total_new_count += new_count  # 全体のカウンタを更新
+            total_update_count += update_count  # 全体のカウンタを更新
+
+        return {"new": total_new_count, "updated": total_update_count}  # 処理結果を返す
 
     def get_total_days(self, user_id: str) -> int:
         """ユーザーの通算ログイン日数を取得
