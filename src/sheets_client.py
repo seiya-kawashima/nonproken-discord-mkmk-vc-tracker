@@ -48,19 +48,8 @@ class SheetsClient:
             # スプレッドシートを開く
             self.sheet = self.client.open(self.sheet_name)  # シート名で開く
             
-            # daily_presenceワークシートを取得（なければ作成）
-            try:
-                self.worksheet = self.sheet.worksheet('daily_presence')  # ワークシート取得
-            except gspread.WorksheetNotFound:  # ワークシートが存在しない場合
-                self.worksheet = self.sheet.add_worksheet(  # 新規作成
-                    title='daily_presence',  # シート名
-                    rows=1000,  # 初期行数
-                    cols=4  # 初期列数（A-D）
-                )
-                # ヘッダー行を設定
-                headers = ['date_jst', 'user_id', 'user_name', 'present']  # ヘッダー定義（guild_id削除）
-                self.worksheet.update('A1:D1', [headers])  # ヘッダーを書き込み
-                logger.info("Created daily_presence worksheet with headers")  # 作成完了をログ出力
+            # デフォルトワークシートは作成しない（VC名ごとに作成するため）
+            self.worksheet = None  # ワークシートは使用しない
             
             logger.info(f"Connected to Google Sheets: {self.sheet_name}")  # 接続成功をログ出力
             
