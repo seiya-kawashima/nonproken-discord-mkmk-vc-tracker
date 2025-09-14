@@ -47,7 +47,7 @@ class DiscordVCPoller:
                         
                         for member in channel.members:  # VCのメンバーをループ
                             member_data = {  # メンバー情報を辞書に格納
-                                "guild_id": str(guild.id),  # ギルドID（文字列）
+                                "vc_name": channel.name,  # VCの名前
                                 "user_id": str(member.id),  # ユーザーID（文字列）
                                 "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名#識別子
                             }
