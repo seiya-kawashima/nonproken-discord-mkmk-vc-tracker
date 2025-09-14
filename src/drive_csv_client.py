@@ -1,4 +1,14 @@
-"""Google Drive上のCSVファイルを管理するクライアント"""
+"""Google Drive上のCSVファイルを管理するクライアント
+
+このモジュールはDiscord VCチャンネルの参加者情報をGoogle Drive上のCSVファイルに
+記録・管理するための機能を提供します。
+
+主な機能:
+- Google Drive APIを使用したCSVファイルの読み書き
+- VCチャンネルごとに独立したCSVファイルで管理
+- 日付と時刻付きで参加者の出席記録を保存
+- 自動的なフォルダ作成とファイル管理
+"""
 
 import csv
 import io
@@ -15,7 +25,12 @@ logger = logging.getLogger(__name__)  # このモジュール用のロガー
 
 
 class DriveCSVClient:
-    """Google Drive上のCSVファイルを管理するクラス"""  # クラスの説明
+    """Google Drive上のCSVファイルを管理するクラス
+
+    Google Drive APIを使用してVCチャンネルごとの参加者データを
+    CSVファイルとして管理します。各VCチャンネルは独立したCSVファイルに
+    保存され、参加者の出席記録が日時付きで記録されます。
+    """  # クラスの説明
 
     SCOPES = [  # 必要なGoogle APIスコープ
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
@@ -34,7 +49,12 @@ class DriveCSVClient:
         self.folder_id = None  # フォルダID
 
     def connect(self):
-        """Google Drive APIに接続"""  # メソッドの説明
+        """Google Drive APIに接続
+
+        サービスアカウントの認証情報を使用してGoogle Drive APIに接続し、
+        データ保存用のフォルダを準備します。フォルダが存在しない場合は
+        自動的に作成されます。
+        """  # メソッドの説明
         try:
             # 認証情報を作成
             creds = Credentials.from_service_account_file(  # サービスアカウントから認証情報作成
@@ -55,7 +75,12 @@ class DriveCSVClient:
             raise  # エラーを再発生
 
     def _ensure_folder(self):
-        """フォルダが存在しない場合は作成"""  # メソッドの説明
+        """フォルダが存在しない場合は作成
+
+        Google Drive上にVC Trackerデータ用のフォルダが存在するか確認し、
+        存在しない場合は新規作成します。既存のフォルダがある場合は
+        そのIDを保存して後続の処理で使用します。
+        """  # メソッドの説明
         # フォルダを検索
         query = f"name='{self.folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"  # 検索クエリ
         results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
@@ -75,7 +100,13 @@ class DriveCSVClient:
             logger.info(f"Created new folder: {self.folder_name} (ID: {self.folder_id})")  # 新規作成をログ出力
 
     def _get_csv_file_id(self, vc_name: str) -> str:
-        """CSVファイルのIDを取得（なければNone）"""  # メソッドの説明
+        """CSVファイルのIDを取得（なければNone）
+
+        指定されたVCチャンネル名に対応するCSVファイルをGoogle Driveから検索し、
+        ファイルIDを返します。ファイルが存在しない場合はNoneを返します。
+        ファイル名にスラッシュやバックスラッシュが含まれる場合は
+        アンダースコアに置換して検索します。
+        """  # メソッドの説明
         # ファイル名を作成（VCチャンネル名.csv）
         filename = f"{vc_name.replace('/', '_').replace('\\', '_')}.csv"  # ファイル名作成
 
@@ -89,7 +120,12 @@ class DriveCSVClient:
         return None  # 見つからない場合はNone
 
     def _download_csv(self, file_id: str) -> List[Dict[str, str]]:
-        """CSVファイルをダウンロードして内容を返す"""  # メソッドの説明
+        """CSVファイルをダウンロードして内容を返す
+
+        Google DriveからCSVファイルをダウンロードし、パースして
+        辞書形式のリストとして返します。UTF-8 BOM付きファイルにも対応し、
+        メモリ上で処理するため一時ファイルは作成しません。
+        """  # メソッドの説明
         request = self.service.files().get_media(fileId=file_id)  # ダウンロードリクエスト作成
         file_content = io.BytesIO()  # メモリ上のファイルオブジェクト
         downloader = MediaIoBaseDownload(file_content, request)  # ダウンローダー作成
@@ -105,7 +141,13 @@ class DriveCSVClient:
         return list(reader)  # リストとして返す
 
     def _upload_csv(self, vc_name: str, data: List[Dict[str, str]], file_id: str = None):
-        """CSVファイルをアップロード（新規または更新）"""  # メソッドの説明
+        """CSVファイルをアップロード（新規または更新）
+
+        VCチャンネルの参加者データをCSVファイルとしてGoogle Driveにアップロードします。
+        file_idが指定されている場合は既存ファイルを更新し、
+        指定されていない場合は新規ファイルを作成します。
+        CSVファイルはUTF-8 BOM付きで保存され、Excelでも正しく開けます。
+        """  # メソッドの説明
         # ファイル名を作成
         filename = f"{vc_name.replace('/', '_').replace('\\', '_')}.csv"  # ファイル名作成
 
@@ -149,11 +191,21 @@ class DriveCSVClient:
     def upsert_presence(self, members: List[Dict[str, Any]]) -> Dict[str, int]:
         """メンバーの出席情報を記録（Upsert）
 
+        Discord VCチャンネルの参加者情報をGoogle Drive上のCSVファイルに記録します。
+        VCチャンネルごとに別々のCSVファイルで管理し、各参加者の出席記録を
+        日付と時刻（YYYY/M/D HH:MM形式）付きで保存します。
+
+        処理の流れ:
+        1. メンバーリストをVCチャンネルごとにグループ化
+        2. 各VCチャンネルのCSVファイルをダウンロード（または新規作成）
+        3. 今日の日付のデータと照合して新規/更新を判定
+        4. CSVファイルを更新してGoogle Driveにアップロード
+
         Args:
-            members: メンバー情報のリスト
+            members: メンバー情報のリスト（user_id, user_name, vc_nameを含む）
 
         Returns:
-            処理結果（新規追加数、更新数）
+            処理結果（new: 新規追加数, updated: 更新数）
         """  # メソッドの説明
         if not self.service:  # APIサービスが未接続の場合
             raise RuntimeError("Not connected to Google Drive")  # エラーを発生
@@ -164,7 +216,9 @@ class DriveCSVClient:
         today_jst = now_jst.strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
         datetime_jst = now_jst.strftime('%Y/%-m/%-d %H:%M')  # 日付と時刻（YYYY/M/D HH:MM形式）
 
-        # VC名でグループ化
+        # === VCチャンネルごとにメンバーをグループ化 ===
+        # 同じVCチャンネルの参加者をまとめて処理するため、
+        # VC名をキーとした辞書形式でグループ化します
         vc_groups = {}  # VC名ごとにメンバーを分類
         for member in members:  # メンバーリストをループ
             vc_name = member.get('vc_name', 'unknown')  # VC名を取得
@@ -175,9 +229,12 @@ class DriveCSVClient:
         total_new_count = 0  # 全体の新規追加カウンタ
         total_update_count = 0  # 全体の更新カウンタ
 
-        # VC名ごとにCSVファイルを作成・更新
+        # === 各VCチャンネルのCSVファイルを処理 ===
+        # VCチャンネルごとに独立したCSVファイルで管理するため、
+        # グループ化したデータを順次処理していきます
         for vc_name, vc_members in vc_groups.items():  # VC名ごとにループ
-            # 既存のCSVファイルを取得
+            # === 既存CSVファイルの取得または新規作成の準備 ===
+            # Google Driveから該当VCチャンネルのCSVファイルを検索
             file_id = self._get_csv_file_id(vc_name)  # ファイルID取得
 
             if file_id:  # ファイルが存在する場合
@@ -186,7 +243,9 @@ class DriveCSVClient:
             else:  # ファイルが存在しない場合
                 existing_data = []  # 空のリスト
 
-            # 今日のデータを抽出
+            # === 今日の既存データを抽出 ===
+            # 重複記録を防ぐため、既存データから今日の日付のレコードを抽出し、
+            # user_idをキーとした辞書形式で保持します
             today_data = {  # 今日のデータを辞書形式で保存
                 row['user_id']: row  # user_idをキーとする
                 for row in existing_data  # 既存データをループ
@@ -195,7 +254,9 @@ class DriveCSVClient:
             new_count = 0  # 新規追加カウンタ
             update_count = 0  # 更新カウンタ
 
-            # メンバーごとに処理
+            # === 各メンバーの出席記録を処理 ===
+            # VCチャンネルの参加者一人ずつについて、
+            # 新規追加または既存レコードの更新を行います
             for member in vc_members:  # VCメンバーリストをループ
                 user_id = member['user_id']  # ユーザーID
 
@@ -221,7 +282,9 @@ class DriveCSVClient:
                                 logger.info(f"Updated presence in {vc_name}: {member['user_name']} on {row['datetime_jst']}")  # 更新をログ出力
                                 break  # ループを抜ける
 
-            # CSVファイルをアップロード
+            # === 更新したデータをGoogle Driveにアップロード ===
+            # 新規追加・更新したデータを含む全データをCSVファイルとして
+            # Google Driveにアップロードします
             self._upload_csv(vc_name, existing_data, file_id)  # CSV更新
 
             total_new_count += new_count  # 全体のカウンタを更新
