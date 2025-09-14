@@ -36,17 +36,18 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, folder_name: str = "VC_Tracker_Data"):
+    def __init__(self, service_account_json: str, folder_path: str = "VC_Tracker_Data"):
         """初期化処理
 
         Args:
             service_account_json: サービスアカウントJSONファイルパス
-            folder_name: Google Drive上のフォルダ名
+            folder_path: Google Drive上のフォルダパス（階層構造対応）
+                        例: "VC_Tracker_Data/2025/01"
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
-        self.folder_name = folder_name  # フォルダ名を保存
+        self.folder_path = folder_path  # フォルダパス（階層構造）を保存
         self.service = None  # Google Drive APIサービス
-        self.folder_id = None  # フォルダID
+        self.folder_id = None  # 最終フォルダID
 
     def connect(self):
         """Google Drive APIに接続
@@ -65,39 +66,57 @@ class DriveCSVClient:
             # Google Drive APIサービスを構築
             self.service = build('drive', 'v3', credentials=creds)  # APIサービス作成
 
-            # フォルダを検索または作成
-            self._ensure_folder()  # フォルダの存在確認・作成
+            # フォルダ階層を検索または作成
+            self._ensure_folder_hierarchy()  # フォルダ階層の存在確認・作成
 
-            logger.info(f"Connected to Google Drive, folder: {self.folder_name}")  # 接続成功をログ出力
+            logger.info(f"Connected to Google Drive, folder path: {self.folder_path}")  # 接続成功をログ出力
 
         except Exception as e:  # エラー発生時
             logger.error(f"Failed to connect to Google Drive: {e}")  # エラーをログ出力
             raise  # エラーを再発生
 
-    def _ensure_folder(self):
-        """フォルダが存在しない場合は作成
+    def _ensure_folder_hierarchy(self):
+        """フォルダ階層が存在しない場合は作成
 
-        Google Drive上にVC Trackerデータ用のフォルダが存在するか確認し、
-        存在しない場合は新規作成します。既存のフォルダがある場合は
-        そのIDを保存して後続の処理で使用します。
+        Google Drive上にVC Trackerデータ用のフォルダ階層を作成します。
+        例: "VC_Tracker_Data/2025/01" の場合、
+        VC_Tracker_Data → 2025 → 01 の順に作成・確認します。
         """  # メソッドの説明
-        # フォルダを検索
-        query = f"name='{self.folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"  # 検索クエリ
-        results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
-        items = results.get('files', [])  # 結果を取得
+        # フォルダパスを分割（例: "VC_Tracker_Data/2025/01" → ["VC_Tracker_Data", "2025", "01"]）
+        folder_names = self.folder_path.split('/')  # スラッシュで分割
+        parent_id = None  # 親フォルダID（最初はルート）
 
-        if items:  # フォルダが見つかった場合
-            self.folder_id = items[0]['id']  # フォルダIDを保存
-            logger.info(f"Found existing folder: {self.folder_name} (ID: {self.folder_id})")  # 既存フォルダをログ出力
-        else:  # フォルダが見つからない場合
-            # フォルダを作成
-            file_metadata = {  # フォルダのメタデータ
-                'name': self.folder_name,  # フォルダ名
-                'mimeType': 'application/vnd.google-apps.folder'  # フォルダのMIMEタイプ
-            }
-            folder = self.service.files().create(body=file_metadata, fields='id').execute()  # フォルダ作成
-            self.folder_id = folder.get('id')  # フォルダIDを保存
-            logger.info(f"Created new folder: {self.folder_name} (ID: {self.folder_id})")  # 新規作成をログ出力
+        # 各階層のフォルダを順番に作成・確認
+        for folder_name in folder_names:  # 各フォルダ名について
+            # 現在の階層でフォルダを検索
+            query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"  # 検索クエリ
+            if parent_id:  # 親フォルダが指定されている場合
+                query += f" and '{parent_id}' in parents"  # 親フォルダ内で検索
+
+            results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
+            items = results.get('files', [])  # 結果を取得
+
+            if items:  # フォルダが見つかった場合
+                folder_id = items[0]['id']  # フォルダIDを取得
+                logger.debug(f"Found existing folder: {folder_name} (ID: {folder_id})")  # 既存フォルダをログ出力
+            else:  # フォルダが見つからない場合
+                # フォルダを作成
+                file_metadata = {  # フォルダのメタデータ
+                    'name': folder_name,  # フォルダ名
+                    'mimeType': 'application/vnd.google-apps.folder'  # フォルダのMIMEタイプ
+                }
+                if parent_id:  # 親フォルダが指定されている場合
+                    file_metadata['parents'] = [parent_id]  # 親フォルダを設定
+
+                folder = self.service.files().create(body=file_metadata, fields='id').execute()  # フォルダ作成
+                folder_id = folder.get('id')  # フォルダIDを取得
+                logger.info(f"Created new folder: {folder_name} (ID: {folder_id})")  # 新規作成をログ出力
+
+            parent_id = folder_id  # 次の階層の親フォルダとして設定
+
+        # 最終的なフォルダIDを保存
+        self.folder_id = parent_id  # 最下層のフォルダIDを保存
+        logger.info(f"Folder hierarchy ready: {self.folder_path} (ID: {self.folder_id})")  # 階層準備完了をログ出力
 
     def _get_csv_file_id(self, vc_name: str) -> str:
         """CSVファイルのIDを取得（なければNone）
