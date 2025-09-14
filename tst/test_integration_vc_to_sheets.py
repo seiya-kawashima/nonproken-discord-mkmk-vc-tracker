@@ -27,11 +27,14 @@ try:
     from src.discord_client import DiscordVCPoller  # Discord VC監視クライアント
     from src.sheets_client import SheetsClient  # Google Sheetsクライアント
     from src.slack_notifier import SlackNotifier  # Slack通知クライアント
-    from src.logger import VCTrackerLogger  # ロガー
 except ImportError as e:
     print(f"❌ インポートエラー: {e}")
     print(f"Python Path: {sys.path}")
     sys.exit(1)
+
+# ロガーの代替実装（logger.pyが存在しない場合）
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 async def test_vc_to_sheets_integration_with_poll_once():
