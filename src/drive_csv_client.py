@@ -112,7 +112,7 @@ class DriveCSVClient:
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
         if data:  # データがある場合
-            fieldnames = ['date_jst', 'user_id', 'user_name', 'present']  # CSVのヘッダー
+            fieldnames = ['datetime_jst', 'user_id', 'user_name', 'present']  # CSVのヘッダー
             writer = csv.DictWriter(output, fieldnames=fieldnames)  # CSV書き込みオブジェクト
             writer.writeheader()  # ヘッダー書き込み
             writer.writerows(data)  # データ書き込み
@@ -190,8 +190,7 @@ class DriveCSVClient:
             today_data = {  # 今日のデータを辞書形式で保存
                 row['user_id']: row  # user_idをキーとする
                 for row in existing_data  # 既存データをループ
-                if row.get('date_jst') == today_jst  # 今日の日付のみ抽出
-            }
+                if row.get('datetime_jst', '').startswith(today_jst)  # 今日の日付のデータを抽出
 
             new_count = 0  # 新規追加カウンタ
             update_count = 0  # 更新カウンタ
@@ -203,23 +202,23 @@ class DriveCSVClient:
                 if user_id not in today_data:  # 今日のデータに存在しない場合
                     # 新規追加
                     new_row = {  # 新しい行データ
-                        'date_jst': today_jst,  # 日付
+                        'datetime_jst': datetime_jst,  # 日付と時刻
                         'user_id': member['user_id'],  # ユーザーID
                         'user_name': member['user_name'],  # ユーザー名
                         'present': 'TRUE'  # 出席フラグ
                     }
                     existing_data.append(new_row)  # データに追加
                     new_count += 1  # カウンタ増加
-                    logger.info(f"New presence in {vc_name}: {member['user_name']} on {today_jst}")  # 新規追加をログ出力
+                    logger.info(f"New presence in {vc_name}: {member['user_name']} on {datetime_jst}")  # 新規追加をログ出力
                 else:
                     # 既にTRUEの場合は更新不要
                     if today_data[user_id].get('present') != 'TRUE':  # まだTRUEでない場合
                         # データを更新
                         for row in existing_data:  # 全データをループ
-                            if row['user_id'] == user_id and row['date_jst'] == today_jst:  # 該当行を発見
+                            if row['user_id'] == user_id and row.get('datetime_jst', '').startswith(today_jst):  # 該当行を発見
                                 row['present'] = 'TRUE'  # 出席フラグを更新
                                 update_count += 1  # カウンタ増加
-                                logger.info(f"Updated presence in {vc_name}: {member['user_name']} on {today_jst}")  # 更新をログ出力
+                                logger.info(f"Updated presence in {vc_name}: {member['user_name']} on {row['datetime_jst']}")  # 更新をログ出力
                                 break  # ループを抜ける
 
             # CSVファイルをアップロード
