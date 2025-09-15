@@ -88,8 +88,10 @@ class DailyAggregator:
 
     def _get_credentials(self):
         """認証情報を取得"""
-        # Base64エンコードされた認証情報を優先
-        service_account_json_base64 = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64')
+        # config.pyから認証情報を取得
+        sheets_config = EnvConfig.get_google_sheets_config(self.env)  # Google Sheets設定取得
+        service_account_json_base64 = sheets_config.get('service_account_json_base64')  # Base64認証情報
+        service_account_file = sheets_config.get('service_account_json')  # ファイルパス
 
         if service_account_json_base64:
             # Base64デコード
@@ -98,7 +100,6 @@ class DailyAggregator:
             logger.info("Using Base64 encoded credentials")  # Base64認証使用ログ
         else:
             # ファイルパスから読み込み
-            service_account_file = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON', 'service_account.json')
             if not os.path.exists(service_account_file):
                 raise FileNotFoundError(f"Service account file not found: {service_account_file}")
             with open(service_account_file, 'r') as f:
