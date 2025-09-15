@@ -94,16 +94,13 @@ class DriveCSVClient:
             if parent_id:  # 親フォルダが指定されている場合
                 query += f" and '{parent_id}' in parents"  # 親フォルダ内で検索
 
-            list_params = {'q': query, 'fields': 'files(id, name)'}  # 検索パラメータ
-            if self.shared_drive_id:  # 共有ドライブを使用する場合
-                list_params['supportsAllDrives'] = True  # 全ドライブ対応
-                list_params['includeItemsFromAllDrives'] = True  # 全ドライブから検索
-                list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
-                list_params['corpora'] = 'drive'  # 特定のドライブを検索
-            else:  # 共有ドライブを使用しない場合
-                list_params['supportsAllDrives'] = True  # 全ドライブ対応
-                list_params['includeItemsFromAllDrives'] = True  # 全ドライブから検索
-                list_params['corpora'] = 'allDrives'  # すべてのドライブから検索
+            list_params = {  # 検索パラメータ
+                'q': query,  # 検索クエリ
+                'fields': 'files(id, name)',  # 取得するフィールド
+                'supportsAllDrives': True,  # 全ドライブ対応
+                'includeItemsFromAllDrives': True,  # 全ドライブから検索
+                'corpora': 'allDrives'  # すべてのドライブから検索
+            }
             results = self.service.files().list(**list_params).execute()  # 検索実行
             items = results.get('files', [])  # 結果を取得
 
@@ -119,9 +116,11 @@ class DriveCSVClient:
                 if parent_id:  # 親フォルダが指定されている場合
                     file_metadata['parents'] = [parent_id]  # 親フォルダを設定
 
-                create_params = {'body': file_metadata, 'fields': 'id'}  # 作成パラメータ
-                if self.shared_drive_id:  # 共有ドライブを使用する場合
-                    create_params['supportsAllDrives'] = True  # 全ドライブ対応
+                create_params = {  # 作成パラメータ
+                    'body': file_metadata,  # フォルダメタデータ
+                    'fields': 'id',  # 取得するフィールド
+                    'supportsAllDrives': True  # 全ドライブ対応
+                }
                 folder = self.service.files().create(**create_params).execute()  # フォルダ作成
                 folder_id = folder.get('id')  # フォルダIDを取得
                 logger.info(f"Created new folder: {folder_name} (ID: {folder_id})")  # 新規作成をログ出力
@@ -249,9 +248,11 @@ class DriveCSVClient:
         media = MediaFileUpload(temp_filename, mimetype='text/csv')  # アップロード用メディア作成
 
         if file_id:  # 既存ファイルを更新
-            update_params = {'fileId': file_id, 'media_body': media}  # 更新パラメータ
-            if self.shared_drive_id:  # 共有ドライブを使用する場合
-                update_params['supportsAllDrives'] = True  # 全ドライブ対応
+            update_params = {  # 更新パラメータ
+                'fileId': file_id,  # ファイルID
+                'media_body': media,  # メディアオブジェクト
+                'supportsAllDrives': True  # 全ドライブ対応
+            }
             self.service.files().update(**update_params).execute()  # ファイル更新
             logger.info(f"Updated CSV file: {filename}")  # 更新完了をログ出力
         else:  # 新規ファイルを作成
