@@ -147,7 +147,7 @@ jobs:
 
       - name: Run poll script
         run: |
-          python poll_once.py
+          python discord_attendance_collector.py
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
@@ -258,7 +258,7 @@ jobs:
       "name": "Python: Poll Once",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/poll_once.py",
+      "program": "${workspaceFolder}/discord_attendance_collector.py",
       "console": "integratedTerminal",
       "envFile": "${workspaceFolder}/.env"
     }
