@@ -174,4 +174,4 @@ A: ユーザーIDで管理しているため、名前変更は自動的に反映
 
 - [Google Drive CSV Client仕様書](src/drive_csv_client.md)
 - [Google Sheets Client仕様書](src/sheets_client.md)
-- [ポーリング処理仕様書](poll_once.md)
+- [ポーリング処理仕様書](discord_attendance_collector.md)
