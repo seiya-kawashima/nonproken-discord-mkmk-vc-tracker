@@ -1,12 +1,28 @@
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q --strict-markers --cov=src --cov-report=term-missing"
+minversion = "7.4.0"  # pytest最小バージョン
+addopts = [
+    "-ra",  # 全テスト結果のサマリを表示
+    "-v",  # 詳細な出力
+    "--strict-markers",  # 未定義マーカーでエラー
+    "--cov=src",  # srcディレクトリのカバレッジ測定
+    "--cov=discord_attendance_collector.py",  # メインスクリプトもカバレッジ測定
+    "--cov-report=term-missing",  # ターミナルに未カバー行を表示
+    "--cov-report=html:htmlcov",  # HTMLレポート生成
+    "--cov-report=xml",  # XMLレポート生成（CI用）
+    "--cov-report=json",  # JSONレポート生成（詳細分析用）
+    "--cov-branch",  # ブランチカバレッジも測定
+]
 testpaths = [
     "tests",
 ]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
+markers = [
+    "slow: 実行時間の長いテスト",
+    "integration: 統合テスト",
+    "unit: 単体テスト",
+]
 
 [tool.coverage.run]
 source = ["src"]
