@@ -100,6 +100,10 @@ class DriveCSVClient:
                 list_params['includeItemsFromAllDrives'] = True  # 全ドライブから検索
                 list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
                 list_params['corpora'] = 'drive'  # 特定のドライブを検索
+            else:  # 共有ドライブを使用しない場合
+                list_params['supportsAllDrives'] = True  # 全ドライブ対応
+                list_params['includeItemsFromAllDrives'] = True  # 全ドライブから検索
+                list_params['corpora'] = 'allDrives'  # すべてのドライブから検索
             results = self.service.files().list(**list_params).execute()  # 検索実行
             items = results.get('files', [])  # 結果を取得
 
