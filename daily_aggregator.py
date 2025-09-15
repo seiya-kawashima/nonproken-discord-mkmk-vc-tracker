@@ -150,14 +150,32 @@ class DailyAggregator:
             csv_folder_id = csv_folders[0]['id']  # csvフォルダID取得
             logger.info(f"Found csv folder (ID: {csv_folder_id})")  # csvフォルダ発見ログ
 
-            # csvフォルダ内のCSVファイルを検索
-            csv_query = f"'{csv_folder_id}' in parents and name contains '.csv'"
-            csv_results = self.drive_service.files().list(
-                q=csv_query,
+            # csvフォルダ内のサブフォルダ（チャンネル名フォルダ）を検索
+            channel_folder_query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
+            channel_folder_results = self.drive_service.files().list(
+                q=channel_folder_query,
                 fields="files(id, name)"
             ).execute()
 
-            csv_files = csv_results.get('files', [])
+            channel_folders = channel_folder_results.get('files', [])
+            logger.info(f"Found {len(channel_folders)} channel folders")  # チャンネルフォルダ数ログ
+
+            csv_files = []
+            # 各チャンネルフォルダ内のCSVファイルを検索
+            for channel_folder in channel_folders:
+                channel_folder_id = channel_folder['id']
+                channel_name = channel_folder['name']
+                logger.debug(f"Checking folder: {channel_name}")  # デバッグログ
+
+                csv_query = f"'{channel_folder_id}' in parents and name contains '.csv'"
+                csv_results = self.drive_service.files().list(
+                    q=csv_query,
+                    fields="files(id, name)"
+                ).execute()
+
+                channel_csv_files = csv_results.get('files', [])
+                csv_files.extend(channel_csv_files)
+                logger.debug(f"Found {len(channel_csv_files)} CSV files in {channel_name}")  # デバッグログ
             logger.info(f"Found {len(csv_files)} CSV files")  # CSVファイル数ログ
 
             return csv_files
