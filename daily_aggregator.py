@@ -526,7 +526,9 @@ def main():
 
     # デバッグモードの設定
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logger.remove()  # 既存のハンドラーを削除
+        logger.add(sys.stderr, level="DEBUG", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # DEBUGレベルでコンソール出力
+        logger.add("daily_aggregator.log", rotation="10 MB", retention="7 days", level="DEBUG", encoding="utf-8")  # DEBUGレベルでファイル出力
 
     # 対象日付の設定
     target_date = None
