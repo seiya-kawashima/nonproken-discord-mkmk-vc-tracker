@@ -205,7 +205,7 @@ jobs:  # 実行するジョブの定義
                         try:
                             # テスト環境（env=1）で実行
                             await poll_once_main(env_arg=1)
-                            print("✅ poll_once.main()が正常に完了")
+                            print("✅ discord_attendance_collector.main()が正常に完了")
                         except Exception as e:
                             print(f"❌ エラー: {e}")
                             import traceback
