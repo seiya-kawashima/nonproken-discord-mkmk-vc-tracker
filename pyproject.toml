@@ -13,7 +13,8 @@ addopts = [
     "--cov-branch",  # ブランチカバレッジも測定
 ]
 testpaths = [
-    "tests",
+    "tst",  # メインのテストディレクトリ
+    "tests",  # 追加のテストディレクトリ
 ]
 python_files = "test_*.py"
 python_classes = "Test*"
