@@ -37,6 +37,7 @@ def test_drive_permissions(env_arg=2):
     logger.info(f"===== Google Drive権限テスト開始 =====")
 
     # 1. 環境設定を取得
+    env = Environment.from_value(env_arg)
     env_name = EnvConfig.get_environment_name(env)
     logger.info(f"環境: {env_name}")
 
