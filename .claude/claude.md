@@ -33,7 +33,7 @@
 - `src/discord_client.py` → `docs/specs/src/discord_client.md`
 - `src/sheets_client.py` → `docs/specs/src/sheets_client.md`
 - `src/slack_notifier.py` → `docs/specs/src/slack_notifier.md`
-- `poll_once.py` → `docs/specs/poll_once.md`
+- `discord_attendance_collector.py` → `docs/specs/discord_attendance_collector.md`
 - `tests/test_discord_client.py` → `docs/specs/tests/test_discord_client.md`
 
 ### 必須ドキュメント更新
@@ -57,7 +57,7 @@ project/
 │   ├── DEVELOPMENT.md          # 開発環境ガイド
 │   ├── SECURITY.md             # セキュリティガイド
 │   ├── specs/                  # 個別詳細仕様書
-│   │   ├── poll_once.md       # メイン処理
+│   │   ├── discord_attendance_collector.md       # メイン処理
 │   │   ├── src/                # srcディレクトリの仕様書
 │   │   │   ├── discord_client.md
 │   │   │   ├── sheets_client.md
