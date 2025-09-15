@@ -29,8 +29,8 @@ load_dotenv()
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # コンソール出力
-logger.add("daily_aggregator.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8")  # ファイル出力
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # コンソール出力（ファイル名と関数名付き）
+logger.add("daily_aggregator.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # ファイル出力（ファイル名と関数名付き）
 
 
 class DailyAggregator:
