@@ -301,7 +301,12 @@ class DriveCSVClient:
             logger.info(f"Created new CSV file: {filename}")  # 作成完了をログ出力
 
         # 一時ファイルを削除
-        os.remove(temp_filename)  # 一時ファイル削除
+        try:
+            os.remove(temp_filename)  # 一時ファイル削除
+        except PermissionError:
+            logger.warning(f"Could not delete temp file (in use): {temp_filename}")  # ファイル使用中の警告
+        except Exception as e:
+            logger.warning(f"Error deleting temp file: {e}")  # その他のエラー
 
     def upsert_presence(self, members: List[Dict[str, Any]]) -> Dict[str, int]:
         """メンバーの出席情報を記録（Upsert）
