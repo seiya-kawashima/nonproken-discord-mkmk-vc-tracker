@@ -28,7 +28,7 @@ logger.remove()
 logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")
 
 
-def test_drive_permissions(env=Environment.DEV):
+def test_drive_permissions(env_arg=2):
     """Google Drive権限テスト
 
     Args:
