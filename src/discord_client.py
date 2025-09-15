@@ -35,12 +35,12 @@ class DiscordVCPoller:
         @self.client.event
         async def on_ready():
             """Bot接続完了時の処理"""  # イベントハンドラの説明
-            logger.info(f"Logged in as {self.client.user}")  # ログイン成功をログ出力
+            logger.info(f"Discordにログインしました：{self.client.user}")  # ログイン成功をログ出力
 
             for guild in self.client.guilds:  # 全ギルドをループ
                 for channel in guild.voice_channels:  # 各ギルドのVCをループ
                     if str(channel.id) in self.allowed_channel_ids:  # 監視対象チャンネルか確認
-                        logger.info(f"Checking VC: {channel.name} ({channel.id})")  # チェック中のVCをログ出力
+                        logger.info(f"VCをチェック中: {channel.name} (ID: {channel.id})")  # チェック中のVCをログ出力
                         
                         for member in channel.members:  # VCのメンバーをループ
                             member_data = {  # メンバー情報を辞書に格納
@@ -50,14 +50,14 @@ class DiscordVCPoller:
                             }
                             self.members_data.append(member_data)  # リストに追加
                             member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
-                            logger.info(f"Found member: {member_name}")  # メンバー発見をログ出力
+                            logger.info(f"メンバーを発見: {member_name}")  # メンバー発見をログ出力
 
             await self.client.close()  # クライアント接続を閉じる
 
         try:
             await self.client.start(self.token)  # Botを起動
         except Exception as e:  # エラー発生時
-            logger.error(f"Failed to connect to Discord: {e}")  # エラーをログ出力
+            logger.error(f"Discordへの接続に失敗しました: {e}")  # エラーをログ出力
             raise  # エラーを再発生
 
         return self.members_data  # メンバー情報を返す
