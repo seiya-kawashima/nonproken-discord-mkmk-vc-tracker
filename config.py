@@ -250,6 +250,9 @@ class EnvConfig:
 
         # 共有ドライブIDを取得（デフォルト値を設定）
         shared_drive_id = cls.get(shared_drive_id_key, '0ANixFe4JBQskUk9PVA')  # 共有ドライブID
+        # 空文字列の場合はNoneに変換（マイドライブを使用）
+        if shared_drive_id == '':  # 空文字列の場合
+            shared_drive_id = None  # Noneに変換してマイドライブを使用
 
         # 環境に応じた認証情報の環境変数名を取得（Google Sheetsと同じ認証情報を使用）
         json_key = cls.get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON', env)  # JSONファイルパスの環境変数名
