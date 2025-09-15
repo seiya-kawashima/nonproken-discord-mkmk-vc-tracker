@@ -106,6 +106,10 @@ def test_drive_permissions(env_arg=2):
             'mimeType': 'application/vnd.google-apps.folder'
         }
 
+        # 共有ドライブ内に作成する場合は、共有ドライブIDを親として指定
+        if shared_drive_id:
+            folder_metadata['parents'] = [shared_drive_id]
+
         # 作成パラメータ
         create_params = {
             'body': folder_metadata,
