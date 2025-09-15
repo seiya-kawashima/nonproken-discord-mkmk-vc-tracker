@@ -85,13 +85,20 @@ class DriveCSVClient:
         """  # メソッドの説明
         # フォルダパスを分割
         folder_names = self.base_folder_path.split('/')  # スラッシュで分割
-        parent_id = None  # 親フォルダID（最初はルート）
+        parent_id = self.shared_drive_id if self.shared_drive_id else None  # 親フォルダID（共有ドライブIDまたはルート）
 
         # 各階層のフォルダを順番に作成・確認
-        for folder_name in folder_names:  # 各フォルダ名について
+        for i, folder_name in enumerate(folder_names):  # 各フォルダ名について
             # 現在の階層でフォルダを検索
             query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"  # 検索クエリ
-            if parent_id:  # 親フォルダが指定されている場合
+
+            # 共有ドライブの場合、最初のフォルダは共有ドライブ直下、それ以降は親フォルダ指定
+            if self.shared_drive_id:
+                if i == 0:  # 最初のフォルダ
+                    query += f" and '{self.shared_drive_id}' in parents"  # 共有ドライブ直下
+                elif parent_id:  # 2番目以降のフォルダ
+                    query += f" and '{parent_id}' in parents"  # 親フォルダ内で検索
+            elif parent_id:  # マイドライブの場合
                 query += f" and '{parent_id}' in parents"  # 親フォルダ内で検索
 
             list_params = {  # 検索パラメータ
@@ -119,7 +126,11 @@ class DriveCSVClient:
                     'name': folder_name,  # フォルダ名
                     'mimeType': 'application/vnd.google-apps.folder'  # フォルダのMIMEタイプ
                 }
-                if parent_id:  # 親フォルダが指定されている場合
+
+                # 親フォルダを設定（共有ドライブの最初のフォルダは共有ドライブIDを親に）
+                if self.shared_drive_id and i == 0:  # 共有ドライブの最初のフォルダ
+                    file_metadata['parents'] = [self.shared_drive_id]  # 共有ドライブを親に設定
+                elif parent_id:  # それ以外で親フォルダがある場合
                     file_metadata['parents'] = [parent_id]  # 親フォルダを設定
 
                 create_params = {  # 作成パラメータ
