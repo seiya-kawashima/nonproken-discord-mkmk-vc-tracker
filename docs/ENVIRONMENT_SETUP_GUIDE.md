@@ -105,16 +105,16 @@
 ### コマンドラインでの指定
 ```bash
 # 本番環境（PRD）
-python poll_once.py --env 0
+python discord_attendance_collector.py --env 0
 
 # テスト環境（TST）
-python poll_once.py --env 1
+python discord_attendance_collector.py --env 1
 
 # 開発環境（DEV）
-python poll_once.py --env 2
+python discord_attendance_collector.py --env 2
 
 # 環境指定なし（デフォルトはPRD）
-python poll_once.py
+python discord_attendance_collector.py
 ```
 
 ### GitHub Actionsでの自動判定
