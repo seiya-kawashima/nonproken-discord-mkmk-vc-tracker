@@ -72,10 +72,10 @@ class DriveCSVClient:
 
             # 共有ドライブ情報をログに含める
             drive_info = f"Shared Drive ID: {self.shared_drive_id}" if self.shared_drive_id else "My Drive"  # ドライブ情報
-            logger.info(f"Connected to Google Drive ({drive_info}), base folder: {self.base_folder_path}")  # 接続成功をログ出力
+            logger.info(f"Google Driveに接続しました ({drive_info}), フォルダ: {self.base_folder_path}")  # 接続成功をログ出力
 
         except Exception as e:  # エラー発生時
-            logger.error(f"Failed to connect to Google Drive: {e}")  # エラーをログ出力
+            logger.error(f"Google Driveへの接続に失敗しました: {e}")  # エラーをログ出力
             raise  # エラーを再発生
 
     def _ensure_base_folder(self):
@@ -150,7 +150,7 @@ class DriveCSVClient:
         self.base_folder_id = parent_id  # ベースフォルダIDを保存
         # 共有ドライブ情報を含めた完全なパス情報をログ出力
         drive_info = f"Shared Drive ID: {self.shared_drive_id}" if self.shared_drive_id else "My Drive"  # ドライブ情報
-        logger.info(f"Base folder ready: {self.base_folder_path} (ID: {self.base_folder_id}, {drive_info})")  # 階層準備完了をログ出力
+        logger.info(f"ベースフォルダの準備完了: {self.base_folder_path} (ID: {self.base_folder_id}, {drive_info})")  # 階層準備完了をログ出力
 
     def _ensure_vc_folder(self, vc_name: str) -> str:
         """VCチャンネル用のフォルダを作成・取得
@@ -207,7 +207,7 @@ class DriveCSVClient:
             folder_id = folder.get('id')  # フォルダIDを取得
             # フルパスを含めてログ出力
             full_path = f"{self.base_folder_path}/{folder_name}"  # フルパス
-            logger.info(f"Created new VC folder: {full_path} (ID: {folder_id})")  # 新規作成をログ出力
+            logger.info(f"VC用フォルダを新規作成: {full_path} (ID: {folder_id})")  # 新規作成をログ出力
 
         # キャッシュに保存
         self.vc_folder_ids[folder_name] = folder_id  # キャッシュに保存
