@@ -19,7 +19,8 @@ logging.basicConfig(  # ロギングの基本設定
     level=logging.INFO,  # INFOレベル以上を出力
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # ログフォーマット
     handlers=[  # ハンドラー設定
-        logging.StreamHandler()  # コンソール出力
+        logging.StreamHandler(),  # コンソール出力
+        logging.FileHandler('discord_vc_tracker.log', encoding='utf-8')  # ファイル出力（UTF-8エンコーディング）
     ]
 )
 logger = logging.getLogger(__name__)  # このモジュール用のロガー
