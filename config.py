@@ -243,10 +243,12 @@ class EnvConfig:
 
         # 環境に応じたフォルダパスの環境変数名を取得
         folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
+        folder_id_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_ID', env)  # フォルダID環境変数名
         shared_drive_id_key = cls.get_env_var_name('GOOGLE_SHARED_DRIVE_ID', env)  # 共有ドライブID環境変数名
 
         # 環境変数から取得、なければデフォルトの階層パスを使用
         folder_path = cls.get(folder_path_key, default_folder_path)  # フォルダパスを取得
+        folder_id = cls.get(folder_id_key)  # 既存フォルダのID（オプション）
 
         # 共有ドライブIDを取得（デフォルト値を設定）
         shared_drive_id = cls.get(shared_drive_id_key, '0ANixFe4JBQskUk9PVA')  # 共有ドライブID
