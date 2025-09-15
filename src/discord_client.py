@@ -1,13 +1,10 @@
 """Discord Botクライアント - VC在室メンバーの取得"""  # モジュールの説明
 
 import os  # 環境変数の取得用
-import logging  # ログ出力用
 from typing import List, Dict, Any  # 型ヒント用
 import discord  # Discord API用
 from discord.ext import commands  # Botコマンド拡張用
-
-# ロガーの設定
-logger = logging.getLogger(__name__)  # このモジュール用のロガー
+from loguru import logger  # ログ出力用（loguru）
 
 
 class DiscordVCPoller:
