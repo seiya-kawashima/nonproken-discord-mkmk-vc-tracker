@@ -52,7 +52,6 @@ def run_coverage():
         pytest_cmd.append('-q')  # 静かモード
 
     pytest_cmd.extend([
-        'tst/',  # テストディレクトリ
         '--tb=short',  # トレースバックを短縮表示
     ])
 
