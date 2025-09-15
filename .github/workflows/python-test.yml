@@ -38,7 +38,7 @@ jobs:  # 実行するジョブの定義
 
     - name: カバレッジ付きテスト実行  # テストとカバレッジ測定を実行
       run: |  # シェルコマンドを実行
-        pytest --cov=src --cov-report=xml --cov-report=html --cov-report=term tst/  # pytestでテスト実行、srcディレクトリのカバレッジを測定
+        pytest tst/  # pytestでテスト実行（pyproject.tomlの設定を使用）
 
     - name: Codecovにカバレッジをアップロード  # カバレッジデータをCodecovに送信
       uses: codecov/codecov-action@v4  # Codecov公式アクション
