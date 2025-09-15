@@ -67,13 +67,6 @@ class DailyAggregator:
         # 初期化処理
         self._initialize_services()
 
-    def _parse_vc_ids(self) -> List[str]:
-        """環境変数からVCチャンネルIDリストを取得"""
-        vc_ids_str = os.getenv('ALLOWED_VOICE_CHANNEL_IDS', '')  # 環境変数から取得
-        if not vc_ids_str:
-            logger.warning("ALLOWED_VOICE_CHANNEL_IDS not set")  # 警告ログ
-            return []
-        return [vc_id.strip() for vc_id in vc_ids_str.split(',')]  # カンマ区切りで分割
 
     def _initialize_services(self):
         """Google API サービスを初期化"""
@@ -132,8 +125,15 @@ class DailyAggregator:
             CSVファイル情報のリスト [{id, name}, ...]
         """
         try:
-            # discord_mokumoku_trackerフォルダを検索
-            folder_query = "name='discord_mokumoku_tracker' and mimeType='application/vnd.google-apps.folder'"
+            # フォルダパスからフォルダ階層を取得
+            folder_parts = self.folder_path.split('/')  # パスを分割
+            if not folder_parts:
+                logger.warning("Invalid folder path")  # 無効なパス警告
+                return []
+
+            # ルートフォルダを検索
+            root_folder_name = folder_parts[0]  # ルートフォルダ名
+            folder_query = f"name='{root_folder_name}' and mimeType='application/vnd.google-apps.folder'"
             folder_results = self.drive_service.files().list(
                 q=folder_query,
                 fields="files(id, name)"
@@ -141,26 +141,31 @@ class DailyAggregator:
 
             folders = folder_results.get('files', [])
             if not folders:
-                logger.warning("discord_mokumoku_tracker folder not found")  # フォルダ未発見警告
+                logger.warning(f"{root_folder_name} folder not found")  # フォルダ未発見警告
                 return []
 
             folder_id = folders[0]['id']  # フォルダID取得
             logger.info(f"Found folder: {folders[0]['name']} (ID: {folder_id})")  # フォルダ発見ログ
 
-            # csvサブフォルダを検索
-            csv_folder_query = f"'{folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
-            csv_folder_results = self.drive_service.files().list(
-                q=csv_folder_query,
-                fields="files(id, name)"
-            ).execute()
+            # 残りのフォルダ階層を順に探索
+            current_folder_id = folder_id
+            for folder_name in folder_parts[1:]:
+                subfolder_query = f"'{current_folder_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
+                subfolder_results = self.drive_service.files().list(
+                    q=subfolder_query,
+                    fields="files(id, name)"
+                ).execute()
 
-            csv_folders = csv_folder_results.get('files', [])
-            if not csv_folders:
-                logger.warning("csv subfolder not found")  # csvサブフォルダ未発見警告
-                return []
+                subfolders = subfolder_results.get('files', [])
+                if not subfolders:
+                    logger.warning(f"{folder_name} subfolder not found")  # サブフォルダ未発見警告
+                    return []
 
-            csv_folder_id = csv_folders[0]['id']  # csvフォルダID取得
-            logger.info(f"Found csv folder (ID: {csv_folder_id})")  # csvフォルダ発見ログ
+                current_folder_id = subfolders[0]['id']  # 次のフォルダID
+                logger.info(f"Found {folder_name} folder (ID: {current_folder_id})")  # フォルダ発見ログ
+
+            # 最終的なフォルダIDを保存
+            csv_folder_id = current_folder_id
 
             # csvフォルダ内のサブフォルダ（チャンネル名フォルダ）を検索
             channel_folder_query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
