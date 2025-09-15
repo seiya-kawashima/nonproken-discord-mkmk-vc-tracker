@@ -12,16 +12,13 @@
 
 import csv
 import io
-import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
-
-# ロガーの設定
-logger = logging.getLogger(__name__)  # このモジュール用のロガー
+from loguru import logger  # ログ出力用（loguru）
 
 
 class DriveCSVClient:
