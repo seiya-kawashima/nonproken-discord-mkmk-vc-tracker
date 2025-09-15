@@ -260,8 +260,8 @@ class DriveCSVClient:
                 'parents': [vc_folder_id]  # VCチャンネル用フォルダ
             }
             create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
-            if self.shared_drive_id:  # 共有ドライブを使用する場合
-                create_params['supportsAllDrives'] = True  # 全ドライブ対応
+            # 共有ドライブ・共有フォルダの両方に対応
+            create_params['supportsAllDrives'] = True  # 全ドライブ対応
             self.service.files().create(**create_params).execute()  # ファイル作成
             logger.info(f"Created new CSV file: {filename}")  # 作成完了をログ出力
 
