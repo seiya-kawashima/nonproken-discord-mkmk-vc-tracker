@@ -98,9 +98,15 @@ class DriveCSVClient:
                 'q': query,  # 検索クエリ
                 'fields': 'files(id, name)',  # 取得するフィールド
                 'supportsAllDrives': True,  # 全ドライブ対応
-                'includeItemsFromAllDrives': True,  # 全ドライブから検索
-                'corpora': 'allDrives'  # すべてのドライブから検索
+                'includeItemsFromAllDrives': True  # 全ドライブから検索
             }
+
+            # 共有ドライブが指定されている場合は、そのドライブ内で検索
+            if self.shared_drive_id:  # 共有ドライブIDが設定されている場合
+                list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
+                list_params['corpora'] = 'drive'  # 特定のドライブを検索
+            else:  # 共有ドライブが指定されていない場合
+                list_params['corpora'] = 'allDrives'  # すべてのドライブから検索
             results = self.service.files().list(**list_params).execute()  # 検索実行
             items = results.get('files', [])  # 結果を取得
 
