@@ -36,7 +36,7 @@ async def main(env_arg=None):
         sys.exit(1)  # 異常終了
     
     env_name = EnvConfig.get_environment_name(env)  # 環境名を取得
-    logger.info(f"Environment: {env_name}")  # 環境名をログ出力
+    logger.info(f"実行環境: {env_name}")  # 環境名をログ出力
     
     # 環境に応じた設定を取得（必須値チェック付き）
     try:
@@ -78,23 +78,23 @@ async def main(env_arg=None):
     
     # サービスアカウントJSONファイルの存在確認
     elif not os.path.exists(service_account_json):  # JSONファイルが存在しない場合
-        logger.error(f"Service account JSON file not found: {service_account_json}")  # エラーログ出力
+        logger.error(f"サービスアカウントのJSONファイルが見つかりません: {service_account_json}")  # エラーログ出力
         sys.exit(1)  # 異常終了
     
     try:
         # 1. Discord VCからメンバー情報を取得
-        logger.info("Fetching VC members from Discord...")  # 処理開始ログ
+        logger.info("Discord VCからメンバー情報を取得中...")  # 処理開始ログ
         discord_client = DiscordVCPoller(discord_token, channel_ids)  # Discordクライアント作成
         vc_members = await discord_client.get_vc_members()  # VCメンバー取得
         
         if not vc_members:  # メンバーがいない場合
-            logger.info("No members found in monitored VCs")  # メンバーなしログ
+            logger.info("監視対象のVCにメンバーが見つかりませんでした")  # メンバーなしログ
             return  # 処理終了
         
-        logger.info(f"Found {len(vc_members)} members in VCs")  # メンバー数ログ
+        logger.info(f"VCに{len(vc_members)}人のメンバーを発見しました")  # メンバー数ログ
         
         # 2. Google Drive上のCSVに記録
-        logger.info("Connecting to Google Drive...")  # 接続開始ログ
+        logger.info("Google Driveに接続中...")  # 接続開始ログ
         # Google Drive設定からフォルダパス、環境名、共有ドライブIDを取得
         drive_folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker/csv')  # フォルダパス取得
         env_name = drive_config.get('env_name', 'PRD')  # 環境名取得（PRD/TST/DEV）
@@ -102,19 +102,19 @@ async def main(env_arg=None):
         csv_client = DriveCSVClient(service_account_json, drive_folder_path, env_name, shared_drive_id)  # CSVクライアント作成（フォルダパス、環境名、共有ドライブID指定）
         csv_client.connect()  # 接続
 
-        logger.info("Recording presence data to CSV...")  # 記録開始ログ
+        logger.info("出席データをCSVファイルに記録中...")  # 記録開始ログ
         result = csv_client.upsert_presence(vc_members)  # 出席データ記録
         new_count = result.get('new', 0)  # 新規件数を取得
         updated_count = result.get('updated', 0)  # 更新件数を取得
-        logger.info(f"Recorded: {new_count} new, {updated_count} updated")  # 記録結果ログ
+        logger.info(f"記録完了: 新規 {new_count}件、更新 {updated_count}件")  # 記録結果ログ
         
         
-        logger.info("Poll completed successfully")  # 処理完了ログ
+        logger.info("処理が正常に完了しました")  # 処理完了ログ
         
     except Exception as e:  # エラー発生時
         import traceback  # トレースバック用
-        logger.error(f"Error during polling: {e}")  # エラーログ出力
-        logger.error(f"Traceback: {traceback.format_exc()}")  # スタックトレース出力
+        logger.error(f"処理中にエラーが発生しました: {e}")  # エラーログ出力
+        logger.error(f"詳細なエラー情報: {traceback.format_exc()}")  # スタックトレース出力
         sys.exit(1)  # 異常終了
     
     finally:
