@@ -41,7 +41,7 @@ on:  # このワークフローが実行されるタイミングの定義
   #   paths:  # 以下のファイルが変更された場合のみ実行
   #     - 'src/drive_csv_client.py'
   #     - 'src/discord_client.py'
-  #     - 'poll_once.py'
+  #     - 'discord_attendance_collector.py'
   #     - 'config.py'
   #     - 'requirements.txt'
 
