@@ -16,8 +16,8 @@ from src.slack_notifier import SlackNotifier  # Slack通知クライアント
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # コンソール出力
-logger.add("discord_vc_tracker.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8")  # ファイル出力（10MBでローテーション、7日間保持）
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # コンソール出力（ファイル名と関数名付き）
+logger.add("discord_vc_tracker.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # ファイル出力（10MBでローテーション、7日間保持、ファイル名と関数名付き）
 
 
 async def main(env_arg=None):
