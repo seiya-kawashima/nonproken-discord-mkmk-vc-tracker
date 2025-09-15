@@ -197,7 +197,7 @@ jobs:  # 実行するジョブの定義
                 print(f"  💬 モック: Slack通知 - {user_name} (通算{total_days}日目)")
                 return True
 
-            print("\n🚀 poll_once.main()を実行中...")
+            print("\n🚀 discord_attendance_collector.main()を実行中...")
 
             with patch.object(DriveCSVClient, '__init__', mock_init):
                 with patch.object(DriveCSVClient, 'upsert_presence', mock_upsert):
