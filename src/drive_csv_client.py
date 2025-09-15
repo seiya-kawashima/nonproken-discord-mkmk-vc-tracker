@@ -366,6 +366,7 @@ class DriveCSVClient:
             total_update_count += update_count  # 全体のカウンタを更新
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
-                logger.info(f"Updated {vc_name}.csv: {new_count} new, {update_count} updated")  # 更新サマリをログ出力
+                csv_filename = f"{vc_name}.csv"  # CSVファイル名を生成
+                logger.info(f"Updated {csv_filename}: {new_count} new, {update_count} updated")  # 更新サマリをログ出力
 
         return {"new": total_new_count, "updated": total_update_count}  # 処理結果を返す
