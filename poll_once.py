@@ -12,7 +12,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))  # srcディ�
 from config import EnvConfig, Environment  # 環境変数設定モジュールと環境列挙型
 from src.discord_client import DiscordVCPoller  # Discord VCポーリングクラス
 from src.drive_csv_client import DriveCSVClient  # Google Drive CSVクライアント
-from src.slack_notifier import SlackNotifier  # Slack通知クライアント
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
@@ -44,7 +43,6 @@ async def main(env_arg=None):
         discord_config = EnvConfig.get_discord_config(env)  # Discord設定
         sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定
         drive_config = EnvConfig.get_google_drive_config(env)  # Google Drive設定
-        slack_config = EnvConfig.get_slack_config(env)  # Slack設定
     except ValueError as e:
         logger.error(f"設定エラー: {e}")  # 設定エラーをログ出力
         sys.exit(1)  # 異常終了
@@ -55,8 +53,6 @@ async def main(env_arg=None):
     sheet_name = sheets_config['sheet_name']  # スプレッドシート名
     service_account_json = sheets_config['service_account_json']  # サービスアカウントJSON
     service_account_json_base64 = sheets_config['service_account_json_base64']  # Base64エンコードされた認証情報
-    slack_token = slack_config['token']  # Slack Botトークン
-    slack_channel = slack_config['channel_id']  # Slackチャンネル ID
     
     # Base64エンコードされた認証情報がある場合はデコード
     import json  # JSON処理用
@@ -112,26 +108,6 @@ async def main(env_arg=None):
         updated_count = result.get('updated', 0)  # 更新件数を取得
         logger.info(f"Recorded: {new_count} new, {updated_count} updated")  # 記録結果ログ
         
-        # 3. Slack通知（設定されている場合）
-        if slack_token and slack_channel:  # Slack設定がある場合
-            logger.info("Sending Slack notifications...")  # 通知開始ログ
-            slack_client = SlackNotifier(slack_token, slack_channel)  # Slackクライアント作成
-            
-            # 新規メンバーの通知
-            if result['new'] > 0:  # 新規メンバーがいる場合
-                for member in vc_members:  # メンバーリストをループ
-                    # TODO: CSVから通算日数を取得する機能を実装
-                    total_days = 1  # 仮の値（CSVから取得する機能が必要）
-
-                    success = slack_client.send_login_notification(  # ログイン通知送信
-                        member['user_name'],  # ユーザー名
-                        total_days  # 通算日数
-                    )
-                    if success:  # 送信成功の場合
-                        user_name = member.get('user_name', 'unknown')  # ユーザー名を取得
-                        logger.info(f"Notified: {user_name} (Day {total_days})")  # 通知成功ログ
-        else:
-            logger.info("Slack notification skipped (not configured)")  # Slack設定なしログ
         
         logger.info("Poll completed successfully")  # 処理完了ログ
         
