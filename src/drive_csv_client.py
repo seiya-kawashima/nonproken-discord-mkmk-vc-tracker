@@ -307,9 +307,9 @@ class DriveCSVClient:
             }
             self.service.files().update(**update_params).execute()  # ファイル更新
             # ファイルのフルパスを含めてログ出力
-            vc_name = filename.replace('.csv', '')  # VC名を抽出
             full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
-            logger.info(f"Updated CSV file: {full_path} (ID: {file_id})")  # 更新完了をログ出力
+            drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
+            logger.info(f"Updated CSV file: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
         else:  # 新規ファイルを作成
             file_metadata = {  # ファイルのメタデータ
                 'name': filename,  # ファイル名
@@ -318,13 +318,13 @@ class DriveCSVClient:
             create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
             # 共有ドライブ・共有フォルダの両方に対応
             create_params['supportsAllDrives'] = True  # 全ドライブ対応
-            # ファイル作成（上の変更で対応済み）
-            # ファイルのフルパスを含めてログ出力
-            vc_name = filename.replace('.csv', '')  # VC名を抽出
-            full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
+            # ファイル作成
             file = self.service.files().create(**create_params).execute()  # ファイル作成
             file_id = file.get('id')  # ファイルIDを取得
-            logger.info(f"Created new CSV file: {full_path} (ID: {file_id})")  # 作成完了をログ出力
+            # ファイルのフルパスを含めてログ出力
+            full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
+            drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
+            logger.info(f"Created new CSV file: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
 
         # 一時ファイルを削除
         try:
