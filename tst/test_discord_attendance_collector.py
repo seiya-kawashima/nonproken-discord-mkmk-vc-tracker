@@ -1,4 +1,4 @@
-"""poll_once.pyのユニットテスト"""  # テストモジュールの説明
+"""discord_attendance_collector.pyのユニットテスト"""  # テストモジュールの説明
 
 import pytest  # テストフレームワーク
 import asyncio  # 非同期処理用
@@ -6,12 +6,12 @@ import sys  # システム関連操作用
 import os  # 環境変数操作用
 from unittest.mock import Mock, AsyncMock, patch, MagicMock  # モック用
 
-# poll_once.pyをインポート
-import poll_once  # テスト対象モジュール
+# discord_attendance_collector.pyをインポート
+import discord_attendance_collector as poll_once  # テスト対象モジュール
 
 
 class TestPollOnce:
-    """poll_once.pyのテスト"""  # テストクラスの説明
+    """discord_attendance_collector.pyのテスト"""  # テストクラスの説明
 
     @pytest.mark.asyncio
     @patch('poll_once.load_dotenv')
