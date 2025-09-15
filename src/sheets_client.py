@@ -68,7 +68,8 @@ class SheetsClient:
 
         # JSTの今日の日付を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
-        today_jst = datetime.now(jst).strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
+        now_jst = datetime.now(jst)  # 現在時刻を取得
+        today_jst = f"{now_jst.year}/{now_jst.month}/{now_jst.day}"  # 今日の日付（YYYY/M/D形式）
 
         # VC名でグループ化
         vc_groups = {}  # VC名ごとにメンバーを分類
@@ -179,7 +180,8 @@ class SheetsClient:
 
         # JSTの今日の日付を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
-        today_jst = datetime.now(jst).strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
+        now_jst = datetime.now(jst)  # 現在時刻を取得
+        today_jst = f"{now_jst.year}/{now_jst.month}/{now_jst.day}"  # 今日の日付（YYYY/M/D形式）
         
         # 全データを取得
         all_values = self.worksheet.get_all_records()  # 全レコードを取得
