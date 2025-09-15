@@ -309,7 +309,7 @@ class DriveCSVClient:
             # ファイルのフルパスを含めてログ出力
             full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
             drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
-            logger.info(f"Updated CSV file: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
+            logger.info(f"CSVファイルを更新しました: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
         else:  # 新規ファイルを作成
             file_metadata = {  # ファイルのメタデータ
                 'name': filename,  # ファイル名
@@ -324,15 +324,15 @@ class DriveCSVClient:
             # ファイルのフルパスを含めてログ出力
             full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
             drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
-            logger.info(f"Created new CSV file: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
+            logger.info(f"CSVファイルを新規作成しました: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
 
         # 一時ファイルを削除
         try:
             os.remove(temp_filename)  # 一時ファイル削除
         except PermissionError:
-            logger.warning(f"Could not delete temp file (in use): {temp_filename}")  # ファイル使用中の警告
+            logger.warning(f"一時ファイルを削除できませんでした（使用中）: {temp_filename}")  # ファイル使用中の警告
         except Exception as e:
-            logger.warning(f"Error deleting temp file: {e}")  # その他のエラー
+            logger.warning(f"一時ファイルの削除中にエラーが発生しました: {e}")  # その他のエラー
 
     def upsert_presence(self, members: List[Dict[str, Any]]) -> Dict[str, int]:
         """メンバーの出席情報を記録（Upsert）
@@ -354,7 +354,7 @@ class DriveCSVClient:
             処理結果（new: 新規追加数, updated: 更新数）
         """  # メソッドの説明
         if not self.service:  # APIサービスが未接続の場合
-            raise RuntimeError("Not connected to Google Drive")  # エラーを発生
+            raise RuntimeError("Google Driveに接続されていません")  # エラーを発生
 
         # JSTの今日の日付と時刻を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
@@ -418,7 +418,7 @@ class DriveCSVClient:
                     }
                     existing_data.append(new_row)  # データに追加
                     new_count += 1  # カウンタ増加
-                    logger.info(f"New presence in {vc_name}: {member.get('user_name', 'unknown')} on {datetime_jst}")  # 新規追加をログ出力
+                    logger.info(f"{vc_name}に新規参加: {member.get('user_name', '不明')} - {datetime_jst}")  # 新規追加をログ出力
                 else:
                     # 既にTRUEの場合は更新不要
                     if today_data[user_id].get('present') != 'TRUE':  # まだTRUEでない場合
@@ -427,7 +427,7 @@ class DriveCSVClient:
                             if row['user_id'] == user_id and row.get('datetime_jst', '').startswith(today_jst):  # 該当行を発見
                                 row['present'] = 'TRUE'  # 出席フラグを更新
                                 update_count += 1  # カウンタ増加
-                                logger.info(f"Updated presence in {vc_name}: {member.get('user_name', 'unknown')} on {row.get('datetime_jst', 'unknown')}")  # 更新をログ出力
+                                logger.info(f"{vc_name}の出席データを更新: {member.get('user_name', '不明')} - {row.get('datetime_jst', '不明')}")  # 更新をログ出力
                                 break  # ループを抜ける
 
             # === 更新したデータをGoogle Driveにアップロード ===
@@ -443,6 +443,6 @@ class DriveCSVClient:
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
                 full_path = f"{self.base_folder_path}/{vc_name}/{csv_filename}"  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
-                logger.info(f"Updated {full_path}{drive_info}: {new_count} new, {update_count} updated")  # 更新サマリをログ出力
+                logger.info(f"{full_path}{drive_info}を更新: 新規{new_count}件、更新{update_count}件")  # 更新サマリをログ出力
 
         return {"new": total_new_count, "updated": total_update_count}  # 処理結果を返す
