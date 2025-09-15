@@ -25,10 +25,10 @@ from googleapiclient.errors import HttpError  # エラー処理
 
 # ログ設定
 logger.remove()
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # ファイル名と関数名付き
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル名と関数名付き
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
-logger.add("logs/test_drive_permission.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # ファイル出力（ファイル名と関数名付き）
+logger.add("logs/test_drive_permission.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力（ファイル名と関数名付き）
 
 
 def test_drive_permissions(env_arg=2):
