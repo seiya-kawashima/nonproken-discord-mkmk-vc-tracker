@@ -4,6 +4,7 @@ import os  # 環境変数の取得用
 import sys  # システム関連操作用
 import asyncio  # 非同期処理用
 import argparse  # コマンドライン引数処理用
+from datetime import datetime  # 日時処理用
 from loguru import logger  # ログ出力用（loguru）
 
 # srcディレクトリをパスに追加
