@@ -137,7 +137,7 @@ class SheetsClient:
 
             # 新規データを一括追加
             if rows_to_append:  # 追加データがある場合
-                worksheet.append_rows(rows_to_append)  # 一括追加
+                worksheet.append_rows(rows_to_append, value_input_option='USER_ENTERED', insert_data_option='INSERT_ROWS', table_range='A1')  # 一括追加（空白行なし）
                 logger.info(f"Added {new_count} new presence records to {vc_name}")  # 追加完了をログ出力
 
             total_new_count += new_count  # 全体のカウンタを更新
