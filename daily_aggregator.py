@@ -27,6 +27,9 @@ from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
 load_dotenv()
 
+# config.pyから設定を読み込み
+from config import EnvConfig, Environment
+
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
 logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名付き）
