@@ -222,8 +222,16 @@ class DriveCSVClient:
         # VCチャンネル用のフォルダIDを取得
         vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
 
-        # ファイル名を作成（環境名.csv）
-        filename = f"{self.env_name}.csv"  # ファイル名作成（例: PRD.csv）
+        # 環境名から番号へのマッピング
+        env_number_map = {
+            'PRD': '0',  # 本番環境
+            'TST': '1',  # テスト環境
+            'DEV': '2'   # 開発環境
+        }
+        env_number = env_number_map.get(self.env_name, '9')  # 環境番号を取得（デフォルト: 9）
+
+        # ファイル名を作成（番号_環境名.csv）
+        filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
 
         # ファイルを検索
         query = f"name='{filename}' and '{vc_folder_id}' in parents and trashed=false"  # 検索クエリ
@@ -278,8 +286,16 @@ class DriveCSVClient:
         # VCチャンネル用のフォルダIDを取得
         vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
 
-        # ファイル名を作成（環境名.csv）
-        filename = f"{self.env_name}.csv"  # ファイル名作成（例: PRD.csv）
+        # 環境名から番号へのマッピング
+        env_number_map = {
+            'PRD': '0',  # 本番環境
+            'TST': '1',  # テスト環境
+            'DEV': '2'   # 開発環境
+        }
+        env_number = env_number_map.get(self.env_name, '9')  # 環境番号を取得（デフォルト: 9）
+
+        # ファイル名を作成（番号_環境名.csv）
+        filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
 
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
