@@ -106,7 +106,12 @@ async def main(env_arg=None):
         result = csv_client.upsert_presence(vc_members)  # 出席データ記録
         new_count = result.get('new', 0)  # 新規件数を取得
         updated_count = result.get('updated', 0)  # 更新件数を取得
-        logger.info(f"記録完了: 新規 {new_count}件、更新 {updated_count}件")  # 記録結果ログ
+
+        # 更新が0件の場合は新規のみ表示
+        if updated_count == 0:  # 更新がない場合
+            logger.info(f"記録完了: 新規 {new_count}件")  # 新規のみログ
+        else:  # 更新がある場合
+            logger.info(f"記録完了: 新規 {new_count}件、更新 {updated_count}件")  # 記録結果ログ
         
         
         logger.info("処理が正常に完了しました")  # 処理完了ログ
