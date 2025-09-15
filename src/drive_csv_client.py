@@ -293,7 +293,7 @@ class DriveCSVClient:
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
         if data:  # データがある場合
-            fieldnames = ['datetime_jst', 'user_id', 'user_name', 'present']  # CSVのヘッダー
+            fieldnames = ['datetime_jst', 'user_id', 'user_name']  # CSVのヘッダー（present列削除）
             writer = csv.DictWriter(output, fieldnames=fieldnames)  # CSV書き込みオブジェクト
             writer.writeheader()  # ヘッダー書き込み
             writer.writerows(data)  # データ書き込み
@@ -423,21 +423,13 @@ class DriveCSVClient:
                         'datetime_jst': datetime_jst,  # 日付と時刻
                         'user_id': member['user_id'],  # ユーザーID
                         'user_name': member['user_name'],  # ユーザー名
-                        'present': 'TRUE'  # 出席フラグ
                     }
                     existing_data.append(new_row)  # データに追加
                     new_count += 1  # カウンタ増加
                     logger.info(f"{vc_name}に新規参加: {member.get('user_name', '不明')} - {datetime_jst}")  # 新規追加をログ出力
                 else:
-                    # 既にTRUEの場合は更新不要
-                    if today_data[user_id].get('present') != 'TRUE':  # まだTRUEでない場合
-                        # データを更新
-                        for row in existing_data:  # 全データをループ
-                            if row['user_id'] == user_id and row.get('datetime_jst', '').startswith(today_jst):  # 該当行を発見
-                                row['present'] = 'TRUE'  # 出席フラグを更新
-                                update_count += 1  # カウンタ増加
-                                logger.info(f"{vc_name}の出席データを更新: {member.get('user_name', '不明')} - {row.get('datetime_jst', '不明')}")  # 更新をログ出力
-                                break  # ループを抜ける
+                    # 既に今日のデータがある場合はスキップ（重複を防ぐため）
+                    pass  # 何もしない
 
             # === 更新したデータをGoogle Driveにアップロード ===
             # 新規追加・更新したデータを含む全データをCSVファイルとして
