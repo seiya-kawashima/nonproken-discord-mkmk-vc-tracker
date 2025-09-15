@@ -345,7 +345,7 @@ class DriveCSVClient:
                     }
                     existing_data.append(new_row)  # データに追加
                     new_count += 1  # カウンタ増加
-                    logger.info(f"New presence in {vc_name}: {member['user_name']} on {datetime_jst}")  # 新規追加をログ出力
+                    logger.info(f"New presence in {vc_name}: {member.get('user_name', 'unknown')} on {datetime_jst}")  # 新規追加をログ出力
                 else:
                     # 既にTRUEの場合は更新不要
                     if today_data[user_id].get('present') != 'TRUE':  # まだTRUEでない場合
