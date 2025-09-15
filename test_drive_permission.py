@@ -25,7 +25,7 @@ from googleapiclient.errors import HttpError  # エラー処理
 
 # ログ設定
 logger.remove()
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function} | {message}")  # ファイル名と関数名付き
 
 
 def test_drive_permissions(env_arg=2):
