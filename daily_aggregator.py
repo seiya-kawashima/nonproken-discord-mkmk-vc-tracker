@@ -30,7 +30,11 @@ load_dotenv()
 # ログ設定
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # コンソール出力
+        logging.FileHandler('daily_aggregator.log', encoding='utf-8')  # ファイル出力
+    ]
 )
 logger = logging.getLogger(__name__)
 
