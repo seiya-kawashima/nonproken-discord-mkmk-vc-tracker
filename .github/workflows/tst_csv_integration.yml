@@ -140,7 +140,7 @@ jobs:  # 実行するジョブの定義
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
 
-        from poll_once import main as poll_once_main
+        from discord_attendance_collector import main as poll_once_main
         from src.drive_csv_client import DriveCSVClient
         from src.slack_notifier import SlackNotifier
         from config import EnvConfig, Environment
