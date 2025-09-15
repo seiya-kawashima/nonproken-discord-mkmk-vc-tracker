@@ -42,7 +42,7 @@ ALLOWED_VOICE_CHANNEL_IDS=test_channel_id_1,test_channel_id_2
 
 4. **動作確認**
 ```bash
-python poll_once.py
+python discord_attendance_collector.py
 ```
 
 ## 🧪 テスト環境（GitHub Actions）
