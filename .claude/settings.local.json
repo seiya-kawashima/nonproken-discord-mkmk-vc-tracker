@@ -39,7 +39,8 @@
       "Bash(git mv:*)",
       "Read(//c/**)",
       "Bash(PYTHONPATH=. python -m pytest tst/ --co -q)",
-      "Bash(set PYTHONPATH=.)"
+      "Bash(set PYTHONPATH=.)",
+      "Bash(set DEV_GOOGLE_SERVICE_ACCOUNT_JSON=C:UsersSeiyaKawashimaDownloadsservice_account.json)"
     ],
     "deny": [],
     "ask": []
