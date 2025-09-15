@@ -235,7 +235,9 @@ class DriveCSVClient:
             writer.writerows(data)  # データ書き込み
 
         # 一時ファイルに保存
-        temp_filename = f"/tmp/{filename}"  # 一時ファイルパス
+        import tempfile  # 一時ファイル用
+        temp_dir = tempfile.gettempdir()  # OSに応じた一時ディレクトリを取得
+        temp_filename = os.path.join(temp_dir, filename)  # 一時ファイルパス
         with open(temp_filename, 'w', encoding='utf-8-sig') as f:  # UTF-8 BOM付きで保存
             f.write(output.getvalue())  # CSVデータを書き込み
 
