@@ -287,8 +287,9 @@ class DriveCSVClient:
         # JSTの今日の日付と時刻を取得
         jst = timezone(timedelta(hours=9))  # JST（UTC+9）のタイムゾーン
         now_jst = datetime.now(jst)  # 現在のJST日時
-        today_jst = now_jst.strftime('%Y/%-m/%-d')  # 今日の日付（YYYY/M/D形式）
-        datetime_jst = now_jst.strftime('%Y/%-m/%-d %H:%M')  # 日付と時刻（YYYY/M/D HH:MM形式）
+        # WindowsとLinux/macOSの両方に対応した日付フォーマット
+        today_jst = f"{now_jst.year}/{now_jst.month}/{now_jst.day}"  # 今日の日付（YYYY/M/D形式）
+        datetime_jst = f"{now_jst.year}/{now_jst.month}/{now_jst.day} {now_jst.strftime('%H:%M')}"  # 日付と時刻（YYYY/M/D HH:MM形式）
 
         # === VCチャンネルごとにメンバーをグループ化 ===
         # 同じVCチャンネルの参加者をまとめて処理するため、
