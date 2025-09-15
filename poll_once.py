@@ -134,7 +134,9 @@ async def main(env_arg=None):
         logger.info("Poll completed successfully")  # 処理完了ログ
         
     except Exception as e:  # エラー発生時
+        import traceback  # トレースバック用
         logger.error(f"Error during polling: {e}")  # エラーログ出力
+        logger.error(f"Traceback: {traceback.format_exc()}")  # スタックトレース出力
         sys.exit(1)  # 異常終了
     
     finally:
