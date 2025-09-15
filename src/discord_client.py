@@ -49,7 +49,8 @@ class DiscordVCPoller:
                                 "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名#識別子
                             }
                             self.members_data.append(member_data)  # リストに追加
-                            logger.info(f"Found member: {member_data['user_name']}")  # メンバー発見をログ出力
+                            member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
+                            logger.info(f"Found member: {member_name}")  # メンバー発見をログ出力
 
             await self.client.close()  # クライアント接続を閉じる
 
