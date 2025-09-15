@@ -70,7 +70,9 @@ class DriveCSVClient:
             # ベースフォルダの存在確認・作成
             self._ensure_base_folder()  # ベースフォルダの存在確認・作成
 
-            logger.info(f"Connected to Google Drive, base folder: {self.base_folder_path}")  # 接続成功をログ出力
+            # 共有ドライブ情報をログに含める
+            drive_info = f"Shared Drive ID: {self.shared_drive_id}" if self.shared_drive_id else "My Drive"  # ドライブ情報
+            logger.info(f"Connected to Google Drive ({drive_info}), base folder: {self.base_folder_path}")  # 接続成功をログ出力
 
         except Exception as e:  # エラー発生時
             logger.error(f"Failed to connect to Google Drive: {e}")  # エラーをログ出力
@@ -146,7 +148,9 @@ class DriveCSVClient:
 
         # ベースフォルダIDを保存
         self.base_folder_id = parent_id  # ベースフォルダIDを保存
-        logger.info(f"Base folder ready: {self.base_folder_path} (ID: {self.base_folder_id})")  # 階層準備完了をログ出力
+        # 共有ドライブ情報を含めた完全なパス情報をログ出力
+        drive_info = f"Shared Drive ID: {self.shared_drive_id}" if self.shared_drive_id else "My Drive"  # ドライブ情報
+        logger.info(f"Base folder ready: {self.base_folder_path} (ID: {self.base_folder_id}, {drive_info})")  # 階層準備完了をログ出力
 
     def _ensure_vc_folder(self, vc_name: str) -> str:
         """VCチャンネル用のフォルダを作成・取得
@@ -201,7 +205,9 @@ class DriveCSVClient:
             }
             folder = self.service.files().create(**create_params).execute()  # フォルダ作成
             folder_id = folder.get('id')  # フォルダIDを取得
-            logger.info(f"Created new VC folder: {folder_name} (ID: {folder_id})")  # 新規作成をログ出力
+            # フルパスを含めてログ出力
+            full_path = f"{self.base_folder_path}/{folder_name}"  # フルパス
+            logger.info(f"Created new VC folder: {full_path} (ID: {folder_id})")  # 新規作成をログ出力
 
         # キャッシュに保存
         self.vc_folder_ids[folder_name] = folder_id  # キャッシュに保存
@@ -300,7 +306,10 @@ class DriveCSVClient:
                 'supportsAllDrives': True  # 全ドライブ対応
             }
             self.service.files().update(**update_params).execute()  # ファイル更新
-            logger.info(f"Updated CSV file: {filename}")  # 更新完了をログ出力
+            # ファイルのフルパスを含めてログ出力
+            vc_name = filename.replace('.csv', '')  # VC名を抽出
+            full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
+            logger.info(f"Updated CSV file: {full_path} (ID: {file_id})")  # 更新完了をログ出力
         else:  # 新規ファイルを作成
             file_metadata = {  # ファイルのメタデータ
                 'name': filename,  # ファイル名
@@ -309,8 +318,13 @@ class DriveCSVClient:
             create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
             # 共有ドライブ・共有フォルダの両方に対応
             create_params['supportsAllDrives'] = True  # 全ドライブ対応
-            self.service.files().create(**create_params).execute()  # ファイル作成
-            logger.info(f"Created new CSV file: {filename}")  # 作成完了をログ出力
+            # ファイル作成（上の変更で対応済み）
+            # ファイルのフルパスを含めてログ出力
+            vc_name = filename.replace('.csv', '')  # VC名を抽出
+            full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
+            file = self.service.files().create(**create_params).execute()  # ファイル作成
+            file_id = file.get('id')  # ファイルIDを取得
+            logger.info(f"Created new CSV file: {full_path} (ID: {file_id})")  # 作成完了をログ出力
 
         # 一時ファイルを削除
         try:
@@ -426,6 +440,9 @@ class DriveCSVClient:
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
                 csv_filename = f"{vc_name}.csv"  # CSVファイル名を生成
-                logger.info(f"Updated {csv_filename}: {new_count} new, {update_count} updated")  # 更新サマリをログ出力
+                # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
+                full_path = f"{self.base_folder_path}/{vc_name}/{csv_filename}"  # フルパス
+                drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
+                logger.info(f"Updated {full_path}{drive_info}: {new_count} new, {update_count} updated")  # 更新サマリをログ出力
 
         return {"new": total_new_count, "updated": total_update_count}  # 処理結果を返す
