@@ -29,10 +29,10 @@ load_dotenv()
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | ファイル: {name}.py | 関数: {function} | {message}")  # コンソール出力（ファイル名と関数名付き）
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名付き）
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
-logger.add("logs/daily_aggregator.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | ファイル: {name}.py | 関数: {function} | {message}")  # ファイル出力（ファイル名と関数名付き）
+logger.add("logs/daily_aggregator.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力（ファイル名と関数名付き）
 
 
 class DailyAggregator:
