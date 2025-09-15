@@ -24,7 +24,7 @@
 # 他の要件ファイルを含める
 # ====================
 -r requirements.txt  # 本番環境用のライブラリを全て含める（Discord.py、gspreadなど）
--r requirements-tst.txt  # テスト環境用のライブラリを全て含める（pytest、flake8など）
+-r requirements-1-tst.txt  # テスト環境用のライブラリを全て含める（pytest、flake8など）
 
 # ====================
 # ドキュメント生成ツール
