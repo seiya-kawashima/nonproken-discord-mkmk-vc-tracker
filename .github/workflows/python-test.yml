@@ -33,7 +33,7 @@ jobs:  # 実行するジョブの定義
     - name: 依存関係インストール  # 必要なパッケージのインストール
       run: |  # シェルコマンドを実行
         python -m pip install --upgrade pip  # pipを最新版にアップグレード
-        pip install -r requirements-tst.txt  # テスト用の依存関係をインストール
+        pip install -r requirements-1-tst.txt  # テスト用の依存関係をインストール
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi  # 本番用の依存関係があればインストール
 
     - name: カバレッジ付きテスト実行  # テストとカバレッジ測定を実行
