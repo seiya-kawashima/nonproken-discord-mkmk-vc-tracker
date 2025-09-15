@@ -266,6 +266,7 @@ class EnvConfig:
 
         return {  # 辞書形式で設定を返す
             'folder_path': folder_path,  # Google Drive上のフォルダパス（階層構造）
+            'folder_id': folder_id,  # 既存フォルダのID（オプション）
             'shared_drive_id': shared_drive_id,  # 共有ドライブID
             'env_name': env.name,  # 環境名（PRD/TST/DEV）をファイル名に使用
             'service_account_json': service_account_json,  # JSONファイルパス
