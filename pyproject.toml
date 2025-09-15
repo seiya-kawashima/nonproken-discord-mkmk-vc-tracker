@@ -63,7 +63,12 @@ sort = "cover"  # カバレッジ率でソート
 fail_under = 70  # 全体のカバレッジが70%未満ならエラー
 
 [tool.coverage.html]
-directory = "htmlcov"
+directory = "htmlcov"  # HTMLレポートの出力先
+show_contexts = true  # テストコンテキストを表示
 
 [tool.coverage.xml]
-output = "coverage.xml"
+output = "coverage.xml"  # CI/CD連携用
+
+[tool.coverage.json]
+output = "coverage.json"  # 詳細分析用
+pretty_print = true  # 読みやすい形式で出力
