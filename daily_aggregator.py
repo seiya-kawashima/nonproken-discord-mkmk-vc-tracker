@@ -120,8 +120,8 @@ class DailyAggregator:
             CSVファイル情報のリスト [{id, name}, ...]
         """
         try:
-            # VC_Tracker_Dataフォルダを検索
-            folder_query = "name='VC_Tracker_Data' and mimeType='application/vnd.google-apps.folder'"
+            # discord_mokumoku_trackerフォルダを検索
+            folder_query = "name='discord_mokumoku_tracker' and mimeType='application/vnd.google-apps.folder'"
             folder_results = self.drive_service.files().list(
                 q=folder_query,
                 fields="files(id, name)"
