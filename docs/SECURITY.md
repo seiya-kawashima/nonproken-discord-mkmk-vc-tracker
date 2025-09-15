@@ -123,7 +123,7 @@ env:
   run: |
     # 機密情報をマスク
     echo "::add-mask::${{ secrets.DISCORD_BOT_TOKEN }}"
-    python poll_once.py
+    python discord_attendance_collector.py
 ```
 
 ## ローカル開発環境
@@ -192,7 +192,7 @@ git secrets --add 'xoxb-[0-9A-Za-z-]+'  # Slackトークン
 
 ### 環境変数の検証
 ```python
-# poll_once.py の冒頭で実施
+# discord_attendance_collector.py の冒頭で実施
 import os
 import sys
 
