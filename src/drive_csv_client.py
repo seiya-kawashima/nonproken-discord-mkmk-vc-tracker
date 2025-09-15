@@ -294,7 +294,7 @@ class DriveCSVClient:
         output = io.StringIO()  # メモリ上の文字列ストリーム
         if data:  # データがある場合
             fieldnames = ['datetime_jst', 'user_id', 'user_name']  # CSVのヘッダー（present列削除）
-            writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')  # CSV書き込みオブジェクト（余分なフィールドは無視）
+            writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore', lineterminator='\n')  # CSV書き込みオブジェクト（改行コードをLFに統一）
             writer.writeheader()  # ヘッダー書き込み
             writer.writerows(data)  # データ書き込み
 
@@ -302,7 +302,7 @@ class DriveCSVClient:
         import tempfile  # 一時ファイル用
         temp_dir = tempfile.gettempdir()  # OSに応じた一時ディレクトリを取得
         temp_filename = os.path.join(temp_dir, filename)  # 一時ファイルパス
-        with open(temp_filename, 'w', encoding='utf-8-sig') as f:  # UTF-8 BOM付きで保存
+        with open(temp_filename, 'w', encoding='utf-8-sig', newline='') as f:  # UTF-8 BOM付きで保存（newline=''でCSVモジュールに改行制御を委ねる）
             f.write(output.getvalue())  # CSVデータを書き込み
 
         # メディアオブジェクトを作成
