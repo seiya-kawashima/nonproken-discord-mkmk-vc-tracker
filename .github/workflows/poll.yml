@@ -73,7 +73,7 @@ jobs:  # 実行するジョブ（作業単位）の定義
         TZ: Asia/Tokyo  # タイムゾーンを日本時間に設定
         LOG_LEVEL: ${{ github.event.inputs.debug_enabled == 'true' && '1' || '2' }}  # デバッグモード: 1=詳細、2=通常
       run: |  # シェルコマンドを実行
-        python poll_once.py  # VCメンバーを監視してGoogle Sheetsに記録するPythonスクリプトを実行
+        python discord_attendance_collector.py  # Discord出席情報を収集してGoogle Sheetsに記録するスクリプトを実行
     
     - name: クリーンアップ  # ステップ7: 後処理（機密ファイルの削除）
       if: always()  # 成功・失敗に関わらず常に実行（セキュリティのため）
