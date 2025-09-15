@@ -244,12 +244,12 @@ collected 45 items
 tests/test_discord_client.py ........... [ 24%]
 tests/test_sheets_client.py ............ [ 51%]
 tests/test_slack_notifier.py .......... [ 73%]
-tests/test_poll_once.py ............ [100%]
+tests/test_discord_attendance_collector.py ............ [100%]
 
 ---------- coverage report ----------
 Name                     Stmts   Miss  Cover
 --------------------------------------------
-poll_once.py                44      4    91%
+discord_attendance_collector.py                44      4    91%
 src/discord_client.py       50     18    64%
 src/sheets_client.py        84      6    93%
 src/slack_notifier.py       73     15    79%
