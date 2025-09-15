@@ -10,12 +10,12 @@ import os
 import sys
 import json
 import base64
-import logging
 import argparse
 from datetime import datetime, timedelta, date
 from typing import Dict, List, Optional, Any
 from collections import defaultdict
 import io
+from loguru import logger
 
 # Google Drive/Sheets API関連のインポート
 from google.oauth2 import service_account
@@ -27,16 +27,10 @@ from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
 load_dotenv()
 
-# ログ設定
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),  # コンソール出力
-        logging.FileHandler('daily_aggregator.log', encoding='utf-8')  # ファイル出力
-    ]
-)
-logger = logging.getLogger(__name__)
+# loguruの設定
+logger.remove()  # デフォルトハンドラーを削除
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # コンソール出力
+logger.add("daily_aggregator.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8")  # ファイル出力
 
 
 class DailyAggregator:
