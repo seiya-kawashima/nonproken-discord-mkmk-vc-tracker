@@ -71,7 +71,6 @@ class EnvConfig:
             環境番号（0/1/2、不明な場合は9）
         """
         return cls.ENV_NUMBER_MAP.get(env_name, '9')  # デフォルトは9
-    """
 
     # スプレッドシート名（環境ごとに異なる名前を使用可能）
     PRD_SHEET_NAME = 'VCトラッカー_PRD'  # 本番環境のGoogle Sheetsのシート名
