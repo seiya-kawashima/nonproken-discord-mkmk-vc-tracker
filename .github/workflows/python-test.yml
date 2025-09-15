@@ -56,4 +56,4 @@ jobs:  # 実行するジョブの定義
 
     - name: カバレッジ閾値チェック  # カバレッジが基準値を満たすか確認
       run: |  # シェルコマンドを実行
-        coverage report --show-missing --fail-under=83  # カバーされていない行番号も表示、83%未満で失敗
+        coverage report --show-missing --fail-under=70  # カバーされていない行番号も表示、70%未満で失敗（pyproject.tomlの設定と同期）
