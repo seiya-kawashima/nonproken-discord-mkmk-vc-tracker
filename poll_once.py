@@ -126,7 +126,8 @@ async def main(env_arg=None):
                         total_days  # 通算日数
                     )
                     if success:  # 送信成功の場合
-                        logger.info(f"Notified: {member['user_name']} (Day {total_days})")  # 通知成功ログ
+                        user_name = member.get('user_name', 'unknown')  # ユーザー名を取得
+                        logger.info(f"Notified: {user_name} (Day {total_days})")  # 通知成功ログ
         else:
             logger.info("Slack notification skipped (not configured)")  # Slack設定なしログ
         
