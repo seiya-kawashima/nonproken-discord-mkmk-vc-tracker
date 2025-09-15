@@ -37,7 +37,9 @@
       "Bash(cp:*)",
       "Bash(rm:*)",
       "Bash(git mv:*)",
-      "Read(//c/**)"
+      "Read(//c/**)",
+      "Bash(PYTHONPATH=. python -m pytest tst/ --co -q)",
+      "Bash(set PYTHONPATH=.)"
     ],
     "deny": [],
     "ask": []

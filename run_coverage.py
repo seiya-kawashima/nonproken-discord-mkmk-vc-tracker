@@ -21,6 +21,12 @@ from pathlib import Path  # パス操作を簡潔に行うため
 def run_coverage():
     """カバレッジ測定とレポート生成を実行"""
 
+    # PYTHONPATHを設定（現在のディレクトリを追加）
+    if 'PYTHONPATH' not in os.environ:  # 環境変数が設定されていない場合
+        os.environ['PYTHONPATH'] = '.'  # 現在のディレクトリを追加
+    elif '.' not in os.environ['PYTHONPATH']:  # 現在のディレクトリが含まれていない場合
+        os.environ['PYTHONPATH'] = '.' + os.pathsep + os.environ['PYTHONPATH']  # 現在のディレクトリを追加
+
     # コマンドライン引数の設定
     parser = argparse.ArgumentParser(description='テストカバレッジを測定してレポートを生成')  # パーサー作成
     parser.add_argument('--html', action='store_true', help='HTMLレポートを自動で開く')  # --htmlオプション
