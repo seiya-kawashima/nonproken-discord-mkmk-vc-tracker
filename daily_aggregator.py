@@ -135,8 +135,23 @@ class DailyAggregator:
             folder_id = folders[0]['id']  # フォルダID取得
             logger.info(f"Found folder: {folders[0]['name']} (ID: {folder_id})")  # フォルダ発見ログ
 
-            # フォルダ内のCSVファイルを検索
-            csv_query = f"'{folder_id}' in parents and name contains '.csv'"
+            # csvサブフォルダを検索
+            csv_folder_query = f"'{folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
+            csv_folder_results = self.drive_service.files().list(
+                q=csv_folder_query,
+                fields="files(id, name)"
+            ).execute()
+
+            csv_folders = csv_folder_results.get('files', [])
+            if not csv_folders:
+                logger.warning("csv subfolder not found")  # csvサブフォルダ未発見警告
+                return []
+
+            csv_folder_id = csv_folders[0]['id']  # csvフォルダID取得
+            logger.info(f"Found csv folder (ID: {csv_folder_id})")  # csvフォルダ発見ログ
+
+            # csvフォルダ内のCSVファイルを検索
+            csv_query = f"'{csv_folder_id}' in parents and name contains '.csv'"
             csv_results = self.drive_service.files().list(
                 q=csv_query,
                 fields="files(id, name)"
