@@ -36,7 +36,8 @@
       "Bash(touch:*)",
       "Bash(cp:*)",
       "Bash(rm:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Read(//c/**)"
     ],
     "deny": [],
     "ask": []
