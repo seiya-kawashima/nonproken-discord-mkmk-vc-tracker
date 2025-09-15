@@ -19,6 +19,9 @@ from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from loguru import logger  # ログ出力用（loguru）
+import sys  # システム操作用
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))  # 親ディレクトリをパスに追加
+from config import EnvConfig  # 環境設定
 
 
 class DriveCSVClient:
@@ -222,13 +225,8 @@ class DriveCSVClient:
         # VCチャンネル用のフォルダIDを取得
         vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
 
-        # 環境名から番号へのマッピング
-        env_number_map = {
-            'PRD': '0',  # 本番環境
-            'TST': '1',  # テスト環境
-            'DEV': '2'   # 開発環境
-        }
-        env_number = env_number_map.get(self.env_name, '9')  # 環境番号を取得（デフォルト: 9）
+        # 環境番号をconfig.pyから取得
+        env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
 
         # ファイル名を作成（番号_環境名.csv）
         filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
@@ -286,13 +284,8 @@ class DriveCSVClient:
         # VCチャンネル用のフォルダIDを取得
         vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
 
-        # 環境名から番号へのマッピング
-        env_number_map = {
-            'PRD': '0',  # 本番環境
-            'TST': '1',  # テスト環境
-            'DEV': '2'   # 開発環境
-        }
-        env_number = env_number_map.get(self.env_name, '9')  # 環境番号を取得（デフォルト: 9）
+        # 環境番号をconfig.pyから取得
+        env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
 
         # ファイル名を作成（番号_環境名.csv）
         filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
