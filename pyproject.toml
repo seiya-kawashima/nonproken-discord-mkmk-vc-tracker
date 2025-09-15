@@ -25,14 +25,18 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
-branch = true
+source = ["src", "."]  # srcディレクトリとルートディレクトリを測定
+branch = true  # ブランチカバレッジも測定
 omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__pycache__/*",
-    "*/venv/*",
-    "*/env/*"
+    "*/tests/*",  # テストコードは除外
+    "*/test_*.py",  # テストファイルは除外
+    "*/__pycache__/*",  # キャッシュは除外
+    "*/venv/*",  # 仮想環境は除外
+    "*/.venv/*",  # 仮想環境は除外
+    "*/env/*",  # 仮想環境は除外
+    "*/site-packages/*",  # インストール済みパッケージは除外
+    "setup.py",  # セットアップファイルは除外
+    "htmlcov/*",  # カバレッジレポートは除外
 ]
 
 [tool.coverage.report]
