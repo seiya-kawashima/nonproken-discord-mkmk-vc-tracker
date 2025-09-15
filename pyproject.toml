@@ -43,6 +43,7 @@ omit = [
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
+    "def __str__",  # __str__メソッドも除外
     "if self.debug:",
     "if settings.DEBUG",
     "raise AssertionError",
@@ -51,11 +52,15 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod"
+    "@(abc\\.)?abstractmethod",
+    "pass",  # passステートメントは除外
 ]
-precision = 2
-show_missing = true
-skip_covered = false
+precision = 2  # パーセンテージの小数点以下桁数
+show_missing = true  # カバーされていない行番号を表示
+skip_covered = false  # 100%カバーされたファイルも表示
+skip_empty = true  # 空のファイルはスキップ
+sort = "cover"  # カバレッジ率でソート
+fail_under = 70  # 全体のカバレッジが70%未満ならエラー
 
 [tool.coverage.html]
 directory = "htmlcov"
