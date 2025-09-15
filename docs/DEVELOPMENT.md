@@ -200,7 +200,7 @@ steps:
     with:
       python-version: "3.11"
   - run: pip install -r requirements.txt
-  - run: python poll_once.py
+  - run: python discord_attendance_collector.py
 ```
 → これだけで動作する簡潔さ
 
