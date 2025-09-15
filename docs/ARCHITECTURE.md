@@ -40,7 +40,7 @@ flowchart TD
 ```mermaid
 graph TB
     subgraph "メインスクリプト"
-        Main[poll_once.py<br/>メイン処理制御]
+        Main[discord_attendance_collector.py<br/>メイン処理制御]
     end
     
     subgraph "外部サービス連携"
@@ -68,7 +68,7 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant Main as poll_once.py
+    participant Main as discord_attendance_collector.py
     participant Env as 環境変数
     participant Discord as DiscordVCPoller
     participant Sheets as SheetsClient
@@ -193,7 +193,7 @@ flowchart TD
 
 ### 単体実行
 ```bash
-python poll_once.py
+python discord_attendance_collector.py
 ```
 
 ### GitHub Actions（定期実行）
