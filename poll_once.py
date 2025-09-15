@@ -3,8 +3,8 @@
 import os  # 環境変数の取得用
 import sys  # システム関連操作用
 import asyncio  # 非同期処理用
-import logging  # ログ出力用
 import argparse  # コマンドライン引数処理用
+from loguru import logger  # ログ出力用（loguru）
 
 # srcディレクトリをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))  # srcディレクトリをインポートパスに追加
@@ -14,16 +14,10 @@ from src.discord_client import DiscordVCPoller  # Discord VCポーリングク�
 from src.drive_csv_client import DriveCSVClient  # Google Drive CSVクライアント
 from src.slack_notifier import SlackNotifier  # Slack通知クライアント
 
-# ロギング設定
-logging.basicConfig(  # ロギングの基本設定
-    level=logging.INFO,  # INFOレベル以上を出力
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # ログフォーマット
-    handlers=[  # ハンドラー設定
-        logging.StreamHandler(),  # コンソール出力
-        logging.FileHandler('discord_vc_tracker.log', encoding='utf-8')  # ファイル出力（UTF-8エンコーディング）
-    ]
-)
-logger = logging.getLogger(__name__)  # このモジュール用のロガー
+# loguruの設定
+logger.remove()  # デフォルトハンドラーを削除
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # コンソール出力
+logger.add("discord_vc_tracker.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8")  # ファイル出力（10MBでローテーション、7日間保持）
 
 
 async def main(env_arg=None):
