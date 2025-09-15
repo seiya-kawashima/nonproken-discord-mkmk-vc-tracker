@@ -2,14 +2,11 @@
 
 import os  # ファイルパス操作用
 import json  # JSON形式の処理用
-import logging  # ログ出力用
 from datetime import datetime, timezone, timedelta  # 日時処理用
 from typing import List, Dict, Any, Optional  # 型ヒント用
 import gspread  # Google Sheets API用
 from google.oauth2.service_account import Credentials  # 認証用
-
-# ロガーの設定
-logger = logging.getLogger(__name__)  # このモジュール用のロガー
+from loguru import logger  # ログ出力用（loguru）
 
 
 class SheetsClient:
