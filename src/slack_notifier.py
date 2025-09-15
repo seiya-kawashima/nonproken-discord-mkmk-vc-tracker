@@ -1,12 +1,9 @@
 """Slack通知クライアント - ログイン通知と節目のお祝い"""  # モジュールの説明
 
-import logging  # ログ出力用
 from typing import Optional, Dict, Any  # 型ヒント用
 from slack_sdk import WebClient  # Slack Web API用
 from slack_sdk.errors import SlackApiError  # Slackエラー用
-
-# ロガーの設定
-logger = logging.getLogger(__name__)  # このモジュール用のロガー
+from loguru import logger  # ログ出力用（loguru）
 
 
 class SlackNotifier:
