@@ -41,19 +41,28 @@ logger.add("logs/daily_aggregator.log", rotation="10 MB", retention="7 days", le
 class DailyAggregator:
     """日次集計処理クラス"""
 
-    def __init__(self, target_date: Optional[date] = None):
+    def __init__(self, target_date: Optional[date] = None, env: Environment = Environment.PRD):
         """
         初期化
 
         Args:
             target_date: 集計対象日（Noneの場合は今日）
+            env: 実行環境
         """
         self.target_date = target_date or date.today()  # 集計対象日
+        self.env = env  # 実行環境
         self.drive_service = None  # Google Drive APIサービス
         self.sheets_service = None  # Google Sheets APIサービス
         self.credentials = None  # 認証情報
-        self.sheet_name = os.getenv('GOOGLE_SHEET_NAME', 'VC_Tracker_Database')  # Sheets名
-        self.allowed_vc_ids = self._parse_vc_ids()  # 対象VCチャンネルID
+
+        # config.pyから設定を取得
+        sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定取得
+        drive_config = EnvConfig.get_google_drive_config(env)  # Google Drive設定取得
+        discord_config = EnvConfig.get_discord_config(env)  # Discord設定取得
+
+        self.sheet_name = sheets_config.get('sheet_name', 'VC_Tracker_Database')  # Sheets名
+        self.folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker/csv')  # フォルダパス
+        self.allowed_vc_ids = discord_config.get('channel_ids', [])  # 対象VCチャンネルID
 
         # 初期化処理
         self._initialize_services()
