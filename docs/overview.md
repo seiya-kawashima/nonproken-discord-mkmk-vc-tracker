@@ -55,7 +55,7 @@ class SlackNotifier:
 - 通常: `🎤 {user_name} さんがログインしました！（通算 {total_days} 日目）`
 - 100日刻み: `🎉` アイコンと「おめでとう！」メッセージ追加
 
-### 4. メインスクリプト (`poll_once.py`)
+### 4. メインスクリプト (`discord_attendance_collector.py`)
 
 **処理フロー**:
 1. 環境変数読み込み
