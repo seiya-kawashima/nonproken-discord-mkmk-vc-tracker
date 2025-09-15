@@ -354,7 +354,7 @@ class DriveCSVClient:
                             if row['user_id'] == user_id and row.get('datetime_jst', '').startswith(today_jst):  # 該当行を発見
                                 row['present'] = 'TRUE'  # 出席フラグを更新
                                 update_count += 1  # カウンタ増加
-                                logger.info(f"Updated presence in {vc_name}: {member['user_name']} on {row['datetime_jst']}")  # 更新をログ出力
+                                logger.info(f"Updated presence in {vc_name}: {member.get('user_name', 'unknown')} on {row.get('datetime_jst', 'unknown')}")  # 更新をログ出力
                                 break  # ループを抜ける
 
             # === 更新したデータをGoogle Driveにアップロード ===
