@@ -257,7 +257,7 @@ class EnvConfig:
         """
         # デフォルトのフォルダ階層パス
         # discord_mokumoku_tracker/csv の形式（VCチャンネル名は実行時に追加）
-        default_folder_path = "csv"  # 共有ドライブ内のベースフォルダパス
+        default_folder_path = "discord_mokumoku_tracker/csv"  # 共有ドライブ内のベースフォルダパス
 
         # 環境に応じたフォルダパスの環境変数名を取得
         folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
