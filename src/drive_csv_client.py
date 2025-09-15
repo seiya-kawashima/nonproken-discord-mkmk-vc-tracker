@@ -294,7 +294,7 @@ class DriveCSVClient:
         output = io.StringIO()  # メモリ上の文字列ストリーム
         if data:  # データがある場合
             fieldnames = ['datetime_jst', 'user_id', 'user_name']  # CSVのヘッダー（present列削除）
-            writer = csv.DictWriter(output, fieldnames=fieldnames)  # CSV書き込みオブジェクト
+            writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')  # CSV書き込みオブジェクト（余分なフィールドは無視）
             writer.writeheader()  # ヘッダー書き込み
             writer.writerows(data)  # データ書き込み
 
