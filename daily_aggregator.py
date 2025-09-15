@@ -573,6 +573,8 @@ def main():
     parser = argparse.ArgumentParser(description='Daily VC login aggregator')
     parser.add_argument('--date', type=str, help='Target date (YYYY-MM-DD)')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('--env', type=int, default=2, choices=[0, 1, 2],
+                       help='Environment (0=PRD, 1=TST, 2=DEV, default=2)')  # 環境引数追加
 
     args = parser.parse_args()
 
@@ -591,8 +593,13 @@ def main():
             logger.error(f"Invalid date format: {args.date}")  # 日付フォーマットエラー
             sys.exit(1)
 
+    # 環境の設定
+    env = Environment(args.env)  # 環境を設定
+    env_name = EnvConfig.get_environment_name(env)  # 環境名取得
+    logger.info(f"Running in {env_name} environment")  # 環境ログ出力
+
     # 集計処理を実行
-    aggregator = DailyAggregator(target_date)
+    aggregator = DailyAggregator(target_date, env)
     aggregator.run()
 
 
