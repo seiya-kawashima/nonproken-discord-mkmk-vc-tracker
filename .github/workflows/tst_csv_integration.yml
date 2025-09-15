@@ -32,7 +32,7 @@ on:  # このワークフローが実行されるタイミングの定義
   #   paths:  # 以下のファイルが変更された場合のみ実行
   #     - 'src/drive_csv_client.py'  # CSVクライアント
   #     - 'src/discord_client.py'  # Discordクライアント
-  #     - 'poll_once.py'  # メインスクリプト
+  #     - 'discord_attendance_collector.py'  # メインスクリプト
   #     - 'config.py'  # 設定ファイル
   #     - 'requirements.txt'  # 依存関係
   #     - '.github/workflows/tst_csv_integration.yml'  # このワークフロー自体
