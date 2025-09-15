@@ -158,7 +158,19 @@ class DriveCSVClient:
 
         # フォルダを検索
         query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{self.base_folder_id}' in parents and trashed=false"  # 検索クエリ
-        results = self.service.files().list(q=query, fields="files(id, name)").execute()  # 検索実行
+        list_params = {  # 検索パラメータ
+            'q': query,  # 検索クエリ
+            'fields': 'files(id, name)',  # 取得するフィールド
+            'supportsAllDrives': True  # 全ドライブ対応
+        }
+
+        # 共有ドライブが指定されている場合は、そのドライブ内で検索
+        if self.shared_drive_id:  # 共有ドライブIDが設定されている場合
+            list_params['includeItemsFromAllDrives'] = True  # 全ドライブから検索
+            list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
+            list_params['corpora'] = 'drive'  # 特定のドライブを検索
+
+        results = self.service.files().list(**list_params).execute()  # 検索実行
         items = results.get('files', [])  # 結果を取得
 
         if items:  # フォルダが見つかった場合
@@ -171,7 +183,12 @@ class DriveCSVClient:
                 'mimeType': 'application/vnd.google-apps.folder',  # フォルダのMIMEタイプ
                 'parents': [self.base_folder_id]  # 親フォルダ
             }
-            folder = self.service.files().create(body=file_metadata, fields='id').execute()  # フォルダ作成
+            create_params = {  # 作成パラメータ
+                'body': file_metadata,  # フォルダメタデータ
+                'fields': 'id',  # 取得するフィールド
+                'supportsAllDrives': True  # 全ドライブ対応
+            }
+            folder = self.service.files().create(**create_params).execute()  # フォルダ作成
             folder_id = folder.get('id')  # フォルダIDを取得
             logger.info(f"Created new VC folder: {folder_name} (ID: {folder_id})")  # 新規作成をログ出力
 
