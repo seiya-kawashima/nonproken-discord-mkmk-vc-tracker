@@ -106,7 +106,9 @@ async def main(env_arg=None):
 
         logger.info("Recording presence data to CSV...")  # 記録開始ログ
         result = csv_client.upsert_presence(vc_members)  # 出席データ記録
-        logger.info(f"Recorded: {result['new']} new, {result['updated']} updated")  # 記録結果ログ
+        new_count = result.get('new', 0)  # 新規件数を取得
+        updated_count = result.get('updated', 0)  # 更新件数を取得
+        logger.info(f"Recorded: {new_count} new, {updated_count} updated")  # 記録結果ログ
         
         # 3. Slack通知（設定されている場合）
         if slack_token and slack_channel:  # Slack設定がある場合
