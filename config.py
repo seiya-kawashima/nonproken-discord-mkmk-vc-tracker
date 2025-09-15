@@ -48,6 +48,29 @@ class Environment(IntEnum):
 
 
 class EnvConfig:
+    """環境設定管理クラス
+
+    環境ごとの設定を管理し、環境変数から値を取得します
+    """
+
+    # 環境名から番号へのマッピング（CSVファイル名用）
+    ENV_NUMBER_MAP = {
+        'PRD': '0',  # 本番環境 → 0_PRD.csv
+        'TST': '1',  # テスト環境 → 1_TST.csv
+        'DEV': '2'   # 開発環境 → 2_DEV.csv
+    }
+
+    @classmethod
+    def get_env_number(cls, env_name: str) -> str:
+        """環境名から番号を取得
+
+        Args:
+            env_name: 環境名（PRD/TST/DEV）
+
+        Returns:
+            環境番号（0/1/2、不明な場合は9）
+        """
+        return cls.ENV_NUMBER_MAP.get(env_name, '9')  # デフォルトは9
     """環境変数の設定を管理するクラス
 
     このクラスで全ての環境変数へのアクセスを一元管理します
