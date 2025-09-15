@@ -171,7 +171,10 @@ def test_drive_permissions(env_arg=2):
         logger.info(f"✅ CSVファイル作成成功: {file.get('name')} (ID: {file.get('id')})")
 
         # 一時ファイル削除
-        os.remove(temp_file)
+        try:
+            os.remove(temp_file)
+        except Exception:
+            pass  # ファイルが使用中の場合は無視
 
     except HttpError as e:
         if 'storageQuotaExceeded' in str(e):
