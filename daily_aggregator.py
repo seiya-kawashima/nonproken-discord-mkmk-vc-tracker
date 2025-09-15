@@ -129,7 +129,7 @@ class DailyAggregator:
 
             folders = folder_results.get('files', [])
             if not folders:
-                logger.warning("VC_Tracker_Data folder not found")  # フォルダ未発見警告
+                logger.warning("discord_mokumoku_tracker folder not found")  # フォルダ未発見警告
                 return []
 
             folder_id = folders[0]['id']  # フォルダID取得
