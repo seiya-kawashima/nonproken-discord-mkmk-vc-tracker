@@ -160,6 +160,52 @@ class DriveCSVClient:
         drive_info = f"Shared Drive ID: {self.shared_drive_id}" if self.shared_drive_id else "My Drive"  # ドライブ情報
         logger.info(f"ベースフォルダの準備完了: {self.base_folder_path} (ID: {self.base_folder_id}, {drive_info})")  # 階層準備完了をログ出力
 
+    def _ensure_csv_base_folder(self) -> str:
+        """CSVベースフォルダ（discord_mokumoku_tracker/csv/）を作成・取得
+
+        Returns:
+            CSVフォルダのID
+        """
+        folder_name = 'csv'  # CSVフォルダ名は固定
+
+        # フォルダを検索
+        query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{self.base_folder_id}' in parents and trashed=false"  # 検索クエリ
+        list_params = {  # 検索パラメータ
+            'q': query,  # 検索クエリ
+            'fields': 'files(id, name)',  # 取得するフィールド
+            'supportsAllDrives': True,  # 全ドライブ対応
+            'includeItemsFromAllDrives': True  # 全ドライブから検索
+        }
+
+        # 共有ドライブが指定されている場合は、そのドライブ内で検索
+        if self.shared_drive_id:  # 共有ドライブIDが設定されている場合
+            list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
+            list_params['corpora'] = 'drive'  # 特定のドライブを検索
+
+        results = self.service.files().list(**list_params).execute()  # 検索実行
+        items = results.get('files', [])  # 結果を取得
+
+        if items:  # フォルダが見つかった場合
+            self.csv_folder_id = items[0]['id']  # フォルダIDを取得
+            logger.debug(f"既存のCSVフォルダを発見: {folder_name} (ID: {self.csv_folder_id})")  # 既存フォルダをログ出力
+        else:  # フォルダが見つからない場合
+            # フォルダを作成
+            file_metadata = {  # フォルダのメタデータ
+                'name': folder_name,  # フォルダ名
+                'mimeType': 'application/vnd.google-apps.folder',  # フォルダのMIMEタイプ
+                'parents': [self.base_folder_id]  # 親フォルダ
+            }
+            create_params = {  # 作成パラメータ
+                'body': file_metadata,  # フォルダメタデータ
+                'fields': 'id',  # 取得するフィールド
+                'supportsAllDrives': True  # 全ドライブ対応
+            }
+            folder = self.service.files().create(**create_params).execute()  # フォルダ作成
+            self.csv_folder_id = folder.get('id')  # フォルダIDを取得
+            logger.info(f"CSVフォルダを新規作成: {self.base_folder_path}/csv (ID: {self.csv_folder_id})")  # 新規作成をログ出力
+
+        return self.csv_folder_id  # フォルダIDを返す
+
     def _ensure_vc_folder(self, vc_name: str) -> str:
         """VCチャンネル用のフォルダを作成・取得
 
