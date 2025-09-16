@@ -36,8 +36,8 @@ def get_config(env: Environment = Environment.DEV) -> dict:
             'base': 'discord_mokumoku_tracker',  # ベースフォルダ名
             'vc_folder': '{vc_name}',  # VCチャンネルフォルダ名のテンプレート
             'csv_folder': 'csv',  # CSVフォルダ名
-            'csv_file': f'{env_number}_{env_name}.csv',  # CSVファイル名
-            'spreadsheet': f'もくもくトラッカー_{env_number}_{env_name}'  # スプレッドシート名
+            'csv_file': f'{suffix[1:]}.csv',  # CSVファイル名 (例: 0_PRD.csv)
+            'spreadsheet': f'もくもくトラッカー{suffix}'  # スプレッドシート名 (例: もくもくトラッカー_0_PRD)
         },
         'slack_token': os.getenv(f'SLACK_BOT_TOKEN{suffix}'),
         'slack_channel': os.getenv(f'SLACK_CHANNEL_ID{suffix}'),
