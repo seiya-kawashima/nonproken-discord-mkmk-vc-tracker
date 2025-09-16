@@ -76,14 +76,14 @@ class DailyAggregator:
 
             # Drive APIサービスの構築
             self.drive_service = build('drive', 'v3', credentials=self.credentials)
-            logger.info("Google Drive service initialized")  # 初期化成功ログ
+            logger.info("📁 Google Driveへの接続が完了しました")  # 初期化成功ログ
 
             # Sheets APIサービスの構築
             self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
-            logger.info("Google Sheets service initialized")  # 初期化成功ログ
+            logger.info("📊 Google Sheetsへの接続が完了しました")  # 初期化成功ログ
 
         except Exception as e:
-            logger.error(f"Failed to initialize services: {e}")  # エラーログ
+            logger.error(f"⚠️ サービスの初期化に失敗しました: {e}")  # エラーログ
             raise
 
     def _get_credentials(self):
@@ -97,14 +97,14 @@ class DailyAggregator:
             # Base64デコード
             service_account_json = base64.b64decode(service_account_json_base64).decode('utf-8')
             service_account_info = json.loads(service_account_json)
-            logger.info("Using Base64 encoded credentials")  # Base64認証使用ログ
+            logger.info("🔐 環境変数から認証情報を取得しました（Base64形式）")  # Base64認証使用ログ
         else:
             # ファイルパスから読み込み
             if not os.path.exists(service_account_file):
                 raise FileNotFoundError(f"Service account file not found: {service_account_file}")
             with open(service_account_file, 'r') as f:
                 service_account_info = json.load(f)
-            logger.info(f"Using credentials from file: {service_account_file}")  # ファイル認証使用ログ
+            logger.info(f"🔐 認証ファイルを読み込みました: {service_account_file}")  # ファイル認証使用ログ
 
         # スコープ設定
         scopes = [
