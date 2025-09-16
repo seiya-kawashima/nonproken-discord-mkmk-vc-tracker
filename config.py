@@ -36,9 +36,6 @@ def get_config(env: Environment = Environment.DEV) -> dict:
     slack_channel = os.getenv(f'SLACK_CHANNEL_ID{suffix}')
     shared_drive = os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}', '0ANixFe4JBQskUk9PVA')
 
-    if shared_drive == '':
-        shared_drive = None
-
     return {
         # Discord設定
         'discord_token': discord_token,
