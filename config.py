@@ -38,7 +38,7 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'google_drive_service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_{suffix}'),  # 認証情報をテキスト形式で保存したもの（GitHub Actionsなどで使用）
         'google_drive_shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID_{suffix}'),  # Google共有ドライブのID（共有ドライブを使う場合のみ）
         'google_drive_base_folder': 'discord_mokumoku_tracker',  # Google Drive上のベースフォルダ名（すべてのデータはこのフォルダ内に保存）
-        'google_drive_csv_path': 'discord_mokumoku_tracker/{vc_name}/csv/' + f'{suffix}.csv',  # CSVファイルのフルパス（例: discord_mokumoku_tracker/一般/csv/0_PRD.csv）
+        'google_drive_csv_path': 'discord_mokumoku_tracker/csv/{vc_name}_' + f'{suffix}.csv',  # CSVファイルのフルパス（例: discord_mokumoku_tracker/csv/一般_0_PRD.csv）
         'google_drive_spreadsheet_path': 'discord_mokumoku_tracker/{vc_name}/' + f'もくもくトラッカー_{suffix}',  # スプレッドシートのフルパス（例: discord_mokumoku_tracker/一般/もくもくトラッカー_0_PRD）
         'slack_token': os.getenv(f'SLACK_BOT_TOKEN_{suffix}'),  # Slack通知用のBotトークン（Slackにメッセージを送るためのパスワード）
         'slack_channel': os.getenv(f'SLACK_CHANNEL_ID_{suffix}'),  # 通知先のSlackチャンネルID
