@@ -232,7 +232,7 @@ class DriveCSVClient:
         Returns:
             csvフォルダのID
         """  # メソッドの説明
-        folder_name = self.folder_structure.get('csv_folder', 'csv')  # csvフォルダ名をconfig設定から取得
+        folder_name = 'csv'  # csvフォルダ名は固定
         cache_key = f"{vc_name}/csv"  # キャッシュ用のキー
 
         # キャッシュから取得
@@ -292,9 +292,8 @@ class DriveCSVClient:
         # csvフォルダIDを取得
         csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
-        # ファイル名を作成（テンプレートから生成）
-        filename_template = self.folder_structure.get('csv_file', '{suffix}.csv')  # CSVファイル名テンプレート
-        filename = filename_template.format(suffix=self.env_suffix)  # ファイル名生成（例: 0_PRD.csv）
+        # CSVファイル名を生成（VC名_suffix.csv形式）
+        filename = f'{vc_name}_{self.env_suffix}.csv'  # ファイル名生成（例: 一般_0_PRD.csv）
 
         # ファイルを検索（csvフォルダ内を検索）
         query = f"name='{filename}' and '{csv_folder_id}' in parents and trashed=false"  # 検索クエリ
@@ -351,9 +350,8 @@ class DriveCSVClient:
         # csvフォルダIDを取得
         csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
-        # ファイル名を作成（テンプレートから生成）
-        filename_template = self.folder_structure.get('csv_file', '{suffix}.csv')  # CSVファイル名テンプレート
-        filename = filename_template.format(suffix=self.env_suffix)  # ファイル名生成（例: 0_PRD.csv）
+        # CSVファイル名を生成（VC名_suffix.csv形式）
+        filename = f'{vc_name}_{self.env_suffix}.csv'  # ファイル名生成（例: 一般_0_PRD.csv）
 
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
@@ -523,8 +521,7 @@ class DriveCSVClient:
             total_update_count += update_count  # 全体のカウンタを更新
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
-                filename_template = self.folder_structure.get('csv_file', '{suffix}.csv')  # CSVファイル名テンプレート
-                csv_filename = filename_template.format(suffix=self.env_suffix)  # CSVファイル名を生成
+                csv_filename = f'{vc_name}_{self.env_suffix}.csv'  # CSVファイル名を生成
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
                 full_path = f"{self.base_folder_path}/{vc_name}/csv/{csv_filename}"  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
