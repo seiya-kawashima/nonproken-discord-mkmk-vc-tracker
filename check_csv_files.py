@@ -29,9 +29,19 @@ def main():
     print("🔍 Google Drive上のファイル構造を確認します...")
     print("=" * 60)
 
-    # discord_mokumoku_trackerフォルダを検索
+    # 共有ドライブIDを取得
+    shared_drive_id = drive_config.get('shared_drive_id', '0ANixFe4JBQskUk9PVA')
+    print(f"🔗 共有ドライブID: {shared_drive_id}")
+
+    # discord_mokumoku_trackerフォルダを検索（共有ドライブをサポート）
     query = "name='discord_mokumoku_tracker' and mimeType='application/vnd.google-apps.folder'"
-    results = service.files().list(q=query, fields="files(id, name)").execute()
+    results = service.files().list(
+        q=query,
+        fields="files(id, name)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True,
+        corpora='allDrives'
+    ).execute()
     folders = results.get('files', [])
 
     if not folders:
