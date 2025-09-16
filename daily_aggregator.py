@@ -126,6 +126,9 @@ class DailyAggregator:
             CSVファイル情報のリスト [{id, name}, ...]
         """
         try:
+            logger.info(f"🔍 CSVファイルの検索を開始します")  # 検索開始ログ
+            logger.info(f"📍 検索パス: {self.folder_path}")  # 検索パス表示
+
             # フォルダパスからフォルダ階層を取得
             folder_parts = self.folder_path.split('/')  # パスを分割
             if not folder_parts:
@@ -169,6 +172,9 @@ class DailyAggregator:
             csv_folder_id = current_folder_id
 
             # csvフォルダ内のサブフォルダ（チャンネル名フォルダ）を検索
+            full_path = '/'.join(folder_parts)  # 完全なパスを構築
+            logger.info(f"📂 現在のフォルダ: {full_path}")  # 現在位置ログ
+            logger.info(f"🔎 VCチャンネルフォルダを検索中...")  # チャンネルフォルダ検索ログ
             channel_folder_query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
             channel_folder_results = self.drive_service.files().list(
                 q=channel_folder_query,
@@ -177,13 +183,16 @@ class DailyAggregator:
 
             channel_folders = channel_folder_results.get('files', [])
             logger.info(f"📁 {len(channel_folders)}個のVCチャンネルフォルダを発見しました")  # チャンネルフォルダ数ログ
+            if channel_folders:
+                logger.info(f"📝 発見したチャンネルフォルダ: {', '.join([f['name'] for f in channel_folders])}")  # チャンネル名一覧
 
             csv_files = []
             # 各チャンネルフォルダ内のCSVファイルを検索
             for channel_folder in channel_folders:
                 channel_folder_id = channel_folder['id']
                 channel_name = channel_folder['name']
-                logger.debug(f"🔍 フォルダをチェック中: {channel_name}")  # デバッグログ
+                search_path = f"{full_path}/{channel_name}"  # 検索パスを構築
+                logger.debug(f"🔍 CSVファイルを検索中: {search_path}")  # デバッグログ
 
                 csv_query = f"'{channel_folder_id}' in parents and name contains '.csv'"
                 csv_results = self.drive_service.files().list(
@@ -193,7 +202,11 @@ class DailyAggregator:
 
                 channel_csv_files = csv_results.get('files', [])
                 csv_files.extend(channel_csv_files)
-                logger.debug(f"📝 {channel_name}内に{len(channel_csv_files)}個のCSVファイルを発見")  # デバッグログ
+                if channel_csv_files:
+                    for csv_file in channel_csv_files:
+                        logger.debug(f"  ✅ 発見: {search_path}/{csv_file['name']}")  # CSVファイル名表示
+                else:
+                    logger.debug(f"  ⚠️ {search_path}内にCSVファイルがありません")  # CSVファイルなしログ
             logger.info(f"📝 合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
 
             return csv_files
