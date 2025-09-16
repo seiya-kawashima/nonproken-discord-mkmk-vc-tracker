@@ -127,6 +127,13 @@ async def main(env_arg=None):
         sys.exit(1)  # 異常終了
     
     finally:
+        # Discordクライアントの終了処理
+        if 'discord_client' in locals():  # discord_clientが定義されている場合
+            if hasattr(discord_client, 'client') and discord_client.client:  # クライアントが存在する場合
+                if not discord_client.client.is_closed():  # まだ閉じていない場合
+                    await discord_client.client.close()  # クライアントを正しく閉じる
+                    logger.debug("Discordクライアントを正常に終了しました")  # 終了ログ
+
         # 一時ファイルの削除
         if temp_file and os.path.exists(temp_file):  # 一時ファイルが存在する場合
             os.unlink(temp_file)  # ファイル削除
