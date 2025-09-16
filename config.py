@@ -37,15 +37,11 @@ def get_discord_config(env: Environment = Environment.PRD) -> dict:
     token_key = get_env_var_name('DISCORD_BOT_TOKEN', env)
     channel_ids_key = get_env_var_name('ALLOWED_VOICE_CHANNEL_IDS', env)
 
-    token = os.getenv(token_key)
-    if not token:
-        raise ValueError(f"環境変数 {token_key} が設定されていません")
-
     channel_ids_str = os.getenv(channel_ids_key, '')
     channel_ids = [id.strip() for id in channel_ids_str.split(',') if id.strip()]
 
     return {
-        'token': token,
+        'token': os.getenv(token_key),
         'channel_ids': channel_ids
     }
 
