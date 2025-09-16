@@ -303,23 +303,46 @@ class DailyAggregator:
 
             # ヘッダー行を取得
             headers = lines[0].split(',')
+            logger.debug(f"📋 CSVヘッダー: {headers}")  # ヘッダー情報ログ
+
+            # 日付列の確認
+            if 'datetime_jst' in headers:
+                logger.info(f"✅ datetime_jst列を発見（インデックス: {headers.index('datetime_jst')}）")  # 日付列確認
+            else:
+                logger.warning(f"⚠️ datetime_jst列が見つかりません。利用可能な列: {headers}")  # 日付列なし警告
 
             # データ行をパース
             records = []
             target_date_str = self.target_date.strftime('%Y/%m/%d')  # 対象日付文字列
+            logger.info(f"🔍 検索対象日付: {target_date_str}")  # 検索日付ログ
 
-            for line in lines[1:]:
+            # 最初の数行をサンプル表示
+            sample_count = min(3, len(lines) - 1)  # 最大3行表示
+            if sample_count > 0:
+                logger.debug(f"📊 CSVデータサンプル（最初の{sample_count}行）:")  # サンプルデータヘッダー
+
+            for idx, line in enumerate(lines[1:]):
                 values = line.split(',')
                 if len(values) != len(headers):
                     continue
 
                 record = dict(zip(headers, values))
 
+                # サンプルデータ表示
+                if idx < sample_count:
+                    if 'datetime_jst' in record:
+                        logger.debug(f"  行{idx+1}: datetime_jst='{record['datetime_jst']}'")  # サンプルデータ表示
+                    else:
+                        logger.debug(f"  行{idx+1}: {record}")  # サンプルデータ全体
+
                 # 対象日のレコードのみ抽出
-                if 'datetime_jst' in record and record['datetime_jst'].startswith(target_date_str):
-                    # VCチャンネル名を追加（ファイル名から拡張子を除いたもの）
-                    record['vc_name'] = file_name.replace('.csv', '')
-                    records.append(record)
+                if 'datetime_jst' in record:
+                    datetime_value = record['datetime_jst']
+                    if datetime_value.startswith(target_date_str):
+                        # VCチャンネル名を追加（ファイル名から拡張子を除いたもの）
+                        record['vc_name'] = file_name.replace('.csv', '')
+                        records.append(record)
+                        logger.debug(f"  ✅ マッチ: {datetime_value}")  # マッチしたレコード
 
             logger.info(f"📖 {file_name}から{target_date_str}の{len(records)}件のデータを読み込みました")  # 読み込み結果ログ
             return records
