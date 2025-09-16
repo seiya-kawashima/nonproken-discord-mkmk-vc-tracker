@@ -289,9 +289,9 @@ class DailyAggregator:
             while not done:
                 status, done = downloader.next_chunk()
 
-            # CSVをパース
+            # CSVをパース（BOMを除去）
             file_content.seek(0)
-            csv_text = file_content.read().decode('utf-8')
+            csv_text = file_content.read().decode('utf-8-sig')  # BOMを自動除去
 
             if not csv_text:
                 logger.warning(f"⚠️ CSVファイルが空です: {file_name}")  # 空ファイル警告
@@ -301,8 +301,8 @@ class DailyAggregator:
             if len(lines) < 2:  # ヘッダーのみの場合
                 return []
 
-            # ヘッダー行を取得
-            headers = lines[0].split(',')
+            # ヘッダー行を取得（改行コードも除去）
+            headers = [h.strip() for h in lines[0].split(',')]
             logger.debug(f"📋 CSVヘッダー: {headers}")  # ヘッダー情報ログ
 
             # 日付列の確認
