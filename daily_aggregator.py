@@ -515,20 +515,20 @@ class DailyAggregator:
                 body={'values': rows}
             ).execute()
 
-            logger.info(f"Updated statistics for {len(stats_dict)} users")  # 更新成功ログ
+            logger.info(f"✅ {len(stats_dict)}名のユーザー統計情報を更新しました")  # 更新成功ログ
 
         except Exception as e:
-            logger.error(f"Failed to update user statistics: {e}")  # エラーログ
+            logger.error(f"⚠️ ユーザー統計情報の更新に失敗しました: {e}")  # エラーログ
 
     def run(self):
         """集計処理のメイン実行"""
         try:
-            logger.info(f"Starting aggregation for {self.target_date}")  # 開始ログ
+            logger.info(f"🚀 {self.target_date}のデータ集計を開始します")  # 開始ログ
 
             # 1. CSVファイル一覧を取得
             csv_files = self.get_csv_files_from_drive()
             if not csv_files:
-                logger.warning("No CSV files found")  # CSVファイルなし警告
+                logger.warning("⚠️ CSVファイルが見つかりませんでした")  # CSVファイルなし警告
                 return
 
             # 2. 各CSVファイルからデータを読み込み
@@ -537,19 +537,19 @@ class DailyAggregator:
                 records = self.read_csv_content(csv_file['id'], csv_file['name'])
                 all_records.extend(records)
 
-            logger.info(f"Total records read: {len(all_records)}")  # 総レコード数ログ
+            logger.info(f"📖 合計{len(all_records)}件のレコードを読み込みました")  # 総レコード数ログ
 
             # 3. ユーザーごとにデータを集約
             user_data = self.aggregate_user_data(all_records)
 
             if not user_data:
-                logger.info("No user data to aggregate")  # 集約データなしログ
+                logger.info("📈 集計するユーザーデータがありません")  # 集約データなしログ
                 return
 
             # 4. Google SheetsのIDを取得
             sheet_id = self.get_sheet_id()
             if not sheet_id:
-                logger.error("Cannot proceed without sheet ID")  # シートID取得失敗エラー
+                logger.error("⚠️ シートIDが取得できないため、処理を続行できません")  # シートID取得失敗エラー
                 return
 
             # 5. 必要なシートを確認・作成
@@ -561,10 +561,10 @@ class DailyAggregator:
             # 7. user_statisticsシートを更新
             self.update_user_statistics(sheet_id, user_data)
 
-            logger.info("Aggregation completed successfully")  # 完了ログ
+            logger.info("🎉 データ集計が正常に完了しました！")  # 完了ログ
 
         except Exception as e:
-            logger.error(f"Aggregation failed: {e}")  # エラーログ
+            logger.error(f"⚠️ データ集計に失敗しました: {e}")  # エラーログ
             raise
 
 
