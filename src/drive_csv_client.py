@@ -21,7 +21,8 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from loguru import logger  # ログ出力用（loguru）
 import sys  # システム操作用
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))  # 親ディレクトリをパスに追加
-from config import EnvConfig  # 環境設定
+# 環境番号のマッピング
+ENV_NUMBER_MAP = {'PRD': '0', 'TST': '1', 'DEV': '2'}
 
 
 class DriveCSVClient:
@@ -290,7 +291,7 @@ class DriveCSVClient:
         csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
         # 環境番号をconfig.pyから取得
-        env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
+        env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
 
         # ファイル名を作成（番号_環境名.csv）
         filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
@@ -351,7 +352,7 @@ class DriveCSVClient:
         csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
         # 環境番号をconfig.pyから取得
-        env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
+        env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
 
         # ファイル名を作成（番号_環境名.csv）
         filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
@@ -524,7 +525,7 @@ class DriveCSVClient:
             total_update_count += update_count  # 全体のカウンタを更新
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
-                env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
+                env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
                 csv_filename = f"{env_number}_{self.env_name}.csv"  # CSVファイル名を生成
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
                 full_path = f"{self.base_folder_path}/{vc_name}/csv/{csv_filename}"  # フルパス
