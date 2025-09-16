@@ -332,19 +332,14 @@ class DriveCSVClient:
     def _get_csv_file_id(self, vc_name: str) -> str:
         """CSVファイルのIDを取得（なければNone）
 
-        discord_mokumoku_tracker/{VC名}/csv/{環境番号}_{環境名}.csv のファイルを検索します。
-        ファイル名は環境番号_環境名.csv（例: 0_PRD.csv, 1_TST.csv, 2_DEV.csv）となります。
+        discord_mokumoku_tracker/csv/{VC名}_{suffix}.csv のファイルを検索します。
+        ファイル名は{VC名}_{suffix}.csv（例: 一般_0_PRD.csv）となります。
         """  # メソッドの説明
-        # VCチャンネル用のフォルダIDを取得
-        vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
-        # csvフォルダIDを取得
-        csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
-
         # CSVファイル名を生成（VC名_suffix.csv形式）
         filename = f'{vc_name}_{self.env_suffix}.csv'  # ファイル名生成（例: 一般_0_PRD.csv）
 
         # ファイルを検索（csvフォルダ内を検索）
-        query = f"name='{filename}' and '{csv_folder_id}' in parents and trashed=false"  # 検索クエリ
+        query = f"name='{filename}' and '{self.csv_folder_id}' in parents and trashed=false"  # 検索クエリ
         list_params = {  # 検索パラメータ
             'q': query,  # 検索クエリ
             'fields': 'files(id, name)',  # 取得するフィールド
