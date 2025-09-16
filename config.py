@@ -20,9 +20,7 @@ class Environment(IntEnum):
 def get_config(env: Environment = Environment.DEV) -> dict:
     """指定環境のすべての設定を取得"""
 
-    suffix = ['0_PRD', '1_TST', '2_DEV'][env]  # アンダースコアなしのサフィックス
-    env_name = ['PRD', 'TST', 'DEV'][env]
-    env_number = str(env)
+    suffix = ['0_PRD', '1_TST', '2_DEV'][env]  # サフィックス (0_PRD/1_TST/2_DEV)
     channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS_{suffix}', '')
 
     return {
