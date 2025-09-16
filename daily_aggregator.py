@@ -93,6 +93,7 @@ class DailyAggregator:
         self.drive_service = None  # Google Drive APIサービス
         self.sheets_service = None  # Google Sheets APIサービス
         self.credentials = None  # 認証情報
+        self.user_mapping = {}  # Discord名→Slack名のマッピング
 
         # config.pyから設定を取得
         sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定取得
@@ -660,7 +661,10 @@ class DailyAggregator:
                 logger.info("📈 集計するユーザーデータがありません")  # 集約データなしログ
                 return "本日の参加者はいませんでした。"
 
-            # 4. 出席レポートを生成
+            # 4. ユーザー名マッピングを読み込み
+            self.load_user_mapping()  # ユーザー名対照表を読み込み
+
+            # 5. 出席レポートを生成
             report = self.generate_attendance_report(user_data)  # レポート生成
 
             # レポートをログに出力
@@ -711,7 +715,10 @@ class DailyAggregator:
 
             # 連続ログイン日数を簡易計算（今後実装可能）
             for user_id, data in sorted_users:
-                user_name = data['user_name'] or 'Unknown'  # ユーザー名
+                user_name = data['user_name'] or 'Unknown'  # Discordユーザー名
+
+                # Slackメンションを取得
+                slack_mention = self.get_slack_mention(user_id, user_name)  # Slackメンション取得
 
                 # ランダムな日数を生成（デモ用）
                 import random  # ランダム
@@ -719,8 +726,11 @@ class DailyAggregator:
                 total_days = random.randint(1, 30)  # 総ログイン日数（デモ）
                 streak_days = min(random.randint(1, 7), total_days)  # 連続日数（デモ）
 
-                # メッセージを生成
-                message = f"{user_name} さん　{total_days}日目のログインになります。"  # 基本メッセージ
+                # メッセージを生成（Slackメンション付き）
+                if slack_mention and slack_mention != user_name:  # Slackメンションがある場合
+                    message = f"{slack_mention} さん　{total_days}日目のログインになります。"  # Slackメンション使用
+                else:
+                    message = f"{user_name} さん　{total_days}日目のログインになります。"  # Discord名使用
 
                 # 連続ログインメッセージを追加
                 if streak_days > 1:  # 2日以上連続の場合
@@ -736,6 +746,91 @@ class DailyAggregator:
         except Exception as e:
             logger.error(f"⚠️ レポート生成でエラー: {e}")  # エラーログ
             return f"レポートの生成に失敗しました: {e}"  # エラーメッセージ
+
+    def load_user_mapping(self):
+        """
+        ユーザー名対照表をGoogle Sheetsから読み込み
+        """
+        try:
+            # 対照表シート名
+            mapping_sheet_name = f"ユーザー名対照表_{self.env.name}"  # 環境別のシート名
+
+            # シートを検索
+            query = f"name='{mapping_sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+            results = self.drive_service.files().list(
+                q=query,
+                fields="files(id, name)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
+                corpora='allDrives'
+            ).execute()
+
+            sheets = results.get('files', [])  # 結果取得
+            if not sheets:
+                logger.warning(f"⚠️ ユーザー名対照表が見つかりません: {mapping_sheet_name}")  # 対照表なし警告
+                logger.info("👉 create_user_mapping_sheet.pyを実行して対照表を作成してください")  # 作成指示
+                return
+
+            sheet_id = sheets[0]['id']  # シートID取得
+            logger.info(f"📝 ユーザー名対照表を読み込み中: {mapping_sheet_name}")  # 読み込みログ
+
+            # データを読み込み
+            range_name = 'A2:E100'  # ヘッダーを除く100行まで
+            result = self.sheets_service.spreadsheets().values().get(
+                spreadsheetId=sheet_id,
+                range=range_name
+            ).execute()
+
+            values = result.get('values', [])  # データ取得
+            if not values:
+                logger.warning("⚠️ 対照表にデータがありません")  # データなし警告
+                return
+
+            # マッピングを作成
+            for row in values:
+                if len(row) >= 5:  # 必要な列数確認
+                    discord_id = row[0]  # Discord ID
+                    discord_name = row[1]  # Discord名
+                    slack_id = row[2] if len(row) > 2 else ''  # Slack ID
+                    slack_name = row[3] if len(row) > 3 else ''  # Slack名
+                    slack_mention = row[4] if len(row) > 4 else ''  # Slackメンション
+
+                    if discord_id and slack_mention:  # IDとメンションがある場合
+                        self.user_mapping[discord_id] = {
+                            'discord_name': discord_name,
+                            'slack_id': slack_id,
+                            'slack_name': slack_name,
+                            'slack_mention': slack_mention
+                        }
+
+            logger.info(f"✅ {len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
+
+        except Exception as e:
+            logger.warning(f"⚠️ ユーザーマッピングの読み込みでエラー: {e}")  # エラーログ
+            # エラーがあっても処理を続行
+
+    def get_slack_mention(self, discord_id: str, discord_name: str) -> str:
+        """
+        Discord IDまたは名前からSlackメンションを取得
+
+        Args:
+            discord_id: DiscordユーザーID
+            discord_name: Discordユーザー名
+
+        Returns:
+            Slackメンション形式またはDiscord名
+        """
+        # IDでマッチングを検索
+        if discord_id in self.user_mapping:
+            return self.user_mapping[discord_id]['slack_mention']  # Slackメンション返す
+
+        # Discord名でマッチングを検索（フォールバック）
+        for user_id, mapping in self.user_mapping.items():
+            if mapping['discord_name'] == discord_name:
+                return mapping['slack_mention']  # Slackメンション返す
+
+        # マッピングがない場合はDiscord名を返す
+        return discord_name  # Discord名をそのまま返す
 
 
 def main():
