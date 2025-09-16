@@ -21,11 +21,10 @@ def get_config(env: Environment = Environment.DEV) -> dict:
     """指定環境のすべての設定を取得"""
 
     suffix = ['0_PRD', '1_TST', '2_DEV'][env]  # サフィックス (0_PRD/1_TST/2_DEV)
-    channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS_{suffix}', '')
 
     return {
         'discord_token': os.getenv(f'DISCORD_BOT_TOKEN_{suffix}'),
-        'discord_channel_ids': [id.strip() for id in channel_ids_str.split(',') if id.strip()],
+        'discord_channel_ids': [id.strip() for id in os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS_{suffix}', '').split(',') if id.strip()],
         'google_drive_service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_{suffix}', 'service_account.json'),
         'google_drive_service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_{suffix}'),
         'google_drive_shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID_{suffix}'),
