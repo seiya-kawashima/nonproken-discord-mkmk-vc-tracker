@@ -96,11 +96,11 @@ jobs:  # 実行するジョブの定義
         fi
 
         # VCチャンネルID
-        if [ -n "${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}" ]; then
-          echo "  ✅ TST_ALLOWED_VOICE_CHANNEL_IDS: 設定済み"
+        if [ -n "${{ secrets.TST_DISCORD_VOICE_CHANNEL_IDS }}" ]; then
+          echo "  ✅ TST_DISCORD_VOICE_CHANNEL_IDS: 設定済み"
         else
-          echo "  ❌ TST_ALLOWED_VOICE_CHANNEL_IDS: 未設定"
-          MISSING_VARS="$MISSING_VARS TST_ALLOWED_VOICE_CHANNEL_IDS"
+          echo "  ❌ TST_DISCORD_VOICE_CHANNEL_IDS: 未設定"
+          MISSING_VARS="$MISSING_VARS TST_DISCORD_VOICE_CHANNEL_IDS"
         fi
 
         # Google Drive フォルダパス（config.pyで設定済み）
@@ -116,7 +116,7 @@ jobs:  # 実行するジョブの定義
       env:  # 環境変数の設定
         # テスト環境用の設定
         TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}  # Discord Botトークン
-        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}  # 監視対象VCチャンネルID
+        TST_DISCORD_VOICE_CHANNEL_IDS: ${{ secrets.TST_DISCORD_VOICE_CHANNEL_IDS }}  # 監視対象VCチャンネルID
         TST_GOOGLE_DRIVE_FOLDER_PATH: discord_mokumoku_tracker/csv  # Google Driveフォルダパス
         TST_GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json  # 認証用JSONファイルパス
         TST_SLACK_BOT_TOKEN: ${{ secrets.TST_SLACK_BOT_TOKEN }}  # Slack Botトークン（オプション）
