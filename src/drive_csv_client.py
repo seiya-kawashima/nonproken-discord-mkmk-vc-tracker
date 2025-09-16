@@ -364,50 +364,62 @@ class DriveCSVClient:
             writer.writeheader()  # ヘッダー書き込み
             writer.writerows(data)  # データ書き込み
 
-        # 一時ファイルに保存
+        # 一時ファイルを作成（自動削除される一時ファイルを使用）
         import tempfile  # 一時ファイル用
-        temp_dir = tempfile.gettempdir()  # OSに応じた一時ディレクトリを取得
-        temp_filename = os.path.join(temp_dir, filename)  # 一時ファイルパス
-        with open(temp_filename, 'w', encoding='utf-8-sig', newline='') as f:  # UTF-8 BOM付きで保存（newline=''でCSVモジュールに改行制御を委ねる）
-            f.write(output.getvalue())  # CSVデータを書き込み
+        temp_file = None  # 一時ファイルオブジェクト
+        temp_filename = None  # 一時ファイルパス
 
-        # メディアオブジェクトを作成
-        media = MediaFileUpload(temp_filename, mimetype='text/csv')  # アップロード用メディア作成
-
-        if file_id:  # 既存ファイルを更新
-            update_params = {  # 更新パラメータ
-                'fileId': file_id,  # ファイルID
-                'media_body': media,  # メディアオブジェクト
-                'supportsAllDrives': True  # 全ドライブ対応
-            }
-            self.service.files().update(**update_params).execute()  # ファイル更新
-            # ファイルのフルパスを含めてログ出力
-            full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
-            drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
-            logger.info(f"CSVファイルを更新しました: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
-        else:  # 新規ファイルを作成
-            file_metadata = {  # ファイルのメタデータ
-                'name': filename,  # ファイル名
-                'parents': [csv_folder_id]  # csvフォルダ内に配置
-            }
-            create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
-            # 共有ドライブ・共有フォルダの両方に対応
-            create_params['supportsAllDrives'] = True  # 全ドライブ対応
-            # ファイル作成
-            file = self.service.files().create(**create_params).execute()  # ファイル作成
-            file_id = file.get('id')  # ファイルIDを取得
-            # ファイルのフルパスを含めてログ出力
-            full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
-            drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
-            logger.info(f"CSVファイルを新規作成しました: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
-
-        # 一時ファイルを削除
         try:
-            os.remove(temp_filename)  # 一時ファイル削除
-        except PermissionError:
-            logger.warning(f"一時ファイルを削除できませんでした（使用中）: {temp_filename}")  # ファイル使用中の警告
-        except Exception as e:
-            logger.warning(f"一時ファイルの削除中にエラーが発生しました: {e}")  # その他のエラー
+            # 一時ファイルを作成（自動削除モードはFalse、手動で削除）
+            with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8-sig', newline='',
+                                            suffix='.csv', delete=False) as temp_file:  # 一時ファイル作成
+                temp_file.write(output.getvalue())  # CSVデータを書き込み
+                temp_filename = temp_file.name  # ファイルパスを保存
+
+            # メディアオブジェクトを作成
+            media = MediaFileUpload(temp_filename, mimetype='text/csv')  # アップロード用メディア作成
+
+            if file_id:  # 既存ファイルを更新
+                update_params = {  # 更新パラメータ
+                    'fileId': file_id,  # ファイルID
+                    'media_body': media,  # メディアオブジェクト
+                    'supportsAllDrives': True  # 全ドライブ対応
+                }
+                self.service.files().update(**update_params).execute()  # ファイル更新
+                # ファイルのフルパスを含めてログ出力
+                full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
+                drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
+                logger.info(f"CSVファイルを更新しました: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
+            else:  # 新規ファイルを作成
+                file_metadata = {  # ファイルのメタデータ
+                    'name': filename,  # ファイル名
+                    'parents': [csv_folder_id]  # csvフォルダ内に配置
+                }
+                create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
+                # 共有ドライブ・共有フォルダの両方に対応
+                create_params['supportsAllDrives'] = True  # 全ドライブ対応
+                # ファイル作成
+                file = self.service.files().create(**create_params).execute()  # ファイル作成
+                file_id = file.get('id')  # ファイルIDを取得
+                # ファイルのフルパスを含めてログ出力
+                full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
+                drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
+                logger.info(f"CSVファイルを新規作成しました: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
+
+        finally:
+            # 一時ファイルを削除（アップロード完了後）
+            if temp_filename and os.path.exists(temp_filename):  # ファイルが存在する場合
+                try:
+                    # MediaFileUploadのクローズを待つ
+                    import time  # 時間待機用
+                    time.sleep(0.5)  # 0.5秒待機
+                    os.remove(temp_filename)  # 一時ファイル削除
+                    logger.debug(f"一時ファイルを削除しました: {temp_filename}")  # 削除成功ログ
+                except PermissionError:
+                    # Windowsでは使用中のファイルは削除できないため、警告レベルを下げる
+                    logger.debug(f"一時ファイルは使用中のため後で削除されます: {temp_filename}")  # デバッグログ
+                except Exception as e:
+                    logger.debug(f"一時ファイルの削除をスキップ: {e}")  # デバッグログ
 
     def upsert_presence(self, members: List[Dict[str, Any]]) -> Dict[str, int]:
         """メンバーの出席情報を記録（Upsert）
