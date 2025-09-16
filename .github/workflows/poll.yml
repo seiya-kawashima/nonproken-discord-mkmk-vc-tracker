@@ -67,7 +67,7 @@ jobs:  # 実行するジョブ（作業単位）の定義
         DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}  # Discord Botトークン（GitHub Secretsから取得）
         GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}  # Google Sheetsの名前（GitHub Secretsから取得）
         GOOGLE_SERVICE_ACCOUNT_JSON: service_account.json  # 認証用JSONファイルのパス
-        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}  # 監視対象のVCチャンネルID（カンマ区切り）
+        DISCORD_VOICE_CHANNEL_IDS: ${{ secrets.DISCORD_VOICE_CHANNEL_IDS }}  # 監視対象のVCチャンネルID（カンマ区切り）
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}  # Slack Botトークン（オプション）
         SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}  # SlackチャンネルID（オプション）
         TZ: Asia/Tokyo  # タイムゾーンを日本時間に設定
