@@ -424,7 +424,7 @@ class DriveCSVClient:
                 }
                 self.service.files().update(**update_params).execute()  # ファイル更新
                 # ファイルのフルパスを含めてログ出力
-                full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
+                full_path = self.csv_path_template.format(vc_name=vc_name)  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
                 logger.info(f"CSVファイルを更新しました: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
             else:  # 新規ファイルを作成
@@ -439,7 +439,7 @@ class DriveCSVClient:
                 file = self.service.files().create(**create_params).execute()  # ファイル作成
                 file_id = file.get('id')  # ファイルIDを取得
                 # ファイルのフルパスを含めてログ出力
-                full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
+                full_path = self.csv_path_template.format(vc_name=vc_name)  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
                 logger.info(f"CSVファイルを新規作成しました: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
 
