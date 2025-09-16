@@ -1,6 +1,6 @@
 """
 環境設定管理モジュール (config.py)
-このファイルは、Discord Botをテスト用と本番用で使い分けるための設定を管理します。
+このファイルは、開発用とテスト用と本番用で使い分けるための設定を管理します。
 例えば、テストではテスト用のDiscordサーバーで動かし、本番では実際のサーバーで動かします。
 環境ごとに異なるトークン（パスワードのようなもの）や設定値を自動的に切り替えることで、
 間違えて本番サーバーでテストしてしまうような事故を防ぎます。
@@ -37,14 +37,9 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'google_drive_service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_{suffix}', 'service_account.json'),  # Google Driveにアクセスするための認証ファイルのパス
         'google_drive_service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_{suffix}'),  # 認証情報をテキスト形式で保存したもの（GitHub Actionsなどで使用）
         'google_drive_shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID_{suffix}'),  # Google共有ドライブのID（共有ドライブを使う場合のみ）
-        'google_drive_folder_path': 'discord_mokumoku_tracker',  # Google Drive上のメインフォルダ名（すべてのデータはこのフォルダ内に保存）
-        'google_drive_folder_structure': {  # Google Drive内のフォルダ構成を定義（整理整頓のルール）
-            'base': 'discord_mokumoku_tracker',  # ベースとなるフォルダ名（すべての親フォルダ）
-            'vc_folder': '{vc_name}',  # 各VCチャンネル用のフォルダ名（{vc_name}は実際のチャンネル名に置き換わる）
-            'csv_folder': 'csv',  # CSVファイルを保存するフォルダ名
-            'csv_file': f'{suffix}.csv',  # 出席データを保存するファイル名（例: 0_PRD.csv）
-            'spreadsheet': f'もくもくトラッカー_{suffix}'  # Googleスプレッドシートの名前（例: もくもくトラッカー_0_PRD）
-        },
+        'google_drive_base_folder': 'discord_mokumoku_tracker',  # Google Drive上のベースフォルダ名（すべてのデータはこのフォルダ内に保存）
+        'google_drive_csv_path': 'discord_mokumoku_tracker/{vc_name}/csv/' + f'{suffix}.csv',  # CSVファイルのフルパス（例: discord_mokumoku_tracker/一般/csv/0_PRD.csv）
+        'google_drive_spreadsheet_path': 'discord_mokumoku_tracker/{vc_name}/' + f'もくもくトラッカー_{suffix}',  # スプレッドシートのフルパス（例: discord_mokumoku_tracker/一般/もくもくトラッカー_0_PRD）
         'slack_token': os.getenv(f'SLACK_BOT_TOKEN_{suffix}'),  # Slack通知用のBotトークン（Slackにメッセージを送るためのパスワード）
         'slack_channel': os.getenv(f'SLACK_CHANNEL_ID_{suffix}'),  # 通知先のSlackチャンネルID
         'suffix': suffix,  # 環境識別子（0_PRD/1_TST/2_DEV）を他の処理でも使えるように保存
