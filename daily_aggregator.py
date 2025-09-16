@@ -635,7 +635,18 @@ def main():
     if args.debug:
         logger.remove()  # 既存のハンドラーを削除
         logger.add(sys.stderr, level="DEBUG", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # DEBUGレベルでコンソール出力
-        logger.add("daily_aggregator.log", rotation="10 MB", retention="7 days", level="DEBUG", encoding="utf-8")  # DEBUGレベルでファイル出力
+
+        # デバッグ時も日付付きファイル名でログ出力
+        from datetime import datetime
+        debug_date = datetime.now().strftime("%Y%m%d")  # 日付取得
+
+        # 全ての処理を含むデバッグログ
+        logger.add(f"logs/debug_{debug_date}.log",
+                  rotation="10 MB",
+                  retention="7 days",
+                  level="DEBUG",
+                  encoding="utf-8",
+                  format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # DEBUGレベルでファイル出力
 
     # 対象日付の設定
     target_date = None
