@@ -479,28 +479,34 @@ class DriveCSVClient:
 
             # === 各メンバーの出席記録を処理 ===
             # VCチャンネルの参加者一人ずつについて、
-            # 新規追加または既存レコードの更新を行います
+            # 新規追加のデータのみを収集します（既存データは保持）
+            new_rows = []  # 新規追加する行のリスト
             for member in vc_members:  # VCメンバーリストをループ
                 user_id = member['user_id']  # ユーザーID
 
-                if user_id not in today_data:  # 今日のデータに存在しない場合
+                # 重複チェック：今日の同じユーザーの記録があるかを確認
+                # 今回の実行で既に追加済みかもチェック
+                already_exists = any(
+                    row['user_id'] == user_id and row['datetime_jst'] == datetime_jst
+                    for row in existing_data + new_rows
+                )
+
+                if not already_exists:  # まだ記録されていない場合
                     # 新規追加
                     new_row = {  # 新しい行データ
                         'datetime_jst': datetime_jst,  # 日付と時刻
                         'user_id': member['user_id'],  # ユーザーID
                         'user_name': member['user_name'],  # ユーザー名
                     }
-                    existing_data.append(new_row)  # データに追加
+                    new_rows.append(new_row)  # 新規データリストに追加
                     new_count += 1  # カウンタ増加
                     logger.info(f"{vc_name}に新規参加: {member.get('user_name', '不明')} - {datetime_jst}")  # 新規追加をログ出力
-                else:
-                    # 既に今日のデータがある場合はスキップ（重複を防ぐため）
-                    pass  # 何もしない
 
-            # === 更新したデータをGoogle Driveにアップロード ===
-            # 新規追加・更新したデータを含む全データをCSVファイルとして
-            # Google Driveにアップロードします
-            self._upload_csv(vc_name, existing_data, file_id)  # CSV更新
+            # === 新規データがある場合のみアップロード ===
+            if new_rows:  # 新規データがある場合
+                # 既存データに新規データを追加（append）
+                all_data = existing_data + new_rows  # 既存データと新規データを結合
+                self._upload_csv(vc_name, all_data, file_id)  # CSV更新
 
             total_new_count += new_count  # 全体のカウンタを更新
             total_update_count += update_count  # 全体のカウンタを更新
