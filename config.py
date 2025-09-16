@@ -29,8 +29,8 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'sheet_name': f'もくもくトラッカー_{env}_{["PRD","TST","DEV"][env]}',
         'service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON{suffix}', 'service_account.json'),
         'service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64{suffix}'),
-        'folder_path': 'discord_mokumoku_tracker',
-        'folder_structure': {
+        'google_drive_folder_path': 'discord_mokumoku_tracker',  # Google Driveベースフォルダパス
+        'google_drive_folder_structure': {  # Google Driveフォルダ構造定義
             'base': 'discord_mokumoku_tracker',  # ベースフォルダ名
             'vc_folder': '{vc_name}',  # VCチャンネルフォルダ名のテンプレート
             'csv_folder': 'csv',  # CSVフォルダ名
