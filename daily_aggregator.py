@@ -849,7 +849,7 @@ def main():
     # デバッグモードの設定
     if args.debug:
         logger.remove()  # 既存のハンドラーを削除
-        logger.add(sys.stderr, level="DEBUG", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}")  # DEBUGレベルでコンソール出力
+        logger.add(sys.stderr, level="DEBUG", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # DEBUGレベルでコンソール出力（ファイル名と関数名を先に表示）
 
         # デバッグ時も日付付きファイル名でログ出力
         from datetime import datetime
