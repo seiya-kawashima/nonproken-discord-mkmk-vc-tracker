@@ -50,7 +50,7 @@ jobs:  # 実行するジョブ（作業単位）の定義
       if: github.event.inputs.environment == 'test'  # environment入力が'test'の場合のみ実行
       env:  # 環境変数の設定
         TST_DISCORD_BOT_TOKEN: ${{ secrets.TST_DISCORD_BOT_TOKEN }}  # テスト用Botトークン（GitHub Secretsから取得）
-        TST_ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.TST_ALLOWED_VOICE_CHANNEL_IDS }}  # テスト用VCチャンネルID（GitHub Secretsから取得）
+        TST_DISCORD_VOICE_CHANNEL_IDS: ${{ secrets.TST_DISCORD_VOICE_CHANNEL_IDS }}  # テスト用VCチャンネルID（GitHub Secretsから取得）
       run: |  # シェルコマンドを実行
         echo "🤖 Discord Bot接続テスト（テスト環境）"  # 実行開始メッセージを表示
         python tst/test_discord_bot.py --test  # テスト環境用のPythonスクリプトを実行
@@ -59,7 +59,7 @@ jobs:  # 実行するジョブ（作業単位）の定義
       if: github.event.inputs.environment == 'production'  # environment入力が'production'の場合のみ実行
       env:  # 環境変数の設定
         DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}  # 本番用Botトークン（GitHub Secretsから取得）
-        ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}  # 本番用VCチャンネルID（GitHub Secretsから取得）
+        DISCORD_VOICE_CHANNEL_IDS: ${{ secrets.DISCORD_VOICE_CHANNEL_IDS }}  # 本番用VCチャンネルID（GitHub Secretsから取得）
       run: |  # シェルコマンドを実行
         echo "🤖 Discord Bot接続テスト（本番環境）"  # 実行開始メッセージを表示
         echo "⚠️ 注意: 本番環境のBotをテストしています"  # 警告メッセージを表示
