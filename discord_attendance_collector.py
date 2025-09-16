@@ -52,7 +52,7 @@ async def main(env_arg=None):
     # 設定値を展開
     discord_token = config['discord_token']  # Discord Botトークン
     discord_channel_ids = config.get('discord_channel_ids', config.get('channel_ids'))  # Discord監視対象VCチャンネルID
-    sheet_name = config.get('google_drive_folder_structure', {}).get('spreadsheet', f"もくもくトラッカー_{config['env_number']}_{config['env_name']}")  # スプレッドシート名
+    sheet_name = config.get('google_drive_folder_structure', {}).get('spreadsheet', f"もくもくトラッカー_{config['suffix']}")  # スプレッドシート名
     google_drive_service_account_json = config.get('google_drive_service_account_json', config.get('service_account_json'))  # Google DriveサービスアカウントJSON
     google_drive_service_account_json_base64 = config.get('google_drive_service_account_json_base64', config.get('service_account_json_base64'))  # Base64エンコードされたGoogle Drive認証情報
     
@@ -99,10 +99,11 @@ async def main(env_arg=None):
         logger.info("Google Driveに接続中...")  # 接続開始ログ
         # Google Drive設定からフォルダパス、環境名、共有ドライブIDを取得
         google_drive_folder_path = config.get('google_drive_folder_path', config.get('folder_path'))  # Google Driveフォルダパス取得（config.pyから）
-        env_name = config['env_name']  # 環境名取得（PRD/TST/DEV）
+        env_suffix = config['suffix']  # 環境サフィックス取得（0_PRD/1_TST/2_DEV）
+        env_name = env_suffix.split('_')[1]  # 環境名をsuffixから抽出（PRD/TST/DEV）
         google_drive_shared_drive_id = config.get('google_drive_shared_drive_id', config.get('shared_drive_id'))  # Google Drive共有ドライブID取得
         google_drive_folder_structure = config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
-        csv_client = DriveCSVClient(google_drive_service_account_json, google_drive_folder_path, env_name, google_drive_shared_drive_id, google_drive_folder_structure)  # CSVクライアント作成（Google Driveフォルダパス、環境名、共有ドライブID、フォルダ構造指定）
+        csv_client = DriveCSVClient(google_drive_service_account_json, google_drive_folder_path, env_suffix, google_drive_shared_drive_id, google_drive_folder_structure)  # CSVクライアント作成（Google Driveフォルダパス、環境サフィックス、共有ドライブID、フォルダ構造指定）
         csv_client.connect()  # 接続
 
         logger.info("出席データをCSVファイルに記録中...")  # 記録開始ログ
