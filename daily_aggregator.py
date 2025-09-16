@@ -101,7 +101,8 @@ class DailyAggregator:
         config = get_config(env)  # すべての設定を取得
 
         self.sheet_name = config['sheet_name']  # Sheets名
-        self.folder_path = config['folder_path']  # ベースフォルダパス
+        self.google_drive_folder_path = config.get('google_drive_folder_path', config.get('folder_path'))  # Google Driveベースフォルダパス
+        self.google_drive_folder_structure = config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
         self.allowed_vc_ids = config['channel_ids']  # 対象VCチャンネルID
         self.env_number = config['env_number']  # 環境番号
         self.env_name = config['env_name']  # 環境名
