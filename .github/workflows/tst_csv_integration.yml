@@ -279,7 +279,7 @@ jobs:  # 実行するジョブの定義
         echo "トラブルシューティング:"  # トラブルシューティングのヘッダー
         echo "1. GitHub Secretsの設定を確認"  # 対処法1
         echo "   - TST_DISCORD_BOT_TOKEN"  # Discord設定
-        echo "   - TST_ALLOWED_VOICE_CHANNEL_IDS"  # VCチャンネル設定
+        echo "   - TST_DISCORD_VOICE_CHANNEL_IDS"  # VCチャンネル設定
         echo "   - TST_GOOGLE_SERVICE_ACCOUNT_JSON_BASE64"  # 認証情報設定
         echo ""  # 空行
         echo "2. Google APIの有効化を確認"  # 対処法2
