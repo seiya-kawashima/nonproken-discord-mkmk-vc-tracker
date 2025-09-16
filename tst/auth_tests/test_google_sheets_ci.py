@@ -53,12 +53,12 @@ def test_google_sheets_connection():
     print("=" * 70)
     
     # GitHub Actions環境かチェック  
-    is_github = EnvConfig.is_github_actions()
+    is_github = os.getenv('GITHUB_ACTIONS') == 'true'
     print(f"\n実行環境: {'GitHub Actions' if is_github else 'ローカル'}")
     
     # テスト環境の設定を取得
     try:
-        config = EnvConfig.get_google_sheets_config(Environment.TST)
+        config = get_config(Environment.TST)
     except ValueError as e:
         print(f"\n❗ 設定エラー: {e}")
         
