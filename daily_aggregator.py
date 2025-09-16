@@ -305,15 +305,15 @@ class DailyAggregator:
 
             sheets = results.get('files', [])
             if not sheets:
-                logger.error(f"Sheet not found: {self.sheet_name}")  # シート未発見エラー
+                logger.error(f"⚠️ スプレッドシートが見つかりません: {self.sheet_name}")  # シート未発見エラー
                 return None
 
             sheet_id = sheets[0]['id']
-            logger.info(f"Found sheet: {self.sheet_name} (ID: {sheet_id})")  # シート発見ログ
+            logger.info(f"📊 スプレッドシートを発見: {self.sheet_name}")  # シート発見ログ
             return sheet_id
 
         except Exception as e:
-            logger.error(f"Failed to get sheet ID: {e}")  # エラーログ
+            logger.error(f"⚠️ シートIDの取得に失敗しました: {e}")  # エラーログ
             return None
 
     def ensure_sheets_exist(self, sheet_id: str):
@@ -340,7 +340,7 @@ class DailyAggregator:
                             }
                         }
                     })
-                    logger.info(f"Creating sheet: {sheet_name}")  # シート作成ログ
+                    logger.info(f"📄 新しいシートを作成中: {sheet_name}")  # シート作成ログ
 
             if requests:
                 self.sheets_service.spreadsheets().batchUpdate(
@@ -352,7 +352,7 @@ class DailyAggregator:
                 self._set_sheet_headers(sheet_id)
 
         except Exception as e:
-            logger.error(f"Failed to ensure sheets exist: {e}")  # エラーログ
+            logger.error(f"⚠️ シートの確認・作成に失敗しました: {e}")  # エラーログ
             raise
 
     def _set_sheet_headers(self, sheet_id: str):
@@ -377,10 +377,10 @@ class DailyAggregator:
                 body={'values': stats_headers}
             ).execute()
 
-            logger.info("Sheet headers set successfully")  # ヘッダー設定成功ログ
+            logger.info("✅ シートのヘッダーを設定しました")  # ヘッダー設定成功ログ
 
         except Exception as e:
-            logger.error(f"Failed to set headers: {e}")  # エラーログ
+            logger.error(f"⚠️ ヘッダーの設定に失敗しました: {e}")  # エラーログ
 
     def write_daily_summary(self, sheet_id: str, user_data: Dict[str, Dict[str, Any]]):
         """日次サマリーをシートに書き込み"""
