@@ -102,6 +102,8 @@ class DailyAggregator:
         self.sheet_name = sheets_config.get('sheet_name', 'VC_Tracker_Database')  # Sheets名
         self.folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker/csv')  # フォルダパス
         self.allowed_vc_ids = discord_config.get('channel_ids', [])  # 対象VCチャンネルID
+        self.env_number = drive_config.get('env_number', '2')  # 環境番号取得
+        self.env_name = drive_config.get('env_name', 'DEV')  # 環境名取得
 
         # 初期化処理
         self._initialize_services()
@@ -230,10 +232,11 @@ class DailyAggregator:
             for channel_folder in channel_folders:
                 channel_folder_id = channel_folder['id']
                 channel_name = channel_folder['name']
-                search_path = f"{full_path}/{channel_name}"  # 検索パスを構築
+                # 環境に応じたCSVファイル名でフィルタ
+                target_csv_name = f"{self.env_number}_{self.env_name}.csv"  # 対象CSVファイル名
+                search_path = f"{full_path}/{channel_name}/{target_csv_name}"  # 検索パスを構築
                 logger.debug(f"🔍 CSVファイルを検索中: {search_path}")  # デバッグログ
-
-                csv_query = f"'{channel_folder_id}' in parents and name contains '.csv'"
+                csv_query = f"'{channel_folder_id}' in parents and name='{target_csv_name}'"
                 csv_results = self.drive_service.files().list(
                     q=csv_query,
                     fields="files(id, name)"

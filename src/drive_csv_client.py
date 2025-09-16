@@ -36,7 +36,7 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, base_folder_path: str = "discord_mokumoku_tracker/csv", env_name: str = "PRD", shared_drive_id: str = None):
+    def __init__(self, service_account_json: str, base_folder_path: str, env_name: str = "PRD", shared_drive_id: str = None):
         """初期化処理
 
         Args:

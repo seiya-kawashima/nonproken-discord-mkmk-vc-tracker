@@ -249,23 +249,29 @@ class EnvConfig:
     def get_google_drive_config(cls, env=Environment.PRD):  # Google Drive関連の設定を取得
         """Google Drive関連の設定を取得（CSVファイル保存先の設定）
 
+        最終的なパス構造:
+        discord_mokumoku_tracker/
+        └── csv/
+            └── [VCチャンネル名]/
+                └── [環境番号]_[環境名].csv
+
         Args:
             env: 環境（Environment.PRD/TST/DEV）
 
         Returns:
             dict: Google Drive設定の辞書
         """
-        # デフォルトのフォルダ階層パス
-        # discord_mokumoku_tracker/csv の形式（VCチャンネル名は実行時に追加）
-        default_folder_path = "discord_mokumoku_tracker/csv"  # 共有ドライブ内のベースフォルダパス
+        # デフォルトのフォルダ階層パス（固定値）
+        # この値は全環境で共通とし、変更不可とする
+        DEFAULT_FOLDER_PATH = "discord_mokumoku_tracker/csv"  # 共有ドライブ内のベースフォルダパス
 
-        # 環境に応じたフォルダパスの環境変数名を取得
+        # 環境に応じたフォルダパスの環境変数名を取得（互換性のため残す）
         folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
         folder_id_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_ID', env)  # フォルダID環境変数名
         shared_drive_id_key = cls.get_env_var_name('GOOGLE_SHARED_DRIVE_ID', env)  # 共有ドライブID環境変数名
 
-        # 環境変数から取得、なければデフォルトの階層パスを使用
-        folder_path = cls.get(folder_path_key, default_folder_path)  # フォルダパスを取得
+        # フォルダパスは固定値を使用（環境変数での上書きを許可しない）
+        folder_path = DEFAULT_FOLDER_PATH  # 常に固定パスを使用
         folder_id = cls.get(folder_id_key)  # 既存フォルダのID（オプション）
 
         # 共有ドライブIDを取得（デフォルト値を設定）
@@ -287,6 +293,7 @@ class EnvConfig:
             'folder_id': folder_id,  # 既存フォルダのID（オプション）
             'shared_drive_id': shared_drive_id,  # 共有ドライブID
             'env_name': env.name,  # 環境名（PRD/TST/DEV）をファイル名に使用
+            'env_number': cls.get_env_number(env.name),  # 環境番号（0/1/2）をファイル名に使用
             'service_account_json': service_account_json,  # JSONファイルパス
             'service_account_json_base64': service_account_json_base64  # Base64形式の認証情報
         }
