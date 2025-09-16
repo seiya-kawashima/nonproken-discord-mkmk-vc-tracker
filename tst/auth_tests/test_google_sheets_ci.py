@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
 import gspread
 from google.oauth2.service_account import Credentials
-from config import EnvConfig, Environment
+from config import get_config, Environment
 
 
 def get_github_secrets_list():
