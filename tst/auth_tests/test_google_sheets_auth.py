@@ -28,7 +28,7 @@ import tempfile  # 一時ファイル作成用
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
-from config import EnvConfig  # 環境変数設定モジュール
+from config import get_config, Environment  # 環境変数設定モジュール
 
 print("=" * 70)
 print("Google Sheets 接続テスト - 全環境チェック")
