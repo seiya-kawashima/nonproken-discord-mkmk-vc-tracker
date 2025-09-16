@@ -303,8 +303,9 @@ class DriveCSVClient:
         # 環境番号をconfig.pyから取得
         env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
 
-        # ファイル名を作成（番号_環境名.csv）
-        filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
+        # ファイル名を作成（テンプレートから生成）
+        filename_template = self.folder_structure.get('csv_file', '{env_number}_{env_name}.csv')  # CSVファイル名テンプレート
+        filename = filename_template.format(env_number=env_number, env_name=self.env_name)  # ファイル名生成（例: 0_PRD.csv）
 
         # ファイルを検索（csvフォルダ内を検索）
         query = f"name='{filename}' and '{csv_folder_id}' in parents and trashed=false"  # 検索クエリ
@@ -364,8 +365,9 @@ class DriveCSVClient:
         # 環境番号をconfig.pyから取得
         env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
 
-        # ファイル名を作成（番号_環境名.csv）
-        filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
+        # ファイル名を作成（テンプレートから生成）
+        filename_template = self.folder_structure.get('csv_file', '{env_number}_{env_name}.csv')  # CSVファイル名テンプレート
+        filename = filename_template.format(env_number=env_number, env_name=self.env_name)  # ファイル名生成（例: 0_PRD.csv）
 
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
@@ -536,7 +538,8 @@ class DriveCSVClient:
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
                 env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
-                csv_filename = f"{env_number}_{self.env_name}.csv"  # CSVファイル名を生成
+                filename_template = self.folder_structure.get('csv_file', '{env_number}_{env_name}.csv')  # CSVファイル名テンプレート
+                csv_filename = filename_template.format(env_number=env_number, env_name=self.env_name)  # CSVファイル名を生成
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
                 full_path = f"{self.base_folder_path}/{vc_name}/csv/{csv_filename}"  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
