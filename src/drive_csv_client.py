@@ -42,16 +42,17 @@ class DriveCSVClient:
         Args:
             service_account_json: サービスアカウントJSONファイルパス
             base_folder_path: Google Drive上のベースフォルダパス
-                             例: "discord_mokumoku_tracker/csv"
+                             例: "discord_mokumoku_tracker"
             env_name: 環境名（PRD/TST/DEV）
             shared_drive_id: 共有ドライブID（オプション）
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
-        self.base_folder_path = base_folder_path  # ベースフォルダパスを保存
+        self.base_folder_path = base_folder_path  # ベースフォルダパスを保存（discord_mokumoku_tracker）
         self.env_name = env_name  # 環境名を保存（ファイル名に使用）
         self.shared_drive_id = shared_drive_id  # 共有ドライブIDを保存
         self.service = None  # Google Drive APIサービス
         self.vc_folder_ids = {}  # VCチャンネル名ごとのフォルダIDを保存
+        self.csv_folder_ids = {}  # VCチャンネル内のcsvフォルダIDを保存
 
     def connect(self):
         """Google Drive APIに接続
@@ -85,8 +86,7 @@ class DriveCSVClient:
         """ベースフォルダ階層が存在しない場合は作成
 
         Google Drive上にベースフォルダ階層を作成します。
-        例: "discord_mokumoku_tracker/csv" の場合、
-        discord_mokumoku_tracker → csv の順に作成・確認します。
+        例: "discord_mokumoku_tracker" のベースフォルダを作成・確認します。
         """  # メソッドの説明
         # フォルダパスを分割
         folder_names = self.base_folder_path.split('/')  # スラッシュで分割
@@ -158,7 +158,7 @@ class DriveCSVClient:
     def _ensure_vc_folder(self, vc_name: str) -> str:
         """VCチャンネル用のフォルダを作成・取得
 
-        discord_mokumoku_tracker/csv/{VC名}/ のフォルダを作成します。
+        discord_mokumoku_tracker/{VC名}/ のフォルダを作成します。
         既に存在する場合はそのIDを返します。
 
         Args:
@@ -216,14 +216,78 @@ class DriveCSVClient:
         self.vc_folder_ids[folder_name] = folder_id  # キャッシュに保存
         return folder_id  # フォルダIDを返す
 
+    def _ensure_csv_folder(self, vc_name: str, vc_folder_id: str) -> str:
+        """VCチャンネル内のcsvフォルダを作成・取得
+
+        discord_mokumoku_tracker/{VC名}/csv/ のフォルダを作成します。
+        既に存在する場合はそのIDを返します。
+
+        Args:
+            vc_name: VCチャンネル名
+            vc_folder_id: VCチャンネルフォルダのID
+
+        Returns:
+            csvフォルダのID
+        """  # メソッドの説明
+        folder_name = "csv"  # csvフォルダ名は固定
+        cache_key = f"{vc_name}/csv"  # キャッシュ用のキー
+
+        # キャッシュから取得
+        if cache_key in self.csv_folder_ids:  # 既にキャッシュにある場合
+            return self.csv_folder_ids[cache_key]  # キャッシュから返す
+
+        # フォルダを検索
+        query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{vc_folder_id}' in parents and trashed=false"  # 検索クエリ
+        list_params = {  # 検索パラメータ
+            'q': query,  # 検索クエリ
+            'fields': 'files(id, name)',  # 取得するフィールド
+            'supportsAllDrives': True,  # 全ドライブ対応
+            'includeItemsFromAllDrives': True  # 全ドライブから検索
+        }
+
+        # 共有ドライブが指定されている場合は、そのドライブ内で検索
+        if self.shared_drive_id:  # 共有ドライブIDが設定されている場合
+            list_params['driveId'] = self.shared_drive_id  # 共有ドライブID
+            list_params['corpora'] = 'drive'  # 特定のドライブを検索
+
+        results = self.service.files().list(**list_params).execute()  # 検索実行
+        items = results.get('files', [])  # 結果を取得
+
+        if items:  # フォルダが見つかった場合
+            folder_id = items[0]['id']  # フォルダIDを取得
+            logger.debug(f"Found existing csv folder in {vc_name}: (ID: {folder_id})")  # 既存フォルダをログ出力
+        else:  # フォルダが見つからない場合
+            # フォルダを作成
+            file_metadata = {  # フォルダのメタデータ
+                'name': folder_name,  # フォルダ名
+                'mimeType': 'application/vnd.google-apps.folder',  # フォルダのMIMEタイプ
+                'parents': [vc_folder_id]  # 親フォルダ（VCチャンネルフォルダ）
+            }
+            create_params = {  # 作成パラメータ
+                'body': file_metadata,  # フォルダメタデータ
+                'fields': 'id',  # 取得するフィールド
+                'supportsAllDrives': True  # 全ドライブ対応
+            }
+            folder = self.service.files().create(**create_params).execute()  # フォルダ作成
+            folder_id = folder.get('id')  # フォルダIDを取得
+            # フルパスを含めてログ出力
+            full_path = f"{self.base_folder_path}/{vc_name}/csv"  # フルパス
+            logger.info(f"csvフォルダを新規作成: {full_path} (ID: {folder_id})")  # 新規作成をログ出力
+
+        # キャッシュに保存
+        self.csv_folder_ids[cache_key] = folder_id  # キャッシュに保存
+        return folder_id  # フォルダIDを返す
+
     def _get_csv_file_id(self, vc_name: str) -> str:
         """CSVファイルのIDを取得（なければNone）
 
-        discord_mokumoku_tracker/csv/{VC名}/{環境}.csv のファイルを検索します。
-        ファイル名は環境名.csv（例: PRD.csv, TST.csv, DEV.csv）となります。
+        discord_mokumoku_tracker/{VC名}/csv/{環境番号}_{環境名}.csv のファイルを検索します。
+        ファイル名は環境番号_環境名.csv（例: 0_PRD.csv, 1_TST.csv, 2_DEV.csv）となります。
         """  # メソッドの説明
         # VCチャンネル用のフォルダIDを取得
         vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
+        # csvフォルダIDを取得
+        csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
         # 環境番号をconfig.pyから取得
         env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
@@ -231,8 +295,8 @@ class DriveCSVClient:
         # ファイル名を作成（番号_環境名.csv）
         filename = f"{env_number}_{self.env_name}.csv"  # ファイル名作成（例: 0_PRD.csv）
 
-        # ファイルを検索
-        query = f"name='{filename}' and '{vc_folder_id}' in parents and trashed=false"  # 検索クエリ
+        # ファイルを検索（csvフォルダ内を検索）
+        query = f"name='{filename}' and '{csv_folder_id}' in parents and trashed=false"  # 検索クエリ
         list_params = {  # 検索パラメータ
             'q': query,  # 検索クエリ
             'fields': 'files(id, name)',  # 取得するフィールド
@@ -276,13 +340,15 @@ class DriveCSVClient:
     def _upload_csv(self, vc_name: str, data: List[Dict[str, str]], file_id: str = None):
         """CSVファイルをアップロード（新規または更新）
 
-        discord_mokumoku_tracker/csv/{VC名}/{環境}.csv にファイルを保存します。
+        discord_mokumoku_tracker/{VC名}/csv/{環境番号}_{環境名}.csv にファイルを保存します。
         file_idが指定されている場合は既存ファイルを更新し、
         指定されていない場合は新規ファイルを作成します。
         CSVファイルはUTF-8 BOM付きで保存され、Excelでも正しく開けます。
         """  # メソッドの説明
         # VCチャンネル用のフォルダIDを取得
         vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
+        # csvフォルダIDを取得
+        csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
         # 環境番号をconfig.pyから取得
         env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
@@ -316,13 +382,13 @@ class DriveCSVClient:
             }
             self.service.files().update(**update_params).execute()  # ファイル更新
             # ファイルのフルパスを含めてログ出力
-            full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
+            full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
             drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
             logger.info(f"CSVファイルを更新しました: {full_path}{drive_info} (ID: {file_id})")  # 更新完了をログ出力
         else:  # 新規ファイルを作成
             file_metadata = {  # ファイルのメタデータ
                 'name': filename,  # ファイル名
-                'parents': [vc_folder_id]  # VCチャンネル用フォルダ
+                'parents': [csv_folder_id]  # csvフォルダ内に配置
             }
             create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
             # 共有ドライブ・共有フォルダの両方に対応
@@ -331,7 +397,7 @@ class DriveCSVClient:
             file = self.service.files().create(**create_params).execute()  # ファイル作成
             file_id = file.get('id')  # ファイルIDを取得
             # ファイルのフルパスを含めてログ出力
-            full_path = f"{self.base_folder_path}/{vc_name}/{filename}"  # フルパス
+            full_path = f"{self.base_folder_path}/{vc_name}/csv/{filename}"  # フルパス
             drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
             logger.info(f"CSVファイルを新規作成しました: {full_path}{drive_info} (ID: {file_id})")  # 作成完了をログ出力
 
@@ -440,9 +506,10 @@ class DriveCSVClient:
             total_update_count += update_count  # 全体のカウンタを更新
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
-                csv_filename = f"{vc_name}.csv"  # CSVファイル名を生成
+                env_number = EnvConfig.get_env_number(self.env_name)  # 環境番号を取得
+                csv_filename = f"{env_number}_{self.env_name}.csv"  # CSVファイル名を生成
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
-                full_path = f"{self.base_folder_path}/{vc_name}/{csv_filename}"  # フルパス
+                full_path = f"{self.base_folder_path}/{vc_name}/csv/{csv_filename}"  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
                 logger.info(f"{full_path}{drive_info}を更新: 新規{new_count}件、更新{update_count}件")  # 更新サマリをログ出力
 
