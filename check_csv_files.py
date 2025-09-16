@@ -53,7 +53,12 @@ def main():
 
     # csvサブフォルダを検索
     query = f"'{root_folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
-    results = service.files().list(q=query, fields="files(id, name)").execute()
+    results = service.files().list(
+        q=query,
+        fields="files(id, name)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True
+    ).execute()
     csv_folders = results.get('files', [])
 
     if not csv_folders:
@@ -65,7 +70,12 @@ def main():
 
     # VCチャンネルフォルダを検索
     query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
-    results = service.files().list(q=query, fields="files(id, name)").execute()
+    results = service.files().list(
+        q=query,
+        fields="files(id, name)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True
+    ).execute()
     channel_folders = results.get('files', [])
 
     print(f"  📁 {len(channel_folders)}個のVCチャンネルフォルダ:")
@@ -77,7 +87,12 @@ def main():
 
         # チャンネルフォルダ内のすべてのファイルを表示
         query = f"'{channel_id}' in parents"
-        results = service.files().list(q=query, fields="files(id, name, mimeType)").execute()
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, mimeType)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True
+        ).execute()
         files = results.get('files', [])
 
         if files:
@@ -97,7 +112,13 @@ def main():
     # 特定のファイルを直接検索
     print("\n📍 2_DEV.csvを直接検索...")
     query = "name='2_DEV.csv'"
-    results = service.files().list(q=query, fields="files(id, name, parents)").execute()
+    results = service.files().list(
+        q=query,
+        fields="files(id, name, parents)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True,
+        corpora='allDrives'
+    ).execute()
     files = results.get('files', [])
 
     if files:
