@@ -35,6 +35,13 @@ class DiscordVCPoller:
         # メンバーデータを毎回クリア（重複防止）
         self.members_data = []  # リストを初期化
 
+        # 新しいクライアントを作成（古いクライアントは破棄）
+        if self.client:  # 既存のクライアントがあれば
+            if not self.client.is_closed():  # まだ閉じていなければ
+                await self.client.close()  # 閉じる
+
+        self.client = discord.Client(intents=self.intents)  # 新しいクライアントを作成
+
         @self.client.event
         async def on_ready():
             """Bot接続完了時の処理"""  # イベントハンドラの説明
@@ -64,6 +71,10 @@ class DiscordVCPoller:
         except Exception as e:  # エラー発生時
             logger.error(f"Discordへの接続に失敗しました: {e}")  # エラーをログ出力
             raise  # エラーを再発生
+        finally:
+            # 確実にクライアントを閉じる
+            if self.client and not self.client.is_closed():  # クライアントが開いていれば
+                await self.client.close()  # 閉じる
 
         return self.members_data  # メンバー情報を返す
 
