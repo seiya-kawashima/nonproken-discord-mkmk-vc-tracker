@@ -571,11 +571,11 @@ class DailyAggregator:
 def main():
     """メイン関数"""
     # コマンドライン引数のパース
-    parser = argparse.ArgumentParser(description='Daily VC login aggregator')
-    parser.add_argument('--date', type=str, help='Target date (YYYY-MM-DD)')
-    parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+    parser = argparse.ArgumentParser(description='日次VCログイン集計プログラム')
+    parser.add_argument('--date', type=str, help='集計対象日 (YYYY-MM-DD形式)')
+    parser.add_argument('--debug', action='store_true', help='デバッグログを有効化')
     parser.add_argument('--env', type=int, default=2, choices=[0, 1, 2],
-                       help='Environment (0=PRD, 1=TST, 2=DEV, default=2)')  # 環境引数追加
+                       help='実行環境 (0=本番, 1=テスト, 2=開発, デフォルト=2)')  # 環境引数追加
 
     args = parser.parse_args()
 
@@ -591,13 +591,13 @@ def main():
         try:
             target_date = datetime.strptime(args.date, '%Y-%m-%d').date()
         except ValueError:
-            logger.error(f"Invalid date format: {args.date}")  # 日付フォーマットエラー
+            logger.error(f"⚠️ 日付フォーマットが無効です: {args.date}。YYYY-MM-DD形式で指定してください")  # 日付フォーマットエラー
             sys.exit(1)
 
     # 環境の設定
     env = Environment(args.env)  # 環境を設定
     env_name = EnvConfig.get_environment_name(env)  # 環境名取得
-    logger.info(f"Running in {env_name} environment")  # 環境ログ出力
+    logger.info(f"🌐 {env_name}で実行中です")  # 環境ログ出力
 
     # 集計処理を実行
     aggregator = DailyAggregator(target_date, env)
