@@ -16,13 +16,13 @@ from src.drive_csv_client import DriveCSVClient  # Google Drive CSVクライア�
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}")  # コンソール出力（ファイル名と関数名付き）
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名を先に表示）
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
 # タイムスタンプベースのログファイル名を生成（実行ごとに新しいファイル）
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 現在時刻をフォーマット（例: 20241216_143025）
 log_filename = f"logs/discord_vc_tracker_{timestamp}.log"  # タイムスタンプ付きファイル名
-logger.add(log_filename, level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}")  # ファイル出力（実行ごとに新しいファイル、ファイル名と関数名付き）
+logger.add(log_filename, level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力（実行ごとに新しいファイル、ファイル名と関数名を先に表示）
 
 
 async def main(env_arg=None):
