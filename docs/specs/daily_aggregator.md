@@ -103,7 +103,7 @@ graph TD
 
 ### コマンドライン実行
 ```bash
-# デフォルト（今日のデータを集計）
+# デフォルト（今日のデータを集計、Slackメンションで出力）
 python daily_aggregator.py
 
 # 特定日のデータを集計
@@ -111,6 +111,16 @@ python daily_aggregator.py --date 2025-09-14
 
 # デバッグモード（詳細ログ出力）
 python daily_aggregator.py --debug
+
+# Discord名で出力（モック/テスト用）
+python daily_aggregator.py --output discord
+
+# Slackメンションで出力（本番用、デフォルト）
+python daily_aggregator.py --output slack
+
+# 環境と出力形式を組み合わせて使用
+python daily_aggregator.py --env 0 --output slack  # 本番環境でSlackメンション
+python daily_aggregator.py --env 2 --output discord # 開発環境でDiscord名
 ```
 
 ### GitHub Actions（毎日23:00に実行）
