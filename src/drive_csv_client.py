@@ -166,7 +166,9 @@ class DriveCSVClient:
         Returns:
             CSVフォルダのID
         """
-        folder_name = 'csv'  # CSVフォルダ名は固定
+        # CSVパステンプレートからフォルダ名を取得（例: "discord_mokumoku_tracker/csv/{vc_name}_0_PRD.csv" → "csv"）
+        path_parts = self.csv_path_template.split('/')  # パスを分割
+        folder_name = path_parts[1] if len(path_parts) > 1 else 'csv'  # CSVフォルダ名を取得（デフォルト: csv）
 
         # フォルダを検索
         query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{self.base_folder_id}' in parents and trashed=false"  # 検索クエリ
