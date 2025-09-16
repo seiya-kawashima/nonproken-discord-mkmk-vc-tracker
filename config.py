@@ -82,21 +82,23 @@ class EnvConfig:
     def get_env_var_name(cls, base_name, env=Environment.PRD):  # 環境に応じた変数名を作るメソッド
         """環境に応じた環境変数名を取得
 
-        例: base_name='DISCORD_BOT_TOKEN', env=TST の場合
-        　　→ 'TST_DISCORD_BOT_TOKEN' を返す
+        例: base_name='DISCORD_BOT_TOKEN', env=DEV の場合
+        　　→ 'DISCORD_BOT_TOKEN_2_DEV' を返す
 
         Args:
             base_name: ベースとなる環境変数名（例: 'DISCORD_BOT_TOKEN'）
             env: 環境（PRD/TST/DEV のいずれか）
 
         Returns:
-            str: 環境に応じた環境変数名（例: 'TST_DISCORD_BOT_TOKEN'）
+            str: 環境に応じた環境変数名（例: 'DISCORD_BOT_TOKEN_1_TST'）
         """
         if env == Environment.TST:  # テスト環境の場合
-            return f'TST_{base_name}'  # 先頭に'TST_'を付ける
+            return f'{base_name}_1_TST'  # 末尾に'_1_TST'を付ける
         elif env == Environment.DEV:  # 開発環境の場合
-            return f'DEV_{base_name}'  # 先頭に'DEV_'を付ける
-        return base_name  # 本番環境の場合はそのまま返す
+            return f'{base_name}_2_DEV'  # 末尾に'_2_DEV'を付ける
+        elif env == Environment.PRD:  # 本番環境の場合
+            return f'{base_name}_0_PRD'  # 末尾に'_0_PRD'を付ける
+        return base_name  # デフォルトはそのまま返す
 
     # GitHub Actions環境かどうかを判定するための定数
     GITHUB_ACTIONS = 'GITHUB_ACTIONS'  # GitHub Actionsで自動的に設定される環境変数名
