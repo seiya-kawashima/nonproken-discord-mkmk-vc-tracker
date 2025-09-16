@@ -240,7 +240,7 @@ class DriveCSVClient:
         Returns:
             csvフォルダのID
         """  # メソッドの説明
-        folder_name = "csv"  # csvフォルダ名は固定
+        folder_name = self.folder_structure.get('csv_folder', 'csv')  # csvフォルダ名をconfig設定から取得
         cache_key = f"{vc_name}/csv"  # キャッシュ用のキー
 
         # キャッシュから取得
