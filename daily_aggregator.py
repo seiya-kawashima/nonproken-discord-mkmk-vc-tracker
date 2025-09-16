@@ -129,7 +129,7 @@ class DailyAggregator:
             # フォルダパスからフォルダ階層を取得
             folder_parts = self.folder_path.split('/')  # パスを分割
             if not folder_parts:
-                logger.warning("Invalid folder path")  # 無効なパス警告
+                logger.warning("⚠️ フォルダパスが無効です")  # 無効なパス警告
                 return []
 
             # ルートフォルダを検索
@@ -142,11 +142,11 @@ class DailyAggregator:
 
             folders = folder_results.get('files', [])
             if not folders:
-                logger.warning(f"{root_folder_name} folder not found")  # フォルダ未発見警告
+                logger.warning(f"⚠️ Google Drive上に '{root_folder_name}' フォルダが見つかりません")  # フォルダ未発見警告
                 return []
 
             folder_id = folders[0]['id']  # フォルダID取得
-            logger.info(f"Found folder: {folders[0]['name']} (ID: {folder_id})")  # フォルダ発見ログ
+            logger.info(f"📂 フォルダを発見: {folders[0]['name']}")  # フォルダ発見ログ
 
             # 残りのフォルダ階層を順に探索
             current_folder_id = folder_id
@@ -159,11 +159,11 @@ class DailyAggregator:
 
                 subfolders = subfolder_results.get('files', [])
                 if not subfolders:
-                    logger.warning(f"{folder_name} subfolder not found")  # サブフォルダ未発見警告
+                    logger.warning(f"⚠️ サブフォルダ '{folder_name}' が見つかりません")  # サブフォルダ未発見警告
                     return []
 
                 current_folder_id = subfolders[0]['id']  # 次のフォルダID
-                logger.info(f"Found {folder_name} folder (ID: {current_folder_id})")  # フォルダ発見ログ
+                logger.info(f"📂 サブフォルダを発見: {folder_name}")  # フォルダ発見ログ
 
             # 最終的なフォルダIDを保存
             csv_folder_id = current_folder_id
@@ -176,14 +176,14 @@ class DailyAggregator:
             ).execute()
 
             channel_folders = channel_folder_results.get('files', [])
-            logger.info(f"Found {len(channel_folders)} channel folders")  # チャンネルフォルダ数ログ
+            logger.info(f"📁 {len(channel_folders)}個のVCチャンネルフォルダを発見しました")  # チャンネルフォルダ数ログ
 
             csv_files = []
             # 各チャンネルフォルダ内のCSVファイルを検索
             for channel_folder in channel_folders:
                 channel_folder_id = channel_folder['id']
                 channel_name = channel_folder['name']
-                logger.debug(f"Checking folder: {channel_name}")  # デバッグログ
+                logger.debug(f"🔍 フォルダをチェック中: {channel_name}")  # デバッグログ
 
                 csv_query = f"'{channel_folder_id}' in parents and name contains '.csv'"
                 csv_results = self.drive_service.files().list(
@@ -193,13 +193,13 @@ class DailyAggregator:
 
                 channel_csv_files = csv_results.get('files', [])
                 csv_files.extend(channel_csv_files)
-                logger.debug(f"Found {len(channel_csv_files)} CSV files in {channel_name}")  # デバッグログ
-            logger.info(f"Found {len(csv_files)} CSV files")  # CSVファイル数ログ
+                logger.debug(f"📝 {channel_name}内に{len(channel_csv_files)}個のCSVファイルを発見")  # デバッグログ
+            logger.info(f"📝 合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
 
             return csv_files
 
         except HttpError as e:
-            logger.error(f"Failed to get CSV files: {e}")  # エラーログ
+            logger.error(f"⚠️ CSVファイルの取得に失敗しました: {e}")  # エラーログ
             return []
 
     def read_csv_content(self, file_id: str, file_name: str) -> List[Dict[str, str]]:
