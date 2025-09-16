@@ -24,17 +24,17 @@ def get_config(env: Environment = Environment.DEV) -> dict:
     channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS{suffix}', '')
 
     return {
-        'discord_token': discord_token,
+        'discord_token': os.getenv(f'DISCORD_BOT_TOKEN{suffix}'),
         'channel_ids': [id.strip() for id in channel_ids_str.split(',') if id.strip()],
         'sheet_name': f'もくもくトラッカー_{env}_{["PRD","TST","DEV"][env]}',
-        'service_account_json': service_json,
-        'service_account_json_base64': service_base64,
+        'service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON{suffix}', 'service_account.json'),
+        'service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64{suffix}'),
         'folder_path': 'discord_mokumoku_tracker',
-        'shared_drive_id': shared_drive,
+        'shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}', '0ANixFe4JBQskUk9PVA'),
         'env_name': ['PRD', 'TST', 'DEV'][env],
         'env_number': str(env),
-        'slack_token': slack_token,
-        'slack_channel': slack_channel
+        'slack_token': os.getenv(f'SLACK_BOT_TOKEN{suffix}'),
+        'slack_channel': os.getenv(f'SLACK_CHANNEL_ID{suffix}')
     }
 
 
