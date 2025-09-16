@@ -2,6 +2,7 @@
 
 import os  # 環境変数の取得用
 from typing import List, Dict, Any  # 型ヒント用
+import asyncio  # 非同期処理用
 import discord  # Discord API用
 from discord.ext import commands  # Botコマンド拡張用
 from loguru import logger  # ログ出力用（loguru）
