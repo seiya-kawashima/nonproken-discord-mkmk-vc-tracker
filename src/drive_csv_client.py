@@ -54,8 +54,8 @@ class DriveCSVClient:
         self.vc_folder_ids = {}  # VCチャンネル名ごとのフォルダIDを保存
         self.csv_folder_ids = {}  # VCチャンネル内のcsvフォルダIDを保存
 
-        # CSVパステンプレートを保存（デフォルト値を設定）
-        self.csv_path_template = csv_path_template or f'discord_mokumoku_tracker/csv/{{vc_name}}_{env_suffix}.csv'  # CSVファイルパステンプレート
+        # CSVパステンプレートを保存（configから渡された値を使用）
+        self.csv_path_template = csv_path_template  # CSVファイルパステンプレート（configから渡される）
 
     def connect(self):
         """Google Drive APIに接続
