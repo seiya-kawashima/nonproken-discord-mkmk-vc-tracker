@@ -33,9 +33,48 @@ from config import EnvConfig, Environment
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
 logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名付き）
+
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
-logger.add("logs/daily_aggregator.log", rotation="10 MB", retention="7 days", level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力（ファイル名と関数名付き）
+
+# 現在の日付を取得（YYYYMMDD形式）
+current_date = datetime.now().strftime("%Y%m%d")  # 日付取得
+
+# 処理別のログファイル設定
+# 1. メイン処理のログ
+logger.add(f"logs/daily_aggregator_{current_date}.log",
+          rotation="10 MB",
+          retention="7 days",
+          level="INFO",
+          encoding="utf-8",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
+          filter=lambda record: "get_csv" not in record["function"] and "aggregate" not in record["function"])  # メイン処理ログ
+
+# 2. CSVファイル取得処理のログ
+logger.add(f"logs/csv_fetch_{current_date}.log",
+          rotation="10 MB",
+          retention="7 days",
+          level="DEBUG",
+          encoding="utf-8",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
+          filter=lambda record: "get_csv" in record["function"] or "read_csv" in record["function"])  # CSV取得ログ
+
+# 3. 集計処理のログ
+logger.add(f"logs/aggregation_{current_date}.log",
+          rotation="10 MB",
+          retention="7 days",
+          level="INFO",
+          encoding="utf-8",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
+          filter=lambda record: "aggregate" in record["function"] or "write" in record["function"] or "update" in record["function"])  # 集計処理ログ
+
+# 4. エラーログ（全てのエラーを記録）
+logger.add(f"logs/error_{current_date}.log",
+          rotation="10 MB",
+          retention="30 days",
+          level="ERROR",
+          encoding="utf-8",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # エラーログ
 
 
 class DailyAggregator:
