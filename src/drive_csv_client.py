@@ -35,7 +35,7 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, base_folder_path: str, env_suffix: str = "0_PRD", shared_drive_id: str = None, folder_structure: dict = None):
+    def __init__(self, service_account_json: str, base_folder_path: str, env_suffix: str = "0_PRD", shared_drive_id: str = None, csv_path_template: str = None):
         """初期化処理
 
         Args:
