@@ -313,8 +313,10 @@ class DailyAggregator:
 
             # データ行をパース
             records = []
-            target_date_str = self.target_date.strftime('%Y/%m/%d')  # 対象日付文字列
-            logger.info(f"🔍 検索対象日付: {target_date_str}")  # 検索日付ログ
+            # 両方の日付形式をサポート（ゼロパディングあり/なし）
+            target_date_str = self.target_date.strftime('%Y/%m/%d')  # 対象日付文字列（ゼロパディングあり）
+            target_date_str_no_pad = self.target_date.strftime('%Y/%-m/%-d') if os.name != 'nt' else self.target_date.strftime('%Y/%#m/%#d')  # ゼロパディングなし
+            logger.info(f"🔍 検索対象日付: {target_date_str} または {target_date_str_no_pad}")  # 検索日付ログ
 
             # 最初の数行をサンプル表示
             sample_count = min(3, len(lines) - 1)  # 最大3行表示
