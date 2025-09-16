@@ -76,6 +76,8 @@ class DriveCSVClient:
 
             # ベースフォルダの存在確認・作成
             self._ensure_base_folder()  # ベースフォルダの存在確認・作成
+            # CSVフォルダの準備（discord_mokumoku_tracker/csv/）
+            self._ensure_csv_base_folder()  # CSVベースフォルダの作成・確認
 
             # 共有ドライブ情報をログに含める
             drive_info = f"Shared Drive ID: {self.shared_drive_id}" if self.shared_drive_id else "My Drive"  # ドライブ情報
