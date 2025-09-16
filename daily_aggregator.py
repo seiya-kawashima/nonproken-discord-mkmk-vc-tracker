@@ -339,8 +339,9 @@ class DailyAggregator:
 
                 # 対象日のレコードのみ抽出
                 if 'datetime_jst' in record:
-                    datetime_value = record['datetime_jst']
-                    if datetime_value.startswith(target_date_str):
+                    datetime_value = record['datetime_jst'].strip()  # 改行コード等を除去
+                    # 両方の日付形式でチェック
+                    if datetime_value.startswith(target_date_str) or datetime_value.startswith(target_date_str_no_pad):
                         # VCチャンネル名を追加（ファイル名から拡張子を除いたもの）
                         record['vc_name'] = file_name.replace('.csv', '')
                         records.append(record)
