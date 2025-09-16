@@ -37,7 +37,7 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, base_folder_path: str, env_name: str = "PRD", shared_drive_id: str = None):
+    def __init__(self, service_account_json: str, base_folder_path: str, env_name: str = "PRD", shared_drive_id: str = None, folder_structure: dict = None):
         """初期化処理
 
         Args:
@@ -46,6 +46,7 @@ class DriveCSVClient:
                              例: "discord_mokumoku_tracker"
             env_name: 環境名（PRD/TST/DEV）
             shared_drive_id: 共有ドライブID（オプション）
+            folder_structure: フォルダ構造定義（オプション）
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
         self.base_folder_path = base_folder_path  # ベースフォルダパスを保存（discord_mokumoku_tracker）
@@ -54,6 +55,15 @@ class DriveCSVClient:
         self.service = None  # Google Drive APIサービス
         self.vc_folder_ids = {}  # VCチャンネル名ごとのフォルダIDを保存
         self.csv_folder_ids = {}  # VCチャンネル内のcsvフォルダIDを保存
+
+        # フォルダ構造の定義（デフォルト値を設定）
+        self.folder_structure = folder_structure or {  # フォルダ構造定義
+            'base': 'discord_mokumoku_tracker',  # ベースフォルダ名
+            'vc_folder': '{vc_name}',  # VCフォルダ名テンプレート
+            'csv_folder': 'csv',  # CSVフォルダ名
+            'csv_file': '{env_number}_{env_name}.csv',  # CSVファイル名テンプレート
+            'spreadsheet': 'もくもくトラッカー_{env_number}_{env_name}.spreadsheet'  # スプレッドシート名テンプレート
+        }
 
     def connect(self):
         """Google Drive APIに接続
