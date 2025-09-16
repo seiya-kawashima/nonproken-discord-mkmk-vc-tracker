@@ -176,12 +176,15 @@ class DailyAggregator:
                 logger.warning("⚠️ フォルダパスが無効です")  # 無効なパス警告
                 return []
 
-            # ルートフォルダを検索
+            # ルートフォルダを検索（共有ドライブ対応）
             root_folder_name = folder_parts[0]  # ルートフォルダ名
             folder_query = f"name='{root_folder_name}' and mimeType='application/vnd.google-apps.folder'"
             folder_results = self.drive_service.files().list(
                 q=folder_query,
-                fields="files(id, name)"
+                fields="files(id, name)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
+                corpora='allDrives'
             ).execute()
 
             folders = folder_results.get('files', [])
@@ -198,7 +201,9 @@ class DailyAggregator:
                 subfolder_query = f"'{current_folder_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
                 subfolder_results = self.drive_service.files().list(
                     q=subfolder_query,
-                    fields="files(id, name)"
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True
                 ).execute()
 
                 subfolders = subfolder_results.get('files', [])
@@ -219,7 +224,9 @@ class DailyAggregator:
             channel_folder_query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
             channel_folder_results = self.drive_service.files().list(
                 q=channel_folder_query,
-                fields="files(id, name)"
+                fields="files(id, name)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
             ).execute()
 
             channel_folders = channel_folder_results.get('files', [])
@@ -239,7 +246,9 @@ class DailyAggregator:
                 csv_query = f"'{channel_folder_id}' in parents and name='{target_csv_name}'"
                 csv_results = self.drive_service.files().list(
                     q=csv_query,
-                    fields="files(id, name)"
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True
                 ).execute()
 
                 channel_csv_files = csv_results.get('files', [])
