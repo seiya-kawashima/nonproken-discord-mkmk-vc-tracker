@@ -561,9 +561,8 @@ class DriveCSVClient:
             total_update_count += update_count  # 全体のカウンタを更新
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
-                csv_filename = f'{vc_name}_{self.env_suffix}.csv'  # CSVファイル名を生成
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
-                full_path = f"{self.base_folder_path}/{vc_name}/csv/{csv_filename}"  # フルパス
+                full_path = self.csv_path_template.format(vc_name=vc_name)  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
                 logger.info(f"{full_path}{drive_info}を更新: 新規{new_count}件、更新{update_count}件")  # 更新サマリをログ出力
 
