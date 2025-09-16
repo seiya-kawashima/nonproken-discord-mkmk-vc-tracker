@@ -10,7 +10,7 @@ from loguru import logger  # ログ出力用（loguru）
 # srcディレクトリをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))  # srcディレクトリをインポートパスに追加
 
-from config import EnvConfig, Environment  # 環境変数設定モジュールと環境列挙型
+from config import get_config, get_environment_from_arg, Environment  # 環境変数設定モジュールと環境列挙型
 from src.discord_client import DiscordVCPoller  # Discord VCポーリングクラス
 from src.drive_csv_client import DriveCSVClient  # Google Drive CSVクライアント
 
@@ -34,29 +34,27 @@ async def main(env_arg=None):
     
     # 引数から環境を取得
     try:
-        env = EnvConfig.get_environment_from_arg(env_arg)  # 環境を引数から取得
+        env = get_environment_from_arg(env_arg)  # 環境を引数から取得
     except ValueError as e:
         logger.error(str(e))  # エラーメッセージをログ出力
         sys.exit(1)  # 異常終了
     
-    env_name = EnvConfig.get_environment_name(env)  # 環境名を取得
+    env_name = {Environment.PRD: "本番環境", Environment.TST: "テスト環境", Environment.DEV: "開発環境"}[env]  # 環境名を取得
     logger.info(f"実行環境: {env_name}")  # 環境名をログ出力
     
     # 環境に応じた設定を取得（必須値チェック付き）
     try:
-        discord_config = EnvConfig.get_discord_config(env)  # Discord設定
-        sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定
-        drive_config = EnvConfig.get_google_drive_config(env)  # Google Drive設定
+        config = get_config(env)  # すべての設定を取得
     except ValueError as e:
         logger.error(f"設定エラー: {e}")  # 設定エラーをログ出力
         sys.exit(1)  # 異常終了
     
-    # 設定値を展開（必須値は既にconfig.pyでチェック済み）
-    discord_token = discord_config['token']  # Discord Botトークン
-    channel_ids = discord_config['channel_ids']  # 監視対象VCチャンネルID
-    sheet_name = sheets_config['sheet_name']  # スプレッドシート名
-    service_account_json = sheets_config['service_account_json']  # サービスアカウントJSON
-    service_account_json_base64 = sheets_config['service_account_json_base64']  # Base64エンコードされた認証情報
+    # 設定値を展開
+    discord_token = config['discord_token']  # Discord Botトークン
+    channel_ids = config['channel_ids']  # 監視対象VCチャンネルID
+    sheet_name = config['sheet_name']  # スプレッドシート名
+    service_account_json = config['service_account_json']  # サービスアカウントJSON
+    service_account_json_base64 = config['service_account_json_base64']  # Base64エンコードされた認証情報
     
     # Base64エンコードされた認証情報がある場合はデコード
     import json  # JSON処理用
@@ -100,9 +98,9 @@ async def main(env_arg=None):
         # 2. Google Drive上のCSVに記録
         logger.info("Google Driveに接続中...")  # 接続開始ログ
         # Google Drive設定からフォルダパス、環境名、共有ドライブIDを取得
-        drive_folder_path = drive_config.get('folder_path')  # フォルダパス取得（config.pyから）
-        env_name = drive_config.get('env_name', 'PRD')  # 環境名取得（PRD/TST/DEV）
-        shared_drive_id = drive_config.get('shared_drive_id')  # 共有ドライブID取得
+        drive_folder_path = config['folder_path']  # フォルダパス取得（config.pyから）
+        env_name = config['env_name']  # 環境名取得（PRD/TST/DEV）
+        shared_drive_id = config['shared_drive_id']  # 共有ドライブID取得
         csv_client = DriveCSVClient(service_account_json, drive_folder_path, env_name, shared_drive_id)  # CSVクライアント作成（フォルダパス、環境名、共有ドライブID指定）
         csv_client.connect()  # 接続
 
