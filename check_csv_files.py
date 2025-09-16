@@ -51,7 +51,7 @@ def main():
     root_folder_id = folders[0]['id']
     print(f"✅ discord_mokumoku_tracker (ID: {root_folder_id})")
 
-    # csvサブフォルダを検索
+    # 旧構造: csvサブフォルダを検索
     query = f"'{root_folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
     results = service.files().list(
         q=query,
