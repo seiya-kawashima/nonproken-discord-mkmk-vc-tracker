@@ -20,21 +20,8 @@ class Environment(IntEnum):
 def get_config(env: Environment = Environment.DEV) -> dict:
     """指定環境のすべての設定を取得"""
 
-    # 環境サフィックスを決定
-    suffix = {
-        Environment.PRD: '_0_PRD',
-        Environment.TST: '_1_TST',
-        Environment.DEV: '_2_DEV'
-    }[env]
-
-    # 環境変数を取得
-    discord_token = os.getenv(f'DISCORD_BOT_TOKEN{suffix}')
+    suffix = ['_0_PRD', '_1_TST', '_2_DEV'][env]
     channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS{suffix}', '')
-    service_json = os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON{suffix}', 'service_account.json')
-    service_base64 = os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64{suffix}')
-    slack_token = os.getenv(f'SLACK_BOT_TOKEN{suffix}')
-    slack_channel = os.getenv(f'SLACK_CHANNEL_ID{suffix}')
-    shared_drive = os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}', '0ANixFe4JBQskUk9PVA')
 
     return {
         'discord_token': discord_token,
