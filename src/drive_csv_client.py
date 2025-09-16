@@ -21,8 +21,6 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from loguru import logger  # ログ出力用（loguru）
 import sys  # システム操作用
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))  # 親ディレクトリをパスに追加
-# 環境番号のマッピング
-ENV_NUMBER_MAP = {'PRD': '0', 'TST': '1', 'DEV': '2'}
 
 
 class DriveCSVClient:
@@ -37,20 +35,20 @@ class DriveCSVClient:
         'https://www.googleapis.com/auth/drive',  # Google Drive権限
     ]
 
-    def __init__(self, service_account_json: str, base_folder_path: str, env_name: str = "PRD", shared_drive_id: str = None, folder_structure: dict = None):
+    def __init__(self, service_account_json: str, base_folder_path: str, env_suffix: str = "0_PRD", shared_drive_id: str = None, folder_structure: dict = None):
         """初期化処理
 
         Args:
             service_account_json: サービスアカウントJSONファイルパス
             base_folder_path: Google Drive上のベースフォルダパス
                              例: "discord_mokumoku_tracker"
-            env_name: 環境名（PRD/TST/DEV）
+            env_suffix: 環境サフィックス（0_PRD/1_TST/2_DEV）
             shared_drive_id: 共有ドライブID（オプション）
             folder_structure: フォルダ構造定義（オプション）
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
         self.base_folder_path = base_folder_path  # ベースフォルダパスを保存（discord_mokumoku_tracker）
-        self.env_name = env_name  # 環境名を保存（ファイル名に使用）
+        self.env_suffix = env_suffix  # 環境サフィックスを保存（ファイル名に使用）
         self.shared_drive_id = shared_drive_id  # 共有ドライブIDを保存
         self.service = None  # Google Drive APIサービス
         self.vc_folder_ids = {}  # VCチャンネル名ごとのフォルダIDを保存
@@ -61,8 +59,8 @@ class DriveCSVClient:
             'base': 'discord_mokumoku_tracker',  # ベースフォルダ名
             'vc_folder': '{vc_name}',  # VCフォルダ名テンプレート
             'csv_folder': 'csv',  # CSVフォルダ名
-            'csv_file': '{env_number}_{env_name}.csv',  # CSVファイル名テンプレート
-            'spreadsheet': 'もくもくトラッカー_{env_number}_{env_name}.spreadsheet'  # スプレッドシート名テンプレート
+            'csv_file': '{suffix}.csv',  # CSVファイル名テンプレート
+            'spreadsheet': 'もくもくトラッカー_{suffix}'  # スプレッドシート名テンプレート
         }
 
     def connect(self):
@@ -300,12 +298,9 @@ class DriveCSVClient:
         # csvフォルダIDを取得
         csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
-        # 環境番号をconfig.pyから取得
-        env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
-
         # ファイル名を作成（テンプレートから生成）
-        filename_template = self.folder_structure.get('csv_file', '{env_number}_{env_name}.csv')  # CSVファイル名テンプレート
-        filename = filename_template.format(env_number=env_number, env_name=self.env_name)  # ファイル名生成（例: 0_PRD.csv）
+        filename_template = self.folder_structure.get('csv_file', '{suffix}.csv')  # CSVファイル名テンプレート
+        filename = filename_template.format(suffix=self.env_suffix)  # ファイル名生成（例: 0_PRD.csv）
 
         # ファイルを検索（csvフォルダ内を検索）
         query = f"name='{filename}' and '{csv_folder_id}' in parents and trashed=false"  # 検索クエリ
@@ -362,12 +357,9 @@ class DriveCSVClient:
         # csvフォルダIDを取得
         csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
 
-        # 環境番号をconfig.pyから取得
-        env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
-
         # ファイル名を作成（テンプレートから生成）
-        filename_template = self.folder_structure.get('csv_file', '{env_number}_{env_name}.csv')  # CSVファイル名テンプレート
-        filename = filename_template.format(env_number=env_number, env_name=self.env_name)  # ファイル名生成（例: 0_PRD.csv）
+        filename_template = self.folder_structure.get('csv_file', '{suffix}.csv')  # CSVファイル名テンプレート
+        filename = filename_template.format(suffix=self.env_suffix)  # ファイル名生成（例: 0_PRD.csv）
 
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
@@ -537,9 +529,8 @@ class DriveCSVClient:
             total_update_count += update_count  # 全体のカウンタを更新
 
             if new_count > 0 or update_count > 0:  # 変更があった場合
-                env_number = ENV_NUMBER_MAP.get(self.env_name, '2')  # 環境番号を取得
-                filename_template = self.folder_structure.get('csv_file', '{env_number}_{env_name}.csv')  # CSVファイル名テンプレート
-                csv_filename = filename_template.format(env_number=env_number, env_name=self.env_name)  # CSVファイル名を生成
+                filename_template = self.folder_structure.get('csv_file', '{suffix}.csv')  # CSVファイル名テンプレート
+                csv_filename = filename_template.format(suffix=self.env_suffix)  # CSVファイル名を生成
                 # フルパスと共有ドライブ情報を含めて更新サマリをログ出力
                 full_path = f"{self.base_folder_path}/{vc_name}/csv/{csv_filename}"  # フルパス
                 drive_info = f" (Shared Drive: {self.shared_drive_id})" if self.shared_drive_id else " (My Drive)"  # ドライブ情報
