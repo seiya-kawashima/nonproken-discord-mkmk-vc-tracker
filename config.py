@@ -33,7 +33,7 @@ def get_config(env: Environment = Environment.DEV) -> dict:
 
     return {
         'discord_token': os.getenv(f'DISCORD_BOT_TOKEN_{suffix}'),  # Discord Botの認証トークン（Botがログインするためのパスワード）
-        'discord_channel_ids': [id.strip() for id in os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS_{suffix}', '').split(',') if id.strip()],  # 監視対象のボイスチャンネルIDリスト（カンマ区切りで複数指定可能）
+        'discord_channel_ids': [id.strip() for id in os.getenv(f'DISCORD_VOICE_CHANNEL_IDS_{suffix}', '').split(',') if id.strip()],  # 監視対象のボイスチャンネルIDリスト（カンマ区切りで複数指定可能）
         'google_drive_service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_{suffix}', 'service_account.json'),  # Google Driveにアクセスするための認証ファイルのパス
         'google_drive_service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_{suffix}'),  # 認証情報をテキスト形式で保存したもの（GitHub Actionsなどで使用）
         'google_drive_shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID_{suffix}'),  # Google共有ドライブのID（共有ドライブを使う場合のみ）
