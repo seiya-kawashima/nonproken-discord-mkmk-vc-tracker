@@ -61,51 +61,107 @@ def main():
     ).execute()
     csv_folders = results.get('files', [])
 
-    if not csv_folders:
-        print("  ❌ csvフォルダが見つかりません")
-        return
+    if csv_folders:
+        csv_folder_id = csv_folders[0]['id']
+        print(f"\n📦 旧構造: discord_mokumoku_tracker/csv/")
+        print(f"  ✅ csv (ID: {csv_folder_id})")
 
-    csv_folder_id = csv_folders[0]['id']
-    print(f"  ✅ csv (ID: {csv_folder_id})")
+        # VCチャンネルフォルダを検索
+        query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
+        results = service.files().list(
+            q=query,
+            fields="files(id, name)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True
+        ).execute()
+        channel_folders = results.get('files', [])
 
-    # VCチャンネルフォルダを検索
-    query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
+        print(f"  📁 {len(channel_folders)}個のVCチャンネルフォルダ:")
+
+        for channel_folder in channel_folders:
+            channel_id = channel_folder['id']
+            channel_name = channel_folder['name']
+            print(f"    📂 {channel_name} (ID: {channel_id})")
+
+            # チャンネルフォルダ内のすべてのファイルを表示
+            query = f"'{channel_id}' in parents"
+            results = service.files().list(
+                q=query,
+                fields="files(id, name, mimeType)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
+            ).execute()
+            files = results.get('files', [])
+
+            if files:
+                for file in files:
+                    file_name = file['name']
+                    file_type = "📄" if 'csv' in file['mimeType'] or file_name.endswith('.csv') else "📁"
+                    print(f"      {file_type} {file_name}")
+
+                    # 2_DEV.csvを特に探す
+                    if file_name == "2_DEV.csv":
+                        print(f"        🎯 ターゲットファイル発見！")
+            else:
+                print(f"      (空のフォルダ)")
+
+    # 新構造: discord_mokumoku_tracker直下のVCチャンネルフォルダを検索
+    print(f"\n🆕 新構造: discord_mokumoku_tracker/[VCチャンネル名]/csv/")
+    query = f"'{root_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
     results = service.files().list(
         q=query,
         fields="files(id, name)",
         supportsAllDrives=True,
         includeItemsFromAllDrives=True
     ).execute()
-    channel_folders = results.get('files', [])
+    all_folders = results.get('files', [])
 
-    print(f"  📁 {len(channel_folders)}個のVCチャンネルフォルダ:")
+    # csvフォルダ以外のフォルダをVCチャンネルフォルダとして扱う
+    vc_channel_folders = [f for f in all_folders if f['name'] != 'csv']
+    print(f"  📁 {len(vc_channel_folders)}個のVCチャンネルフォルダ:")
 
-    for channel_folder in channel_folders:
-        channel_id = channel_folder['id']
-        channel_name = channel_folder['name']
-        print(f"    📂 {channel_name} (ID: {channel_id})")
+    for vc_folder in vc_channel_folders:
+        vc_folder_id = vc_folder['id']
+        vc_folder_name = vc_folder['name']
+        print(f"    📂 {vc_folder_name} (ID: {vc_folder_id})")
 
-        # チャンネルフォルダ内のすべてのファイルを表示
-        query = f"'{channel_id}' in parents"
+        # csvサブフォルダを検索
+        query = f"'{vc_folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
         results = service.files().list(
             q=query,
-            fields="files(id, name, mimeType)",
+            fields="files(id, name)",
             supportsAllDrives=True,
             includeItemsFromAllDrives=True
         ).execute()
-        files = results.get('files', [])
+        csv_subfolders = results.get('files', [])
 
-        if files:
-            for file in files:
-                file_name = file['name']
-                file_type = "📄" if 'csv' in file['mimeType'] or file_name.endswith('.csv') else "📁"
-                print(f"      {file_type} {file_name}")
+        if csv_subfolders:
+            csv_subfolder_id = csv_subfolders[0]['id']
+            print(f"      📁 csv (ID: {csv_subfolder_id})")
 
-                # 2_DEV.csvを特に探す
-                if file_name == "2_DEV.csv":
-                    print(f"        🎯 ターゲットファイル発見！")
+            # csvフォルダ内のファイルを表示
+            query = f"'{csv_subfolder_id}' in parents"
+            results = service.files().list(
+                q=query,
+                fields="files(id, name, mimeType)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
+            ).execute()
+            files = results.get('files', [])
+
+            if files:
+                for file in files:
+                    file_name = file['name']
+                    file_type = "📄" if 'csv' in file['mimeType'] or file_name.endswith('.csv') else "📁"
+                    print(f"        {file_type} {file_name}")
+
+                    # 2_DEV.csvを特に探す
+                    if file_name == "2_DEV.csv":
+                        print(f"          🎯 ターゲットファイル発見！")
+            else:
+                print(f"        (空のフォルダ)")
         else:
-            print(f"      (空のフォルダ)")
+            print(f"      (まだcsvフォルダがありません)")
 
     print("=" * 60)
 
