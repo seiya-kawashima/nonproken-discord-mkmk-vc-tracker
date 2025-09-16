@@ -388,11 +388,14 @@ class DailyAggregator:
     def get_sheet_id(self) -> Optional[str]:
         """Google SheetsのIDを取得"""
         try:
-            # Sheets名で検索
+            # Sheets名で検索（共有ドライブ対応）
             query = f"name='{self.sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"
             results = self.drive_service.files().list(
                 q=query,
-                fields="files(id, name)"
+                fields="files(id, name)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
+                corpora='allDrives'
             ).execute()
 
             sheets = results.get('files', [])
