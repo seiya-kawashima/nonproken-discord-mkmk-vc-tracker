@@ -430,7 +430,7 @@ class DriveCSVClient:
             else:  # 新規ファイルを作成
                 file_metadata = {  # ファイルのメタデータ
                     'name': filename,  # ファイル名
-                    'parents': [csv_folder_id]  # csvフォルダ内に配置
+                    'parents': [self.csv_folder_id]  # csvベースフォルダ内に配置
                 }
                 create_params = {'body': file_metadata, 'media_body': media, 'fields': 'id'}  # 作成パラメータ
                 # 共有ドライブ・共有フォルダの両方に対応
