@@ -228,7 +228,7 @@ class DailyAggregator:
             csv_text = file_content.read().decode('utf-8')
 
             if not csv_text:
-                logger.warning(f"Empty CSV file: {file_name}")  # 空ファイル警告
+                logger.warning(f"⚠️ CSVファイルが空です: {file_name}")  # 空ファイル警告
                 return []
 
             lines = csv_text.strip().split('\n')
@@ -255,11 +255,11 @@ class DailyAggregator:
                     record['vc_name'] = file_name.replace('.csv', '')
                     records.append(record)
 
-            logger.info(f"Read {len(records)} records for {target_date_str} from {file_name}")  # 読み込み結果ログ
+            logger.info(f"📖 {file_name}から{target_date_str}の{len(records)}件のデータを読み込みました")  # 読み込み結果ログ
             return records
 
         except Exception as e:
-            logger.error(f"Failed to read CSV {file_name}: {e}")  # エラーログ
+            logger.error(f"⚠️ CSVファイル {file_name} の読み込みに失敗しました: {e}")  # エラーログ
             return []
 
     def aggregate_user_data(self, all_records: List[Dict[str, str]]) -> Dict[str, Dict[str, Any]]:
@@ -290,7 +290,7 @@ class DailyAggregator:
         for user_id, data in user_data.items():
             data['vc_channels'] = ', '.join(sorted(data['vc_channels']))
 
-        logger.info(f"Aggregated data for {len(user_data)} users")  # 集計結果ログ
+        logger.info(f"📈 {len(user_data)}名のユーザーデータを集計しました")  # 集計結果ログ
         return dict(user_data)
 
     def get_sheet_id(self) -> Optional[str]:
