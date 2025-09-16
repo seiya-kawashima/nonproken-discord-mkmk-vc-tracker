@@ -246,9 +246,11 @@ class DailyAggregator:
                 csv_files.extend(channel_csv_files)
                 if channel_csv_files:
                     for csv_file in channel_csv_files:
-                        logger.debug(f"  ✅ 発見: {search_path}/{csv_file['name']}")  # CSVファイル名表示
+                        logger.debug(f"  ✅ 発見: {search_path}")  # CSVファイル名表示
+                        logger.info(f"  ✅ CSVファイルを発見: {search_path}")  # CSVファイル発見通知
                 else:
-                    logger.debug(f"  ⚠️ {search_path}内にCSVファイルがありません")  # CSVファイルなしログ
+                    logger.debug(f"  ⚠️ {target_csv_name}が見つかりません")  # CSVファイルなしログ
+                    logger.info(f"  ℹ️ {channel_name}フォルダ内に{target_csv_name}がありません")  # 詳細情報
             logger.info(f"📝 合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
 
             return csv_files
