@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # config.pyから設定を読み込み
-from config import EnvConfig, Environment
+from config import get_config, get_environment_from_arg, Environment
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
@@ -98,15 +98,13 @@ class DailyAggregator:
         self.user_mapping = {}  # Discord名→Slack名のマッピング
 
         # config.pyから設定を取得
-        sheets_config = EnvConfig.get_google_sheets_config(env)  # Google Sheets設定取得
-        drive_config = EnvConfig.get_google_drive_config(env)  # Google Drive設定取得
-        discord_config = EnvConfig.get_discord_config(env)  # Discord設定取得
+        config = get_config(env)  # すべての設定を取得
 
-        self.sheet_name = sheets_config.get('sheet_name', 'VC_Tracker_Database')  # Sheets名
-        self.folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker')  # ベースフォルダパス（csvを除く）
-        self.allowed_vc_ids = discord_config.get('channel_ids', [])  # 対象VCチャンネルID
-        self.env_number = drive_config.get('env_number', '2')  # 環境番号取得
-        self.env_name = drive_config.get('env_name', 'DEV')  # 環境名取得
+        self.sheet_name = config['sheet_name']  # Sheets名
+        self.folder_path = config['folder_path']  # ベースフォルダパス
+        self.allowed_vc_ids = config['channel_ids']  # 対象VCチャンネルID
+        self.env_number = config['env_number']  # 環境番号
+        self.env_name = config['env_name']  # 環境名
 
         # 初期化処理
         self._initialize_services()
@@ -133,9 +131,9 @@ class DailyAggregator:
     def _get_credentials(self):
         """認証情報を取得"""
         # config.pyから認証情報を取得
-        sheets_config = EnvConfig.get_google_sheets_config(self.env)  # Google Sheets設定取得
-        service_account_json_base64 = sheets_config.get('service_account_json_base64')  # Base64認証情報
-        service_account_file = sheets_config.get('service_account_json')  # ファイルパス
+        config = get_config(self.env)  # すべての設定を取得
+        service_account_json_base64 = config['service_account_json_base64']  # Base64認証情報
+        service_account_file = config['service_account_json']  # ファイルパス
 
         if service_account_json_base64:
             # Base64デコード
@@ -875,7 +873,7 @@ def main():
 
     # 環境の設定
     env = Environment(args.env)  # 環境を設定
-    env_name = EnvConfig.get_environment_name(env)  # 環境名取得
+    env_name = {Environment.PRD: "本番環境", Environment.TST: "テスト環境", Environment.DEV: "開発環境"}[env]  # 環境名取得
     logger.info(f"🌐 {env_name}で実行中です")  # 環境ログ出力
 
     # 集計処理を実行
