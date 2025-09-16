@@ -51,10 +51,10 @@ async def main(env_arg=None):
     
     # 設定値を展開
     discord_token = config['discord_token']  # Discord Botトークン
-    channel_ids = config['channel_ids']  # 監視対象VCチャンネルID
-    sheet_name = config['sheet_name']  # スプレッドシート名
-    service_account_json = config['service_account_json']  # サービスアカウントJSON
-    service_account_json_base64 = config['service_account_json_base64']  # Base64エンコードされた認証情報
+    discord_channel_ids = config.get('discord_channel_ids', config.get('channel_ids'))  # Discord監視対象VCチャンネルID
+    sheet_name = config.get('google_drive_folder_structure', {}).get('spreadsheet', f"もくもくトラッカー_{config['env_number']}_{config['env_name']}")  # スプレッドシート名
+    google_drive_service_account_json = config.get('google_drive_service_account_json', config.get('service_account_json'))  # Google DriveサービスアカウントJSON
+    google_drive_service_account_json_base64 = config.get('google_drive_service_account_json_base64', config.get('service_account_json_base64'))  # Base64エンコードされたGoogle Drive認証情報
     
     # Base64エンコードされた認証情報がある場合はデコード
     import json  # JSON処理用
@@ -62,9 +62,9 @@ async def main(env_arg=None):
     import tempfile  # 一時ファイル作成用
     
     temp_file = None  # 一時ファイルパス
-    if service_account_json_base64:  # Base64エンコードされた認証情報がある場合
+    if google_drive_service_account_json_base64:  # Base64エンコードされた認証情報がある場合
         try:
-            decoded_bytes = base64.b64decode(service_account_json_base64)  # Base64デコード
+            decoded_bytes = base64.b64decode(google_drive_service_account_json_base64)  # Base64デコード
             decoded_str = decoded_bytes.decode('utf-8')  # UTF-8文字列に変換
             json_data = json.loads(decoded_str)  # JSONパース
             
@@ -72,21 +72,21 @@ async def main(env_arg=None):
             with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:  # 一時ファイル作成
                 json.dump(json_data, f)  # JSONデータを書き込み
                 temp_file = f.name  # ファイルパスを保存
-                service_account_json = temp_file  # サービスアカウントJSONパスを更新
+                google_drive_service_account_json = temp_file  # Google DriveサービスアカウントJSONパスを更新
             logger.info("認証情報をBase64からデコードしました")  # デコード成功ログ
         except Exception as e:  # デコードエラー時
             logger.error(f"Base64デコードエラー: {e}")  # エラーログ出力
             sys.exit(1)  # 異常終了
     
     # サービスアカウントJSONファイルの存在確認
-    elif not os.path.exists(service_account_json):  # JSONファイルが存在しない場合
-        logger.error(f"サービスアカウントのJSONファイルが見つかりません: {service_account_json}")  # エラーログ出力
+    elif not os.path.exists(google_drive_service_account_json):  # JSONファイルが存在しない場合
+        logger.error(f"サービスアカウントのJSONファイルが見つかりません: {google_drive_service_account_json}")  # エラーログ出力
         sys.exit(1)  # 異常終了
     
     try:
         # 1. Discord VCからメンバー情報を取得
         logger.info("Discord VCからメンバー情報を取得中...")  # 処理開始ログ
-        discord_client = DiscordVCPoller(discord_token, channel_ids)  # Discordクライアント作成
+        discord_client = DiscordVCPoller(discord_token, discord_channel_ids)  # Discordクライアント作成
         vc_members = await discord_client.get_vc_members()  # VCメンバー取得
         
         if not vc_members:  # メンバーがいない場合
@@ -100,9 +100,9 @@ async def main(env_arg=None):
         # Google Drive設定からフォルダパス、環境名、共有ドライブIDを取得
         google_drive_folder_path = config.get('google_drive_folder_path', config.get('folder_path'))  # Google Driveフォルダパス取得（config.pyから）
         env_name = config['env_name']  # 環境名取得（PRD/TST/DEV）
-        shared_drive_id = config['shared_drive_id']  # 共有ドライブID取得
+        google_drive_shared_drive_id = config.get('google_drive_shared_drive_id', config.get('shared_drive_id'))  # Google Drive共有ドライブID取得
         google_drive_folder_structure = config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
-        csv_client = DriveCSVClient(service_account_json, google_drive_folder_path, env_name, shared_drive_id, google_drive_folder_structure)  # CSVクライアント作成（Google Driveフォルダパス、環境名、共有ドライブID、フォルダ構造指定）
+        csv_client = DriveCSVClient(google_drive_service_account_json, google_drive_folder_path, env_name, google_drive_shared_drive_id, google_drive_folder_structure)  # CSVクライアント作成（Google Driveフォルダパス、環境名、共有ドライブID、フォルダ構造指定）
         csv_client.connect()  # 接続
 
         logger.info("出席データをCSVファイルに記録中...")  # 記録開始ログ
