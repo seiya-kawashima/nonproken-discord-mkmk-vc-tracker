@@ -32,6 +32,9 @@ class DiscordVCPoller:
         Returns:
             メンバー情報のリスト（vc_name, user_id, user_name含む）
         """  # メソッドの説明
+        # メンバーデータを毎回クリア（重複防止）
+        self.members_data = []  # リストを初期化
+
         @self.client.event
         async def on_ready():
             """Bot接続完了時の処理"""  # イベントハンドラの説明
@@ -41,7 +44,8 @@ class DiscordVCPoller:
                 for channel in guild.voice_channels:  # 各ギルドのVCをループ
                     if str(channel.id) in self.allowed_channel_ids:  # 監視対象チャンネルか確認
                         logger.info(f"VCをチェック中: {channel.name} (ID: {channel.id})")  # チェック中のVCをログ出力
-                        
+                        logger.info(f"  現在のメンバー数: {len(channel.members)}名")  # メンバー数を出力
+
                         for member in channel.members:  # VCのメンバーをループ
                             member_data = {  # メンバー情報を辞書に格納
                                 "vc_name": channel.name,  # VCの名前
@@ -50,8 +54,9 @@ class DiscordVCPoller:
                             }
                             self.members_data.append(member_data)  # リストに追加
                             member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
-                            logger.info(f"メンバーを発見: {member_name}")  # メンバー発見をログ出力
+                            logger.info(f"  メンバーを発見: {member_name}")  # メンバー発見をログ出力
 
+            logger.info(f"取得完了: 合計{len(self.members_data)}名のメンバーを取得")  # 取得完了ログ
             await self.client.close()  # クライアント接続を閉じる
 
         try:
