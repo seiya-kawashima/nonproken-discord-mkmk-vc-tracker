@@ -399,7 +399,7 @@ class DailyAggregator:
                 ])
 
             if not rows:
-                logger.info("No data to write to daily_summary")  # データなしログ
+                logger.info("📝 daily_summaryに書き込むデータがありません")  # データなしログ
                 return
 
             # 既存データの最終行を取得
@@ -420,10 +420,10 @@ class DailyAggregator:
                 body={'values': rows}
             ).execute()
 
-            logger.info(f"Wrote {len(rows)} rows to daily_summary")  # 書き込み成功ログ
+            logger.info(f"✅ daily_summaryシートに{len(rows)}件のデータを書き込みました")  # 書き込み成功ログ
 
         except Exception as e:
-            logger.error(f"Failed to write daily summary: {e}")  # エラーログ
+            logger.error(f"⚠️ daily_summaryの書き込みに失敗しました: {e}")  # エラーログ
 
     def update_user_statistics(self, sheet_id: str, user_data: Dict[str, Dict[str, Any]]):
         """ユーザー統計情報を更新"""
