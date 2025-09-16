@@ -30,6 +30,13 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON{suffix}', 'service_account.json'),
         'service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64{suffix}'),
         'folder_path': 'discord_mokumoku_tracker',
+        'folder_structure': {
+            'base': 'discord_mokumoku_tracker',  # ベースフォルダ名
+            'vc_folder': '{vc_name}',  # VCチャンネルフォルダ名のテンプレート
+            'csv_folder': 'csv',  # CSVフォルダ名
+            'csv_file': '{env_number}_{env_name}.csv',  # CSVファイル名のテンプレート
+            'spreadsheet': 'もくもくトラッカー_{env_number}_{env_name}.spreadsheet'  # スプレッドシート名のテンプレート
+        },
         'shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}', '0ANixFe4JBQskUk9PVA'),
         'env_name': ['PRD', 'TST', 'DEV'][env],
         'env_number': str(env),
