@@ -80,16 +80,18 @@ logger.add(f"logs/error_{current_date}.log",
 class DailyAggregator:
     """日次集計処理クラス"""
 
-    def __init__(self, target_date: Optional[date] = None, env: Environment = Environment.PRD):
+    def __init__(self, target_date: Optional[date] = None, env: Environment = Environment.PRD, output_pattern: str = 'slack'):
         """
         初期化
 
         Args:
             target_date: 集計対象日（Noneの場合は今日）
             env: 実行環境
+            output_pattern: 出力パターン ('discord' or 'slack')
         """
         self.target_date = target_date or date.today()  # 集計対象日
         self.env = env  # 実行環境
+        self.output_pattern = output_pattern  # 出力パターン
         self.drive_service = None  # Google Drive APIサービス
         self.sheets_service = None  # Google Sheets APIサービス
         self.credentials = None  # 認証情報
@@ -717,20 +719,19 @@ class DailyAggregator:
             for user_id, data in sorted_users:
                 user_name = data['user_name'] or 'Unknown'  # Discordユーザー名
 
-                # Slackメンションを取得
-                slack_mention = self.get_slack_mention(user_id, user_name)  # Slackメンション取得
-
                 # ランダムな日数を生成（デモ用）
                 import random  # ランダム
                 random.seed(user_id)  # ユーザーIDでシード固定
                 total_days = random.randint(1, 30)  # 総ログイン日数（デモ）
                 streak_days = min(random.randint(1, 7), total_days)  # 連続日数（デモ）
 
-                # メッセージを生成（Slackメンション付き）
-                if slack_mention and slack_mention != user_name:  # Slackメンションがある場合
-                    message = f"{slack_mention} さん　{total_days}日目のログインになります。"  # Slackメンション使用
-                else:
+                # 出力パターンに応じてメッセージを生成
+                if self.output_pattern == 'discord':  # Discord名で出力（モック用）
                     message = f"{user_name} さん　{total_days}日目のログインになります。"  # Discord名使用
+                else:  # Slackメンションで出力（本番用）
+                    # Slackメンションを取得
+                    slack_mention = self.get_slack_mention(user_id, user_name)  # Slackメンション取得
+                    message = f"{slack_mention} さん　{total_days}日目のログインになります。"  # Slackメンション使用
 
                 # 連続ログインメッセージを追加
                 if streak_days > 1:  # 2日以上連続の場合
@@ -841,6 +842,8 @@ def main():
     parser.add_argument('--debug', action='store_true', help='デバッグログを有効化')
     parser.add_argument('--env', type=int, default=2, choices=[0, 1, 2],
                        help='実行環境 (0=本番, 1=テスト, 2=開発, デフォルト=2)')  # 環境引数追加
+    parser.add_argument('--output', type=str, default='slack', choices=['discord', 'slack'],
+                       help='出力形式 (discord=Discord名, slack=Slackメンション, デフォルト=slack)')  # 出力形式引数追加
 
     args = parser.parse_args()
 
@@ -876,7 +879,7 @@ def main():
     logger.info(f"🌐 {env_name}で実行中です")  # 環境ログ出力
 
     # 集計処理を実行
-    aggregator = DailyAggregator(target_date, env)
+    aggregator = DailyAggregator(target_date, env, args.output)  # 出力パターンを渡す
     report = aggregator.run()  # レポートを取得
 
     # レポートを文字列として返す（Slack連携などで使用可能）
