@@ -37,11 +37,8 @@ def get_config(env: Environment = Environment.DEV) -> dict:
     shared_drive = os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}', '0ANixFe4JBQskUk9PVA')
 
     return {
-        # Discord設定
         'discord_token': discord_token,
         'channel_ids': [id.strip() for id in channel_ids_str.split(',') if id.strip()],
-
-        # Google設定
         'sheet_name': f'もくもくトラッカー_{env}_{["PRD","TST","DEV"][env]}',
         'service_account_json': service_json,
         'service_account_json_base64': service_base64,
@@ -49,8 +46,6 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'shared_drive_id': shared_drive,
         'env_name': ['PRD', 'TST', 'DEV'][env],
         'env_number': str(env),
-
-        # Slack設定
         'slack_token': slack_token,
         'slack_channel': slack_channel
     }
