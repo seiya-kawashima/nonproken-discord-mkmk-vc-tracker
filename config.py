@@ -3,11 +3,10 @@
 本番環境、テスト環境、開発環境ごとに異なる設定を切り替えます
 """
 
-import os  # 環境変数取得用
-from enum import IntEnum  # 列挙型用
-from dotenv import load_dotenv  # .envファイル読み込み用
+import os
+from enum import IntEnum
+from dotenv import load_dotenv
 
-# .envファイルを読み込み
 load_dotenv()
 
 
@@ -18,120 +17,107 @@ class Environment(IntEnum):
     DEV = 2  # 開発環境
 
 
-def get_env_var_name(base_name: str, env: Environment = Environment.PRD) -> str:
-    """
-    環境に応じた環境変数名を取得
-    例: 'DISCORD_BOT_TOKEN' + DEV → 'DISCORD_BOT_TOKEN_2_DEV'
-    """
-    if env == Environment.PRD:
-        return f'{base_name}_0_PRD'
-    elif env == Environment.TST:
-        return f'{base_name}_1_TST'
-    elif env == Environment.DEV:
-        return f'{base_name}_2_DEV'
-    return base_name
+def get_config(env: Environment = Environment.DEV) -> dict:
+    """指定環境のすべての設定を取得"""
 
+    # 環境サフィックスを決定
+    suffix = {
+        Environment.PRD: '_0_PRD',
+        Environment.TST: '_1_TST',
+        Environment.DEV: '_2_DEV'
+    }[env]
 
-def get_discord_config(env: Environment = Environment.PRD) -> dict:
-    """Discord関連の設定を取得"""
-    token_key = get_env_var_name('DISCORD_BOT_TOKEN', env)
-    channel_ids_key = get_env_var_name('ALLOWED_VOICE_CHANNEL_IDS', env)
+    # 環境変数を取得
+    discord_token = os.getenv(f'DISCORD_BOT_TOKEN{suffix}')
+    channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS{suffix}', '')
+    service_json = os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON{suffix}', 'service_account.json')
+    service_base64 = os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64{suffix}')
+    slack_token = os.getenv(f'SLACK_BOT_TOKEN{suffix}')
+    slack_channel = os.getenv(f'SLACK_CHANNEL_ID{suffix}')
+    shared_drive = os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}', '0ANixFe4JBQskUk9PVA')
 
-    channel_ids_str = os.getenv(channel_ids_key, '')
-    channel_ids = [id.strip() for id in channel_ids_str.split(',') if id.strip()]
-
-    return {
-        'token': os.getenv(token_key),
-        'channel_ids': channel_ids
-    }
-
-
-def get_google_sheets_config(env: Environment = Environment.PRD) -> dict:
-    """Google Sheets関連の設定を取得"""
-    # 環境ごとのシート名（ハードコード）
-    sheet_names = {
-        Environment.PRD: 'もくもくトラッカー_0_PRD',
-        Environment.TST: 'もくもくトラッカー_1_TST',
-        Environment.DEV: 'もくもくトラッカー_2_DEV'
-    }
-
-    json_key = get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON', env)
-    base64_key = get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64', env)
+    if shared_drive == '':
+        shared_drive = None
 
     return {
-        'sheet_name': sheet_names[env],
-        'service_account_json': os.getenv(json_key, 'service_account.json'),
-        'service_account_json_base64': os.getenv(base64_key)
+        # Discord設定
+        'discord_token': discord_token,
+        'channel_ids': [id.strip() for id in channel_ids_str.split(',') if id.strip()],
+
+        # Google設定
+        'sheet_name': f'もくもくトラッカー_{env}_{["PRD","TST","DEV"][env]}',
+        'service_account_json': service_json,
+        'service_account_json_base64': service_base64,
+        'folder_path': 'discord_mokumoku_tracker',
+        'shared_drive_id': shared_drive,
+        'env_name': ['PRD', 'TST', 'DEV'][env],
+        'env_number': str(env),
+
+        # Slack設定
+        'slack_token': slack_token,
+        'slack_channel': slack_channel
     }
-
-
-def get_google_drive_config(env: Environment = Environment.PRD) -> dict:
-    """Google Drive関連の設定を取得"""
-    # 環境名マップ
-    env_names = {
-        Environment.PRD: 'PRD',
-        Environment.TST: 'TST',
-        Environment.DEV: 'DEV'
-    }
-
-    # 環境番号マップ
-    env_numbers = {
-        Environment.PRD: '0',
-        Environment.TST: '1',
-        Environment.DEV: '2'
-    }
-
-    json_key = get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON', env)
-    base64_key = get_env_var_name('GOOGLE_SERVICE_ACCOUNT_JSON_BASE64', env)
-    shared_drive_key = get_env_var_name('GOOGLE_SHARED_DRIVE_ID', env)
-
-    shared_drive_id = os.getenv(shared_drive_key, '0ANixFe4JBQskUk9PVA')
-    if shared_drive_id == '':
-        shared_drive_id = None
-
-    return {
-        'folder_path': 'discord_mokumoku_tracker',  # 固定値
-        'folder_id': None,
-        'shared_drive_id': shared_drive_id,
-        'service_account_json': os.getenv(json_key, 'service_account.json'),
-        'service_account_json_base64': os.getenv(base64_key),
-        'env_name': env_names[env],
-        'env_number': env_numbers[env]
-    }
-
-
-def get_slack_config(env: Environment = Environment.PRD) -> dict:
-    """Slack関連の設定を取得"""
-    token_key = get_env_var_name('SLACK_BOT_TOKEN', env)
-    channel_key = get_env_var_name('SLACK_CHANNEL_ID', env)
-
-    return {
-        'bot_token': os.getenv(token_key),
-        'channel_id': os.getenv(channel_key)
-    }
-
-
-def get_environment_name(env: Environment = Environment.PRD) -> str:
-    """環境の日本語名を取得"""
-    names = {
-        Environment.PRD: "本番環境",
-        Environment.TST: "テスト環境",
-        Environment.DEV: "開発環境"
-    }
-    return names.get(env, "不明な環境")
 
 
 def get_environment_from_arg(env_arg: int = None) -> Environment:
     """コマンドライン引数から環境を取得"""
     if env_arg is None:
-        return Environment.DEV  # デフォルトは開発環境
+        return Environment.DEV
     try:
         return Environment(env_arg)
     except (ValueError, TypeError):
         raise ValueError(f"無効な環境指定: {env_arg}. 0(本番), 1(テスト), 2(開発)のいずれかを指定してください")
 
 
-# 後方互換性のため（段階的に削除予定）
+# ===== 後方互換性のため（段階的に削除予定） =====
+
+def get_env_var_name(base_name: str, env: Environment = Environment.PRD) -> str:
+    """後方互換性のため"""
+    suffix = {Environment.PRD: '_0_PRD', Environment.TST: '_1_TST', Environment.DEV: '_2_DEV'}
+    return f'{base_name}{suffix.get(env, "")}'
+
+
+def get_discord_config(env: Environment = Environment.PRD) -> dict:
+    """後方互換性のため"""
+    config = get_config(env)
+    return {'token': config['discord_token'], 'channel_ids': config['channel_ids']}
+
+
+def get_google_sheets_config(env: Environment = Environment.PRD) -> dict:
+    """後方互換性のため"""
+    config = get_config(env)
+    return {
+        'sheet_name': config['sheet_name'],
+        'service_account_json': config['service_account_json'],
+        'service_account_json_base64': config['service_account_json_base64']
+    }
+
+
+def get_google_drive_config(env: Environment = Environment.PRD) -> dict:
+    """後方互換性のため"""
+    config = get_config(env)
+    return {
+        'folder_path': config['folder_path'],
+        'folder_id': None,
+        'shared_drive_id': config['shared_drive_id'],
+        'service_account_json': config['service_account_json'],
+        'service_account_json_base64': config['service_account_json_base64'],
+        'env_name': config['env_name'],
+        'env_number': config['env_number']
+    }
+
+
+def get_slack_config(env: Environment = Environment.PRD) -> dict:
+    """後方互換性のため"""
+    config = get_config(env)
+    return {'bot_token': config['slack_token'], 'channel_id': config['slack_channel']}
+
+
+def get_environment_name(env: Environment = Environment.PRD) -> str:
+    """後方互換性のため"""
+    return {Environment.PRD: "本番環境", Environment.TST: "テスト環境", Environment.DEV: "開発環境"}[env]
+
+
 class EnvConfig:
     """後方互換性のためのラッパークラス"""
 
@@ -166,5 +152,4 @@ class EnvConfig:
     @staticmethod
     def get_env_number(env_name: str) -> str:
         """環境名から番号を取得（CSVファイル名用）"""
-        env_map = {'PRD': '0', 'TST': '1', 'DEV': '2'}
-        return env_map.get(env_name, '9')
+        return {'PRD': '0', 'TST': '1', 'DEV': '2'}.get(env_name, '9')
