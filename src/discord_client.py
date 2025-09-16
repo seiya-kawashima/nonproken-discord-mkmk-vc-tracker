@@ -59,7 +59,7 @@ class DiscordVCPoller:
                                     member_data = {  # メンバー情報を辞書に格納
                                         "vc_name": channel.name,  # VCの名前
                                         "user_id": str(member.id),  # ユーザーID（文字列）
-                                        "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名#識別子
+                                        "user_name": member.name,  # ユーザー名（識別番号は新システムでは不要）
                                     }
                                     self.members_data.append(member_data)  # リストに追加
                                     member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
