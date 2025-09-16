@@ -550,7 +550,7 @@ class DriveCSVClient:
                     }
                     new_rows.append(new_row)  # 新規データリストに追加
                     new_count += 1  # カウンタ増加
-                    logger.info(f"{vc_name}に新規参加: {member.get('user_name', '不明')} - {datetime_jst}")  # 新規追加をログ出力
+                    logger.debug(f"{vc_name}に新規参加: {member.get('user_name', '不明')} - {datetime_jst}")  # 新規追加をデバッグログ出力
 
             # === 新規データがある場合のみアップロード ===
             if new_rows:  # 新規データがある場合
