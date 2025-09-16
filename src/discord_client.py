@@ -36,46 +36,61 @@ class DiscordVCPoller:
         # メンバーデータを毎回クリア（重複防止）
         self.members_data = []  # リストを初期化
 
-        # 新しいクライアントを作成（古いクライアントは破棄）
-        if self.client:  # 既存のクライアントがあれば
-            if not self.client.is_closed():  # まだ閉じていなければ
-                await self.client.close()  # 閉じる
-
+        # 新しいクライアントを作成
         self.client = discord.Client(intents=self.intents)  # 新しいクライアントを作成
 
-        @self.client.event
-        async def on_ready():
-            """Bot接続完了時の処理"""  # イベントハンドラの説明
-            logger.info(f"Discordにログインしました：{self.client.user}")  # ログイン成功をログ出力
-
-            for guild in self.client.guilds:  # 全ギルドをループ
-                for channel in guild.voice_channels:  # 各ギルドのVCをループ
-                    if str(channel.id) in self.allowed_channel_ids:  # 監視対象チャンネルか確認
-                        logger.info(f"VCをチェック中: {channel.name} (ID: {channel.id})")  # チェック中のVCをログ出力
-                        logger.info(f"  現在のメンバー数: {len(channel.members)}名")  # メンバー数を出力
-
-                        for member in channel.members:  # VCのメンバーをループ
-                            member_data = {  # メンバー情報を辞書に格納
-                                "vc_name": channel.name,  # VCの名前
-                                "user_id": str(member.id),  # ユーザーID（文字列）
-                                "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名#識別子
-                            }
-                            self.members_data.append(member_data)  # リストに追加
-                            member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
-                            logger.info(f"  メンバーを発見: {member_name}")  # メンバー発見をログ出力
-
-            logger.info(f"取得完了: 合計{len(self.members_data)}名のメンバーを取得")  # 取得完了ログ
-            await self.client.close()  # クライアント接続を閉じる
-
         try:
-            await self.client.start(self.token)  # Botを起動
+            # データ取得完了フラグ
+            data_collected = asyncio.Event()  # 非同期イベント
+
+            @self.client.event
+            async def on_ready():
+                """Bot接続完了時の処理"""  # イベントハンドラの説明
+                try:
+                    logger.info(f"Discordにログインしました：{self.client.user}")  # ログイン成功をログ出力
+
+                    for guild in self.client.guilds:  # 全ギルドをループ
+                        for channel in guild.voice_channels:  # 各ギルドのVCをループ
+                            if str(channel.id) in self.allowed_channel_ids:  # 監視対象チャンネルか確認
+                                logger.info(f"VCをチェック中: {channel.name} (ID: {channel.id})")  # チェック中のVCをログ出力
+                                logger.info(f"  現在のメンバー数: {len(channel.members)}名")  # メンバー数を出力
+
+                                for member in channel.members:  # VCのメンバーをループ
+                                    member_data = {  # メンバー情報を辞書に格納
+                                        "vc_name": channel.name,  # VCの名前
+                                        "user_id": str(member.id),  # ユーザーID（文字列）
+                                        "user_name": f"{member.name}#{member.discriminator}",  # ユーザー名#識別子
+                                    }
+                                    self.members_data.append(member_data)  # リストに追加
+                                    member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
+                                    logger.info(f"  メンバーを発見: {member_name}")  # メンバー発見をログ出力
+
+                    logger.info(f"取得完了: 合計{len(self.members_data)}名のメンバーを取得")  # 取得完了ログ
+                finally:
+                    data_collected.set()  # データ取得完了を通知
+                    await self.client.close()  # クライアント接続を閉じる
+
+            # Botを起動（非同期タスクとして）
+            bot_task = asyncio.create_task(self.client.start(self.token))  # タスク作成
+
+            # データ取得完了まで待機（最大30秒）
+            try:
+                await asyncio.wait_for(data_collected.wait(), timeout=30.0)  # タイムアウト付き待機
+            except asyncio.TimeoutError:  # タイムアウト時
+                logger.error("Discord接続がタイムアウトしました")  # エラーログ
+                raise
+
         except Exception as e:  # エラー発生時
             logger.error(f"Discordへの接続に失敗しました: {e}")  # エラーをログ出力
             raise  # エラーを再発生
         finally:
-            # 確実にクライアントを閉じる
-            if self.client and not self.client.is_closed():  # クライアントが開いていれば
-                await self.client.close()  # 閉じる
+            # 確実にクライアントをクリーンアップ
+            if self.client:  # クライアントが存在すれば
+                if not self.client.is_closed():  # まだ閉じていなければ
+                    await self.client.close()  # 閉じる
+                # HTTPセッションも確実に閉じる
+                if hasattr(self.client, 'http') and self.client.http:  # HTTPセッションがあれば
+                    await self.client.http.close()  # セッションを閉じる
 
         return self.members_data  # メンバー情報を返す
 
