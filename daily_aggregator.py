@@ -170,10 +170,10 @@ class DailyAggregator:
         """
         try:
             logger.info(f"🔍 CSVファイルの検索を開始します")  # 検索開始ログ
-            logger.info(f"📍 検索パス: {self.folder_path}")  # 検索パス表示
+            logger.info(f"📍 検索パス: {self.google_drive_folder_path}")  # 検索パス表示
 
             # フォルダパスからフォルダ階層を取得
-            folder_parts = self.folder_path.split('/')  # パスを分割
+            folder_parts = self.google_drive_folder_path.split('/')  # パスを分割
             if not folder_parts:
                 logger.warning("⚠️ フォルダパスが無効です")  # 無効なパス警告
                 return []
