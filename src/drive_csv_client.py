@@ -44,7 +44,7 @@ class DriveCSVClient:
                              例: "discord_mokumoku_tracker"
             env_suffix: 環境サフィックス（0_PRD/1_TST/2_DEV）
             shared_drive_id: 共有ドライブID（オプション）
-            folder_structure: フォルダ構造定義（オプション）
+            csv_path_template: CSVファイルパステンプレート（オプション）
         """  # 初期化処理の説明
         self.service_account_json = service_account_json  # JSONファイルパスを保存
         self.base_folder_path = base_folder_path  # ベースフォルダパスを保存（discord_mokumoku_tracker）
