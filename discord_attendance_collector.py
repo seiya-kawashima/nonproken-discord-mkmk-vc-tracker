@@ -98,10 +98,11 @@ async def main(env_arg=None):
         # 2. Google Drive上のCSVに記録
         logger.info("Google Driveに接続中...")  # 接続開始ログ
         # Google Drive設定からフォルダパス、環境名、共有ドライブIDを取得
-        drive_folder_path = config['folder_path']  # フォルダパス取得（config.pyから）
+        google_drive_folder_path = config.get('google_drive_folder_path', config.get('folder_path'))  # Google Driveフォルダパス取得（config.pyから）
         env_name = config['env_name']  # 環境名取得（PRD/TST/DEV）
         shared_drive_id = config['shared_drive_id']  # 共有ドライブID取得
-        csv_client = DriveCSVClient(service_account_json, drive_folder_path, env_name, shared_drive_id)  # CSVクライアント作成（フォルダパス、環境名、共有ドライブID指定）
+        google_drive_folder_structure = config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
+        csv_client = DriveCSVClient(service_account_json, google_drive_folder_path, env_name, shared_drive_id, google_drive_folder_structure)  # CSVクライアント作成（Google Driveフォルダパス、環境名、共有ドライブID、フォルダ構造指定）
         csv_client.connect()  # 接続
 
         logger.info("出席データをCSVファイルに記録中...")  # 記録開始ログ
