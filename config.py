@@ -20,30 +20,30 @@ class Environment(IntEnum):
 def get_config(env: Environment = Environment.DEV) -> dict:
     """指定環境のすべての設定を取得"""
 
-    suffix = ['_0_PRD', '_1_TST', '_2_DEV'][env]
+    suffix = ['0_PRD', '1_TST', '2_DEV'][env]  # アンダースコアなしのサフィックス
     env_name = ['PRD', 'TST', 'DEV'][env]
     env_number = str(env)
-    channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS{suffix}', '')
+    channel_ids_str = os.getenv(f'ALLOWED_VOICE_CHANNEL_IDS_{suffix}', '')
 
     return {
-        'discord_token': os.getenv(f'DISCORD_BOT_TOKEN{suffix}'),
+        'discord_token': os.getenv(f'DISCORD_BOT_TOKEN_{suffix}'),
         'discord_channel_ids': [id.strip() for id in channel_ids_str.split(',') if id.strip()],
-        'google_drive_service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON{suffix}', 'service_account.json'),
-        'google_drive_service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64{suffix}'),
-        'google_drive_shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID{suffix}'),
+        'google_drive_service_account_json': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_{suffix}', 'service_account.json'),
+        'google_drive_service_account_json_base64': os.getenv(f'GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_{suffix}'),
+        'google_drive_shared_drive_id': os.getenv(f'GOOGLE_SHARED_DRIVE_ID_{suffix}'),
         'google_drive_folder_path': 'discord_mokumoku_tracker',  # Google Driveベースフォルダパス
         'google_drive_folder_structure': {  # Google Driveフォルダ構造定義
             'base': 'discord_mokumoku_tracker',  # ベースフォルダ名
             'vc_folder': '{vc_name}',  # VCチャンネルフォルダ名のテンプレート
             'csv_folder': 'csv',  # CSVフォルダ名
-            'csv_file': f'{suffix[1:]}.csv',  # CSVファイル名 (例: 0_PRD.csv)
-            'spreadsheet': f'もくもくトラッカー{suffix}'  # スプレッドシート名 (例: もくもくトラッカー_0_PRD)
+            'csv_file': f'{suffix}.csv',  # CSVファイル名 (例: 0_PRD.csv)
+            'spreadsheet': f'もくもくトラッカー_{suffix}'  # スプレッドシート名 (例: もくもくトラッカー_0_PRD)
         },
-        'slack_token': os.getenv(f'SLACK_BOT_TOKEN{suffix}'),
-        'slack_channel': os.getenv(f'SLACK_CHANNEL_ID{suffix}'),
+        'slack_token': os.getenv(f'SLACK_BOT_TOKEN_{suffix}'),
+        'slack_channel': os.getenv(f'SLACK_CHANNEL_ID_{suffix}'),
         'env_name': env_name,  # 環境名 (PRD/TST/DEV)
         'env_number': env_number,  # 環境番号 (0/1/2)
-        'suffix': suffix,  # サフィックス (_0_PRD/_1_TST/_2_DEV)
+        'suffix': suffix,  # サフィックス (0_PRD/1_TST/2_DEV)
     }
 
 
