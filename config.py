@@ -41,9 +41,9 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         },
         'slack_token': os.getenv(f'SLACK_BOT_TOKEN_{suffix}'),
         'slack_channel': os.getenv(f'SLACK_CHANNEL_ID_{suffix}'),
-        'env_name': env_name,  # 環境名 (PRD/TST/DEV)
-        'env_number': env_number,  # 環境番号 (0/1/2)
-        'suffix': suffix,  # サフィックス (0_PRD/1_TST/2_DEV)
+        'suffix': suffix,  # サフィックス (0_PRD/1_TST/2_DEV) - 推奨
+        'env_name': env_name,  # 環境名 (PRD/TST/DEV) - 後方互換性のため残存
+        'env_number': env_number,  # 環境番号 (0/1/2) - 後方互換性のため残存
     }
 
 
