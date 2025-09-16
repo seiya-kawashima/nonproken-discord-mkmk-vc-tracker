@@ -66,7 +66,7 @@ jobs:
         DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
         GOOGLE_SHARED_DRIVE_ID_0_PRD: ${{ secrets.GOOGLE_SHARED_DRIVE_ID_0_PRD }}
-        ALLOWED_VOICE_CHANNEL_IDS_0_PRD: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS_0_PRD }}
+        DISCORD_VOICE_CHANNEL_IDS_0_PRD: ${{ secrets.DISCORD_VOICE_CHANNEL_IDS_0_PRD }}
       run: |
         echo "本番環境で出席記録を収集します"
         python discord_attendance_collector.py --env 0
