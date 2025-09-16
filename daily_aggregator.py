@@ -133,12 +133,12 @@ class DailyAggregator:
         """認証情報を取得"""
         # config.pyから認証情報を取得
         config = get_config(self.env)  # すべての設定を取得
-        service_account_json_base64 = config['service_account_json_base64']  # Base64認証情報
-        service_account_file = config['service_account_json']  # ファイルパス
+        google_drive_service_account_json_base64 = config.get('google_drive_service_account_json_base64', config.get('service_account_json_base64'))  # Google Drive Base64認証情報
+        service_account_file = config.get('google_drive_service_account_json', config.get('service_account_json'))  # Google Driveサービスアカウントファイルパス
 
-        if service_account_json_base64:
+        if google_drive_service_account_json_base64:
             # Base64デコード
-            service_account_json = base64.b64decode(service_account_json_base64).decode('utf-8')
+            service_account_json = base64.b64decode(google_drive_service_account_json_base64).decode('utf-8')
             service_account_info = json.loads(service_account_json)
             logger.info("🔐 環境変数から認証情報を取得しました（Base64形式）")  # Base64認証使用ログ
         else:
