@@ -23,7 +23,7 @@ class DiscordVCPoller:
         self.intents.voice_states = True  # ボイスステート権限を有効化
         self.intents.guilds = True  # ギルド情報権限を有効化
         self.intents.members = True  # メンバー情報権限を有効化
-        self.client = discord.Client(intents=self.intents)  # Discordクライアントを作成
+        self.client = None  # クライアントは後で作成
         self.members_data = []  # メンバー情報を格納するリスト
 
     async def get_vc_members(self) -> List[Dict[str, Any]]:
