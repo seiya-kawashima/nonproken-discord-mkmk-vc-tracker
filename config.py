@@ -252,9 +252,14 @@ class EnvConfig:
 
         最終的なパス構造:
         discord_mokumoku_tracker/
-        └── csv/
-            └── [VCチャンネル名]/
-                └── [環境番号]_[環境名].csv
+        └── [VCチャンネル名]/
+            ├── もくもくトラッカー_0_PRD.spreadsheet
+            ├── もくもくトラッカー_1_TST.spreadsheet
+            ├── もくもくトラッカー_2_DEV.spreadsheet
+            └── csv/
+                ├── 0_PRD.csv
+                ├── 1_TST.csv
+                └── 2_DEV.csv
 
         Args:
             env: 環境（Environment.PRD/TST/DEV）
@@ -264,7 +269,7 @@ class EnvConfig:
         """
         # デフォルトのフォルダ階層パス（固定値）
         # この値は全環境で共通とし、変更不可とする
-        DEFAULT_FOLDER_PATH = "discord_mokumoku_tracker/csv"  # 共有ドライブ内のベースフォルダパス
+        DEFAULT_BASE_PATH = "discord_mokumoku_tracker"  # 共有ドライブ内のベースフォルダパス
 
         # 環境に応じたフォルダパスの環境変数名を取得（互換性のため残す）
         folder_path_key = cls.get_env_var_name('GOOGLE_DRIVE_FOLDER_PATH', env)  # 環境変数名を作成
