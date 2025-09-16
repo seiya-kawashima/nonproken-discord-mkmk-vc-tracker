@@ -32,7 +32,7 @@ from config import EnvConfig, Environment
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名付き）
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}")  # コンソール出力（ファイル名と関数名付き）
 
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
@@ -47,7 +47,7 @@ logger.add(f"logs/daily_aggregator_{current_date}.log",
           retention="7 days",
           level="INFO",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}",
           filter=lambda record: "get_csv" not in record["function"] and "aggregate" not in record["function"])  # メイン処理ログ
 
 # 2. CSVファイル取得処理のログ
@@ -56,7 +56,7 @@ logger.add(f"logs/csv_fetch_{current_date}.log",
           retention="7 days",
           level="DEBUG",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}",
           filter=lambda record: "get_csv" in record["function"] or "read_csv" in record["function"])  # CSV取得ログ
 
 # 3. 集計処理のログ
@@ -65,7 +65,7 @@ logger.add(f"logs/aggregation_{current_date}.log",
           retention="7 days",
           level="INFO",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}",
           filter=lambda record: "aggregate" in record["function"] or "write" in record["function"] or "update" in record["function"])  # 集計処理ログ
 
 # 4. エラーログ（全てのエラーを記録）
