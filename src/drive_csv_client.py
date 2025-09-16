@@ -385,18 +385,13 @@ class DriveCSVClient:
     def _upload_csv(self, vc_name: str, data: List[Dict[str, str]], file_id: str = None):
         """CSVファイルをアップロード（新規または更新）
 
-        discord_mokumoku_tracker/{VC名}/csv/{環境番号}_{環境名}.csv にファイルを保存します。
+        discord_mokumoku_tracker/csv/{VC名}_{suffix}.csv にファイルを保存します。
         file_idが指定されている場合は既存ファイルを更新し、
         指定されていない場合は新規ファイルを作成します。
         CSVファイルはUTF-8 BOM付きで保存され、Excelでも正しく開けます。
         """  # メソッドの説明
-        # VCチャンネル用のフォルダIDを取得
-        vc_folder_id = self._ensure_vc_folder(vc_name)  # VCフォルダを作成・取得
-        # csvフォルダIDを取得
-        csv_folder_id = self._ensure_csv_folder(vc_name, vc_folder_id)  # csvフォルダを作成・取得
-
-        # CSVファイル名を生成（VC名_suffix.csv形式）
-        filename = f'{vc_name}_{self.env_suffix}.csv'  # ファイル名生成（例: 一般_0_PRD.csv）
+        # CSVファイル名を生成（CSVパステンプレートから）
+        filename = self.csv_path_template.format(vc_name=vc_name).split('/')[-1]  # ファイル名を取得（例: 一般_0_PRD.csv）
 
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
