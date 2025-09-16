@@ -154,7 +154,7 @@ jobs:  # 実行するジョブの定義
 
             # 環境変数チェック
             print("📋 環境変数チェック:")
-            required_vars = ['TST_DISCORD_BOT_TOKEN', 'TST_ALLOWED_VOICE_CHANNEL_IDS']
+            required_vars = ['TST_DISCORD_BOT_TOKEN', 'TST_DISCORD_VOICE_CHANNEL_IDS']
             for var in required_vars:
                 value = os.getenv(var)
                 if value:
