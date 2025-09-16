@@ -388,12 +388,14 @@ class DailyAggregator:
         })
 
         for record in all_records:
-            if record.get('present', '').upper() == 'TRUE':  # ログイン中の場合
-                user_id = record.get('user_id', '')
-                if user_id:
-                    user_data[user_id]['user_name'] = record.get('user_name', '')  # ユーザー名
-                    user_data[user_id]['vc_channels'].add(record.get('vc_name', ''))  # VCチャンネル追加
-                    user_data[user_id]['login_count'] += 1  # ログイン回数カウント
+            # present列が削除されたため、全レコードを集計対象とする
+            user_id = record.get('user_id', '')
+            if user_id:
+                user_data[user_id]['user_name'] = record.get('user_name', '')  # ユーザー名
+                # vc_name列がない場合はファイルパスから取得（互換性のため）
+                vc_name = record.get('vc_name', 'unknown')  # VCチャンネル名
+                user_data[user_id]['vc_channels'].add(vc_name)  # VCチャンネル追加
+                user_data[user_id]['login_count'] += 1  # ログイン回数カウント
 
         # セットを文字列に変換
         for user_id, data in user_data.items():
