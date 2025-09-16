@@ -100,7 +100,7 @@ class DailyAggregator:
         discord_config = EnvConfig.get_discord_config(env)  # Discord設定取得
 
         self.sheet_name = sheets_config.get('sheet_name', 'VC_Tracker_Database')  # Sheets名
-        self.folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker/csv')  # フォルダパス
+        self.folder_path = drive_config.get('folder_path', 'discord_mokumoku_tracker')  # ベースフォルダパス（csvを除く）
         self.allowed_vc_ids = discord_config.get('channel_ids', [])  # 対象VCチャンネルID
         self.env_number = drive_config.get('env_number', '2')  # 環境番号取得
         self.env_name = drive_config.get('env_name', 'DEV')  # 環境名取得
@@ -214,14 +214,14 @@ class DailyAggregator:
                 current_folder_id = subfolders[0]['id']  # 次のフォルダID
                 logger.info(f"📂 サブフォルダを発見: {folder_name}")  # フォルダ発見ログ
 
-            # 最終的なフォルダIDを保存
-            csv_folder_id = current_folder_id
+            # 最終的なフォルダIDを保存（discord_mokumoku_trackerフォルダ）
+            base_folder_id = current_folder_id
 
-            # csvフォルダ内のサブフォルダ（チャンネル名フォルダ）を検索
+            # discord_mokumoku_tracker内のVCチャンネルフォルダを検索
             full_path = '/'.join(folder_parts)  # 完全なパスを構築
             logger.info(f"📂 現在のフォルダ: {full_path}")  # 現在位置ログ
             logger.info(f"🔎 VCチャンネルフォルダを検索中...")  # チャンネルフォルダ検索ログ
-            channel_folder_query = f"'{csv_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
+            channel_folder_query = f"'{base_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
             channel_folder_results = self.drive_service.files().list(
                 q=channel_folder_query,
                 fields="files(id, name)",
@@ -235,15 +235,32 @@ class DailyAggregator:
                 logger.info(f"📝 発見したチャンネルフォルダ: {', '.join([f['name'] for f in channel_folders])}")  # チャンネル名一覧
 
             csv_files = []
-            # 各チャンネルフォルダ内のCSVファイルを検索
+            # 各VCチャンネルフォルダ内のcsvサブフォルダを検索
             for channel_folder in channel_folders:
                 channel_folder_id = channel_folder['id']
                 channel_name = channel_folder['name']
-                # 環境に応じたCSVファイル名でフィルタ
+
+                # csvサブフォルダを検索
+                csv_folder_query = f"'{channel_folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
+                csv_folder_results = self.drive_service.files().list(
+                    q=csv_folder_query,
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True
+                ).execute()
+
+                csv_folders = csv_folder_results.get('files', [])
+                if not csv_folders:
+                    logger.info(f"  ℹ️ {channel_name}フォルダ内にcsvフォルダがありません")  # csvフォルダなしログ
+                    continue
+
+                csv_folder_id = csv_folders[0]['id']
+
+                # csvフォルダ内の環境に応じたCSVファイルを検索
                 target_csv_name = f"{self.env_number}_{self.env_name}.csv"  # 対象CSVファイル名
-                search_path = f"{full_path}/{channel_name}/{target_csv_name}"  # 検索パスを構築
+                search_path = f"{full_path}/{channel_name}/csv/{target_csv_name}"  # 検索パスを構築
                 logger.debug(f"🔍 CSVファイルを検索中: {search_path}")  # デバッグログ
-                csv_query = f"'{channel_folder_id}' in parents and name='{target_csv_name}'"
+                csv_query = f"'{csv_folder_id}' in parents and name='{target_csv_name}'"
                 csv_results = self.drive_service.files().list(
                     q=csv_query,
                     fields="files(id, name)",
@@ -259,7 +276,7 @@ class DailyAggregator:
                         logger.info(f"  ✅ CSVファイルを発見: {search_path}")  # CSVファイル発見通知
                 else:
                     logger.debug(f"  ⚠️ {target_csv_name}が見つかりません")  # CSVファイルなしログ
-                    logger.info(f"  ℹ️ {channel_name}フォルダ内に{target_csv_name}がありません")  # 詳細情報
+                    logger.info(f"  ℹ️ {channel_name}/csvフォルダ内に{target_csv_name}がありません")  # 詳細情報
             logger.info(f"📝 合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
 
             return csv_files
