@@ -100,12 +100,12 @@ class DailyAggregator:
         # config.pyから設定を取得
         config = get_config(env)  # すべての設定を取得
 
-        self.sheet_name = config['sheet_name']  # Sheets名
+        folder_structure = config.get('google_drive_folder_structure', {})  # Google Driveフォルダ構造
+        self.sheet_name = folder_structure.get('spreadsheet', f"もくもくトラッカー_{config['suffix']}")  # Sheets名
         self.google_drive_folder_path = config.get('google_drive_folder_path', config.get('folder_path'))  # Google Driveベースフォルダパス
         self.google_drive_folder_structure = config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
-        self.allowed_vc_ids = config['channel_ids']  # 対象VCチャンネルID
-        self.env_number = config['env_number']  # 環境番号
-        self.env_name = config['env_name']  # 環境名
+        self.allowed_vc_ids = config.get('discord_channel_ids', config.get('channel_ids'))  # Discord対象VCチャンネルID
+        self.suffix = config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
 
         # 初期化処理
         self._initialize_services()
@@ -259,7 +259,7 @@ class DailyAggregator:
                 csv_folder_id = csv_folders[0]['id']
 
                 # csvフォルダ内の環境に応じたCSVファイルを検索
-                target_csv_name = f"{self.env_number}_{self.env_name}.csv"  # 対象CSVファイル名
+                target_csv_name = f"{self.suffix}.csv"  # 対象CSVファイル名
                 search_path = f"{full_path}/{channel_name}/csv/{target_csv_name}"  # 検索パスを構築
                 logger.debug(f"🔍 CSVファイルを検索中: {search_path}")  # デバッグログ
                 csv_query = f"'{csv_folder_id}' in parents and name='{target_csv_name}'"
