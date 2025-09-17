@@ -653,15 +653,13 @@ class DailyAggregator:
                 except SlackApiError as e:
                     logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
                     logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
-                    # レポートをログに出力（改行で分割して各行をログ出力）
-                    for line in message.split('\n'):
-                        logger.info(f"[レポート] {line}")
+                    # レポート全体を1つのログメッセージとして出力
+                    logger.info(f"\n{'='*60}\n[レポート]\n{message}\n{'='*60}")
             else:
                 # Discord出力モードまたはSlackが設定されていない場合はログ出力
                 logger.info("レポートをログに出力します")  # ログ出力
-                # レポートをログに出力（改行で分割して各行をログ出力）
-                for line in message.split('\n'):
-                    logger.info(f"[レポート] {line}")
+                # レポート全体を1つのログメッセージとして出力
+                logger.info(f"\n{'='*60}\n[レポート]\n{message}\n{'='*60}")
 
             return message
 
