@@ -782,8 +782,14 @@ class DailyAggregator:
                     # デバッグ：更新前の状態を出力（blueさんの場合）
                     if 'blue' in user_name.lower():
                         logger.debug(f"=== {user_name} の統計更新 ===")
-                        logger.debug(f"  更新前: 最終ログイン={old_last_login}, 連続={old_consecutive}日, 累計={old_total}日")
-                        logger.debug(f"  今日: {today_str}, 前営業日: {previous_business_day_str}")
+                        logger.debug(f"  ユーザーID: {user_id}")
+                        logger.debug(f"  【統計シート既存値】")
+                        logger.debug(f"    最終ログイン日: {old_last_login}")
+                        logger.debug(f"    連続日数: {old_consecutive}日")
+                        logger.debug(f"    累計日数: {old_total}日")
+                        logger.debug(f"  【処理日情報】")
+                        logger.debug(f"    今日: {today_str}")
+                        logger.debug(f"    前営業日: {previous_business_day_str}")
 
                     # 最終ログイン日が今日でない場合のみ更新（同じ日の重複カウントを防ぐ）
                     if stats['last_login_date'] != today_str:
