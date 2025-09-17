@@ -179,6 +179,81 @@ class DailyAggregator:
             scopes=scopes
         )
 
+    def _load_user_mapping(self):
+        """ユーザーマッピングシートからデータを読み込み"""
+        try:
+            # Drive APIでシートを検索
+            query = f"name='{self.user_mapping_sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+            results = self.drive_service.files().list(
+                q=query,
+                fields="files(id, name)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
+            ).execute()  # 検索実行
+
+            files = results.get('files', [])  # ファイルリスト
+            if not files:
+                logger.warning(f"⚠️ ユーザーマッピングシート '{self.user_mapping_sheet_name}' が見つかりません")  # シート未発見
+                return
+
+            sheet_id = files[0]['id']  # シートID
+            logger.info(f"📖 ユーザーマッピングシートを発見: {self.user_mapping_sheet_name}")  # シート発見
+
+            # シートからデータを読み込み
+            result = self.sheets_service.spreadsheets().values().get(
+                spreadsheetId=sheet_id,
+                range='user_mapping!A2:C1000'  # ヘッダーを除くデータ範囲
+            ).execute()  # データ取得
+
+            rows = result.get('values', [])  # データ行
+            for row in rows:
+                if len(row) >= 3:
+                    discord_user_id = row[0]  # DiscordユーザーID
+                    slack_mention_id = row[2]  # SlackメンションID
+                    if discord_user_id and slack_mention_id:
+                        self.user_mapping[discord_user_id] = slack_mention_id  # マッピング登録
+
+            logger.info(f"✅ {len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
+
+        except Exception as e:
+            logger.warning(f"⚠️ ユーザーマッピングの読み込みに失敗: {e}")  # エラー
+            # マッピングがなくても処理継続
+
+    def is_business_day(self, target_date: date) -> bool:
+        """
+        営業日か否かを判定
+
+        Args:
+            target_date: 判定対象日
+
+        Returns:
+            営業日の場合True、土日祝日の場合False
+        """
+        # 土日の判定 (weekday(): 0=月, 5=土, 6=日)
+        if target_date.weekday() >= 5:  # 土日
+            return False
+
+        # 祝日の判定
+        if jpholiday.is_holiday(target_date):  # 祝日
+            return False
+
+        return True  # 営業日
+
+    def get_previous_business_day(self, target_date: date) -> date:
+        """
+        直前の営業日を取得
+
+        Args:
+            target_date: 基準日
+
+        Returns:
+            直前の営業日
+        """
+        previous_date = target_date - timedelta(days=1)  # 1日前
+        while not self.is_business_day(previous_date):  # 営業日でない間
+            previous_date -= timedelta(days=1)  # さらに1日前
+        return previous_date  # 営業日を返す
+
     def get_csv_files_from_drive(self) -> List[Dict[str, str]]:
         """
         Google DriveからCSVファイル一覧を取得
