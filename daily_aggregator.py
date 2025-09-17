@@ -128,24 +128,24 @@ class DailyAggregator:
 
             # Drive APIサービスの構築
             self.drive_service = build('drive', 'v3', credentials=self.credentials)
-            logger.info("📁 Google Driveへの接続が完了しました")  # 初期化成功ログ
+            logger.info("Google Driveへの接続が完了しました")  # 初期化成功ログ
 
             # Sheets APIサービスの構築
             self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
-            logger.info("📊 Google Sheetsへの接続が完了しました")  # 初期化成功ログ
+            logger.info("Google Sheetsへの接続が完了しました")  # 初期化成功ログ
 
             # Slackクライアントの初期化
             if self.slack_token:
                 self.slack_client = WebClient(token=self.slack_token)
-                logger.info("💬 Slackクライアントを初期化しました")  # Slack初期化
+                logger.info("Slackクライアントを初期化しました")  # Slack初期化
             else:
-                logger.warning("⚠️ Slackトークンが設定されていません")  # Slack未設定
+                logger.warning("Slackトークンが設定されていません")  # Slack未設定
 
             # ユーザーマッピングを読み込み
             self._load_user_mapping()
 
         except Exception as e:
-            logger.error(f"⚠️ サービスの初期化に失敗しました: {e}")  # エラーログ
+            logger.error(f"サービスの初期化に失敗しました: {e}")  # エラーログ
             raise
 
     def _get_credentials(self):
@@ -159,14 +159,14 @@ class DailyAggregator:
             # Base64デコード
             service_account_json = base64.b64decode(google_drive_service_account_json_base64).decode('utf-8')
             service_account_info = json.loads(service_account_json)
-            logger.info("🔐 環境変数から認証情報を取得しました（Base64形式）")  # Base64認証使用ログ
+            logger.info("環境変数から認証情報を取得しました（Base64形式）")  # Base64認証使用ログ
         else:
             # ファイルパスから読み込み
             if not os.path.exists(service_account_file):
                 raise FileNotFoundError(f"Service account file not found: {service_account_file}")
             with open(service_account_file, 'r') as f:
                 service_account_info = json.load(f)
-            logger.info(f"🔐 認証ファイルを読み込みました: {service_account_file}")  # ファイル認証使用ログ
+            logger.info(f"認証ファイルを読み込みました: {service_account_file}")  # ファイル認証使用ログ
 
         # スコープ設定
         scopes = [
@@ -185,14 +185,14 @@ class DailyAggregator:
         try:
             # パスが設定されていない場合はスキップ
             if not self.google_drive_discord_slack_mapping_sheet_path:
-                logger.info("📓 Discord-Slackマッピングシートが設定されていません。Discord名を使用します")  # 設定なし
+                logger.info("Discord-Slackマッピングシートが設定されていません。Discord名を使用します")  # 設定なし
                 return
 
             # パスからフォルダとファイル名を取得
             path_parts = self.google_drive_discord_slack_mapping_sheet_path.split('/')  # パスを分割
             file_name = path_parts[-1]  # ファイル名（最後の要素）
 
-            logger.info(f"📖 Discord-Slackマッピングシートを検索: {self.google_drive_discord_slack_mapping_sheet_path}")  # シート検索
+            logger.info(f"Discord-Slackマッピングシートを検索: {self.google_drive_discord_slack_mapping_sheet_path}")  # シート検索
 
             # Google Driveでスプレッドシートを検索
             query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false"  # 検索クエリ
@@ -205,12 +205,12 @@ class DailyAggregator:
 
             items = results.get('files', [])  # 検索結果
             if not items:
-                logger.warning(f"⚠️ Discord-Slackマッピングシートが見つかりません: {file_name}")  # シートなし
-                logger.info("📓 Discord名を使用します")  # フォールバック
+                logger.warning(f"Discord-Slackマッピングシートが見つかりません: {file_name}")  # シートなし
+                logger.info("Discord名を使用します")  # フォールバック
                 return
 
             sheet_id = items[0]['id']  # シートID取得
-            logger.info(f"✅ マッピングシートを発見: {file_name} (ID: {sheet_id})")  # シート発見
+            logger.info(f"マッピングシートを発見: {file_name} (ID: {sheet_id})")  # シート発見
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
@@ -226,10 +226,10 @@ class DailyAggregator:
                     if discord_user_id and slack_mention_id:
                         self.user_mapping[discord_user_id] = slack_mention_id  # マッピング登録
 
-            logger.info(f"✅ {len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
+            logger.info(f"{len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
 
         except Exception as e:
-            logger.warning(f"⚠️ ユーザーマッピングの読み込みに失敗: {e}")  # エラー
+            logger.warning(f"ユーザーマッピングの読み込みに失敗: {e}")  # エラー
             # マッピングがなくても処理継続
 
     def is_business_day(self, target_date: date) -> bool:
@@ -275,13 +275,13 @@ class DailyAggregator:
             CSVファイル情報のリスト [{id, name}, ...]
         """
         try:
-            logger.info(f"🔍 CSVファイルの検索を開始します")  # 検索開始ログ
-            logger.info(f"📍 検索パス: {self.google_drive_folder_path}")  # 検索パス表示
+            logger.info(f"CSVファイルの検索を開始します")  # 検索開始ログ
+            logger.info(f"検索パス: {self.google_drive_folder_path}")  # 検索パス表示
 
             # フォルダパスからフォルダ階層を取得
             folder_parts = self.google_drive_folder_path.split('/')  # パスを分割
             if not folder_parts:
-                logger.warning("⚠️ フォルダパスが無効です")  # 無効なパス警告
+                logger.warning("フォルダパスが無効です")  # 無効なパス警告
                 return []
 
             # ルートフォルダを検索（共有ドライブ対応）
@@ -297,11 +297,11 @@ class DailyAggregator:
 
             folders = folder_results.get('files', [])
             if not folders:
-                logger.warning(f"⚠️ Google Drive上に '{root_folder_name}' フォルダが見つかりません")  # フォルダ未発見警告
+                logger.warning(f"Google Drive上に '{root_folder_name}' フォルダが見つかりません")  # フォルダ未発見警告
                 return []
 
             folder_id = folders[0]['id']  # フォルダID取得
-            logger.info(f"📂 フォルダを発見: {folders[0]['name']}")  # フォルダ発見ログ
+            logger.info(f"フォルダを発見: {folders[0]['name']}")  # フォルダ発見ログ
 
             # 残りのフォルダ階層を順に探索
             current_folder_id = folder_id
@@ -316,19 +316,19 @@ class DailyAggregator:
 
                 subfolders = subfolder_results.get('files', [])
                 if not subfolders:
-                    logger.warning(f"⚠️ サブフォルダ '{folder_name}' が見つかりません")  # サブフォルダ未発見警告
+                    logger.warning(f"サブフォルダ '{folder_name}' が見つかりません")  # サブフォルダ未発見警告
                     return []
 
                 current_folder_id = subfolders[0]['id']  # 次のフォルダID
-                logger.info(f"📂 サブフォルダを発見: {folder_name}")  # フォルダ発見ログ
+                logger.info(f"サブフォルダを発見: {folder_name}")  # フォルダ発見ログ
 
             # 最終的なフォルダIDを保存（discord_mokumoku_trackerフォルダ）
             base_folder_id = current_folder_id
 
             # discord_mokumoku_tracker内のVCチャンネルフォルダを検索
             full_path = '/'.join(folder_parts)  # 完全なパスを構築
-            logger.info(f"📂 現在のフォルダ: {full_path}")  # 現在位置ログ
-            logger.info(f"🔎 VCチャンネルフォルダを検索中...")  # チャンネルフォルダ検索ログ
+            logger.info(f"現在のフォルダ: {full_path}")  # 現在位置ログ
+            logger.info(f"VCチャンネルフォルダを検索中...")  # チャンネルフォルダ検索ログ
             channel_folder_query = f"'{base_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
             channel_folder_results = self.drive_service.files().list(
                 q=channel_folder_query,
@@ -338,9 +338,9 @@ class DailyAggregator:
             ).execute()
 
             channel_folders = channel_folder_results.get('files', [])
-            logger.info(f"📁 {len(channel_folders)}個のVCチャンネルフォルダを発見しました")  # チャンネルフォルダ数ログ
+            logger.info(f"{len(channel_folders)}個のVCチャンネルフォルダを発見しました")  # チャンネルフォルダ数ログ
             if channel_folders:
-                logger.info(f"📝 発見したチャンネルフォルダ: {', '.join([f['name'] for f in channel_folders])}")  # チャンネル名一覧
+                logger.info(f"発見したチャンネルフォルダ: {', '.join([f['name'] for f in channel_folders])}")  # チャンネル名一覧
 
             csv_files = []
             # 各VCチャンネルフォルダ内のcsvサブフォルダを検索
@@ -359,7 +359,7 @@ class DailyAggregator:
 
                 csv_folders = csv_folder_results.get('files', [])
                 if not csv_folders:
-                    logger.info(f"  ℹ️ {channel_name}フォルダ内にcsvフォルダがありません")  # csvフォルダなしログ
+                    logger.info(f"  {channel_name}フォルダ内にcsvフォルダがありません")  # csvフォルダなしログ
                     continue
 
                 csv_folder_id = csv_folders[0]['id']
@@ -367,7 +367,7 @@ class DailyAggregator:
                 # csvフォルダ内の環境に応じたCSVファイルを検索
                 target_csv_name = f"{self.suffix}.csv"  # 対象CSVファイル名
                 search_path = f"{full_path}/{channel_name}/csv/{target_csv_name}"  # 検索パスを構築
-                logger.debug(f"🔍 CSVファイルを検索中: {search_path}")  # デバッグログ
+                logger.debug(f"CSVファイルを検索中: {search_path}")  # デバッグログ
                 csv_query = f"'{csv_folder_id}' in parents and name='{target_csv_name}'"
                 csv_results = self.drive_service.files().list(
                     q=csv_query,
@@ -380,17 +380,17 @@ class DailyAggregator:
                 csv_files.extend(channel_csv_files)
                 if channel_csv_files:
                     for csv_file in channel_csv_files:
-                        logger.debug(f"  ✅ 発見: {search_path}")  # CSVファイル名表示
-                        logger.info(f"  ✅ CSVファイルを発見: {search_path}")  # CSVファイル発見通知
+                        logger.debug(f"  発見: {search_path}")  # CSVファイル名表示
+                        logger.info(f"  CSVファイルを発見: {search_path}")  # CSVファイル発見通知
                 else:
-                    logger.debug(f"  ⚠️ {target_csv_name}が見つかりません")  # CSVファイルなしログ
-                    logger.info(f"  ℹ️ {channel_name}/csvフォルダ内に{target_csv_name}がありません")  # 詳細情報
-            logger.info(f"📝 合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
+                    logger.debug(f"  {target_csv_name}が見つかりません")  # CSVファイルなしログ
+                    logger.info(f"  {channel_name}/csvフォルダ内に{target_csv_name}がありません")  # 詳細情報
+            logger.info(f"合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
 
             return csv_files
 
         except HttpError as e:
-            logger.error(f"⚠️ CSVファイルの取得に失敗しました: {e}")  # エラーログ
+            logger.error(f"CSVファイルの取得に失敗しました: {e}")  # エラーログ
             return []
 
     def read_csv_content(self, file_id: str, file_name: str) -> List[Dict[str, str]]:
@@ -419,7 +419,7 @@ class DailyAggregator:
             csv_text = file_content.read().decode('utf-8-sig')  # BOMを自動除去
 
             if not csv_text:
-                logger.warning(f"⚠️ CSVファイルが空です: {file_name}")  # 空ファイル警告
+                logger.warning(f"CSVファイルが空です: {file_name}")  # 空ファイル警告
                 return []
 
             lines = csv_text.strip().split('\n')
@@ -428,25 +428,25 @@ class DailyAggregator:
 
             # ヘッダー行を取得（改行コードも除去）
             headers = [h.strip() for h in lines[0].split(',')]
-            logger.debug(f"📋 CSVヘッダー: {headers}")  # ヘッダー情報ログ
+            logger.debug(f"CSVヘッダー: {headers}")  # ヘッダー情報ログ
 
             # 日付列の確認
             if 'datetime_jst' in headers:
-                logger.info(f"✅ datetime_jst列を発見（インデックス: {headers.index('datetime_jst')}）")  # 日付列確認
+                logger.info(f"datetime_jst列を発見（インデックス: {headers.index('datetime_jst')}）")  # 日付列確認
             else:
-                logger.warning(f"⚠️ datetime_jst列が見つかりません。利用可能な列: {headers}")  # 日付列なし警告
+                logger.warning(f"datetime_jst列が見つかりません。利用可能な列: {headers}")  # 日付列なし警告
 
             # データ行をパース
             records = []
             # 両方の日付形式をサポート（ゼロパディングあり/なし）
             target_date_str = self.target_date.strftime('%Y/%m/%d')  # 対象日付文字列（ゼロパディングあり）
             target_date_str_no_pad = self.target_date.strftime('%Y/%-m/%-d') if os.name != 'nt' else self.target_date.strftime('%Y/%#m/%#d')  # ゼロパディングなし
-            logger.info(f"🔍 検索対象日付: {target_date_str} または {target_date_str_no_pad}")  # 検索日付ログ
+            logger.info(f"検索対象日付: {target_date_str} または {target_date_str_no_pad}")  # 検索日付ログ
 
             # 最初の数行をサンプル表示
             sample_count = min(3, len(lines) - 1)  # 最大3行表示
             if sample_count > 0:
-                logger.debug(f"📊 CSVデータサンプル（最初の{sample_count}行）:")  # サンプルデータヘッダー
+                logger.debug(f"CSVデータサンプル（最初の{sample_count}行）:")  # サンプルデータヘッダー
 
             for idx, line in enumerate(lines[1:]):
                 values = line.split(',')
@@ -470,13 +470,13 @@ class DailyAggregator:
                         # VCチャンネル名を追加（ファイル名から拡張子を除いたもの）
                         record['vc_name'] = file_name.replace('.csv', '')
                         records.append(record)
-                        logger.debug(f"  ✅ マッチ: {datetime_value}")  # マッチしたレコード
+                        logger.debug(f"  マッチ: {datetime_value}")  # マッチしたレコード
 
-            logger.info(f"📖 {file_name}から{target_date_str}の{len(records)}件のデータを読み込みました")  # 読み込み結果ログ
+            logger.info(f"{file_name}から{target_date_str}の{len(records)}件のデータを読み込みました")  # 読み込み結果ログ
             return records
 
         except Exception as e:
-            logger.error(f"⚠️ CSVファイル {file_name} の読み込みに失敗しました: {e}")  # エラーログ
+            logger.error(f"CSVファイル {file_name} の読み込みに失敗しました: {e}")  # エラーログ
             return []
 
     def aggregate_user_data(self, all_records: List[Dict[str, str]]) -> Dict[str, Dict[str, Any]]:
@@ -509,7 +509,7 @@ class DailyAggregator:
         for user_id, data in user_data.items():
             data['vc_channels'] = ', '.join(sorted(data['vc_channels']))
 
-        logger.info(f"📈 {len(user_data)}名のユーザーデータを集計しました")  # 集計結果ログ
+        logger.info(f"{len(user_data)}名のユーザーデータを集計しました")  # 集計結果ログ
         return dict(user_data)
 
     def get_sheet_id(self) -> Optional[str]:
@@ -527,15 +527,15 @@ class DailyAggregator:
 
             sheets = results.get('files', [])
             if not sheets:
-                logger.error(f"⚠️ スプレッドシートが見つかりません: {self.sheet_name}")  # シート未発見エラー
+                logger.error(f"スプレッドシートが見つかりません: {self.sheet_name}")  # シート未発見エラー
                 return None
 
             sheet_id = sheets[0]['id']
-            logger.info(f"📊 スプレッドシートを発見: {self.sheet_name}")  # シート発見ログ
+            logger.info(f"スプレッドシートを発見: {self.sheet_name}")  # シート発見ログ
             return sheet_id
 
         except Exception as e:
-            logger.error(f"⚠️ シートIDの取得に失敗しました: {e}")  # エラーログ
+            logger.error(f"シートIDの取得に失敗しました: {e}")  # エラーログ
             return None
 
     def ensure_sheets_exist(self, sheet_id: str):
@@ -562,7 +562,7 @@ class DailyAggregator:
                             }
                         }
                     })
-                    logger.info(f"📄 新しいシートを作成中: {sheet_name}")  # シート作成ログ
+                    logger.info(f"新しいシートを作成中: {sheet_name}")  # シート作成ログ
 
             if requests:
                 self.sheets_service.spreadsheets().batchUpdate(
@@ -574,7 +574,7 @@ class DailyAggregator:
                 self._set_sheet_headers(sheet_id)
 
         except Exception as e:
-            logger.error(f"⚠️ シートの確認・作成に失敗しました: {e}")  # エラーログ
+            logger.error(f"シートの確認・作成に失敗しました: {e}")  # エラーログ
             raise
 
     def _set_sheet_headers(self, sheet_id: str):
@@ -599,10 +599,10 @@ class DailyAggregator:
                 body={'values': stats_headers}
             ).execute()
 
-            logger.info("✅ シートのヘッダーを設定しました")  # ヘッダー設定成功ログ
+            logger.info("シートのヘッダーを設定しました")  # ヘッダー設定成功ログ
 
         except Exception as e:
-            logger.error(f"⚠️ ヘッダーの設定に失敗しました: {e}")  # エラーログ
+            logger.error(f"ヘッダーの設定に失敗しました: {e}")  # エラーログ
 
     def post_to_slack(self, user_data: Dict[str, Dict[str, Any]], stats_dict: Dict[str, Dict[str, Any]]) -> str:
         """集計結果をSlackに投稿"""
@@ -647,23 +647,23 @@ class DailyAggregator:
                         channel=self.slack_channel,
                         text=message
                     )
-                    logger.info(f"✅ Slackにレポートを投稿しました")  # 投稿成功
+                    logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
                 except SlackApiError as e:
-                    logger.warning(f"⚠️ Slack投稿エラー: {e.response['error']}")  # Slackエラー
-                    logger.info("📝 コンソールに出力します")  # コンソール出力
+                    logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
+                    logger.info("コンソールに出力します")  # コンソール出力
                     print(message)
             else:
                 # Discord出力モードまたはSlackが設定されていない場合はコンソール出力
-                logger.info("📝 コンソールに出力します")  # コンソール出力
+                logger.info("コンソールに出力します")  # コンソール出力
                 print(message)
 
             return message
 
         except SlackApiError as e:
-            logger.error(f"❌ Slack投稿エラー: {e.response['error']}")  # Slackエラー
+            logger.error(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
             raise
         except Exception as e:
-            logger.error(f"❌ レポート作成エラー: {e}")  # エラー
+            logger.error(f"レポート作成エラー: {e}")  # エラー
             raise
 
     def get_user_statistics_sheet_id(self) -> Optional[str]:
@@ -684,7 +684,7 @@ class DailyAggregator:
             files = results.get('files', [])  # ファイルリスト
             if files:
                 sheet_id = files[0]['id']  # シートID
-                logger.info(f"📊 既存のマッピングシートを使用: {file_name} (ID: {sheet_id})")  # 発見
+                logger.info(f"既存のマッピングシートを使用: {file_name} (ID: {sheet_id})")  # 発見
 
                 # statisticsタブが存在するか確認、なければ作成
                 spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()  # シート情報取得
@@ -714,16 +714,16 @@ class DailyAggregator:
                         body={'values': headers}
                     ).execute()  # ヘッダー書き込み
 
-                    logger.info("✅ statisticsタブを作成しました")  # タブ作成ログ
+                    logger.info("statisticsタブを作成しました")  # タブ作成ログ
 
                 return sheet_id  # ID返却
             else:
-                logger.warning(f"⚠️ マッピングシートが見つかりません: {file_name}")  # シートなし
-                logger.info("📝 統計情報の保存をスキップします")  # スキップ
+                logger.warning(f"マッピングシートが見つかりません: {file_name}")  # シートなし
+                logger.info("統計情報の保存をスキップします")  # スキップ
                 return None
 
         except Exception as e:
-            logger.error(f"❌ マッピングシートの取得エラー: {e}")  # エラー
+            logger.error(f"マッピングシートの取得エラー: {e}")  # エラー
             return None
 
     def update_user_statistics(self, user_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -733,7 +733,7 @@ class DailyAggregator:
             sheet_id = self.get_user_statistics_sheet_id()  # シートID
 
             if not sheet_id:
-                logger.warning("⚠️ 統計シートが見つからないため、統計情報の更新をスキップします")  # スキップログ
+                logger.warning("統計シートが見つからないため、統計情報の更新をスキップします")  # スキップログ
                 # 統計情報なしで返却（連続日数は1日として返す）
                 for user_id in user_data:
                     user_data[user_id]['consecutive_days'] = 1
@@ -816,23 +816,23 @@ class DailyAggregator:
                 body={'values': rows}
             ).execute()  # 書き込み
 
-            logger.info(f"✅ {len(stats_dict)}名のユーザー統計情報を更新しました")  # 更新成功ログ
+            logger.info(f"{len(stats_dict)}名のユーザー統計情報を更新しました")  # 更新成功ログ
 
             return stats_dict  # 統計情報を返却
 
         except Exception as e:
-            logger.error(f"⚠️ ユーザー統計情報の更新に失敗しました: {e}")  # エラーログ
+            logger.error(f"ユーザー統計情報の更新に失敗しました: {e}")  # エラーログ
             return {}  # 空の辞書を返却
 
     def run(self) -> str:
         """集計処理のメイン実行"""
         try:
-            logger.info(f"🚀 {self.target_date}のデータ集計を開始します")  # 開始ログ
+            logger.info(f"{self.target_date}のデータ集計を開始します")  # 開始ログ
 
             # 1. CSVファイル一覧を取得
             csv_files = self.get_csv_files_from_drive()
             if not csv_files:
-                logger.warning("⚠️ CSVファイルが見つかりませんでした")  # CSVファイルなし警告
+                logger.warning("CSVファイルが見つかりませんでした")  # CSVファイルなし警告
                 return
 
             # 2. 各CSVファイルからデータを読み込み
@@ -841,13 +841,13 @@ class DailyAggregator:
                 records = self.read_csv_content(csv_file['id'], csv_file['name'])
                 all_records.extend(records)
 
-            logger.info(f"📖 合計{len(all_records)}件のレコードを読み込みました")  # 総レコード数ログ
+            logger.info(f"合計{len(all_records)}件のレコードを読み込みました")  # 総レコード数ログ
 
             # 3. ユーザーごとにデータを集約
             user_data = self.aggregate_user_data(all_records)
 
             if not user_data:
-                logger.info("📈 集計するユーザーデータがありません")  # 集約データなしログ
+                logger.info("集計するユーザーデータがありません")  # 集約データなしログ
                 return "本日の参加者はいませんでした。"
 
             # 4. ユーザー統計情報を更新
@@ -856,12 +856,12 @@ class DailyAggregator:
             # 5. Slackに投稿
             report = self.post_to_slack(user_data, stats_dict)  # Slack投稿
 
-            logger.info("🎉 データ集計が正常に完了しました！")  # 完了ログ
+            logger.info("データ集計が正常に完了しました！")  # 完了ログ
 
             return report  # レポート文字列を返す
 
         except Exception as e:
-            logger.error(f"⚠️ データ集計に失敗しました: {e}")  # エラーログ
+            logger.error(f"データ集計に失敗しました: {e}")  # エラーログ
             raise
 
     def load_user_mapping(self):
@@ -918,7 +918,7 @@ class DailyAggregator:
                 if streak_days > 1:  # 2日以上連続の場合
                     message += f"（{streak_days}日連続ログイン達成！）"  # 連続日数表示
 
-                lines.append(f"  ✅ {message}")  # メッセージ追加
+                lines.append(f"  {message}")  # メッセージ追加
 
             lines.append("")  # 空行
             lines.append("="*60)  # 区切り線
@@ -926,7 +926,7 @@ class DailyAggregator:
             return "\n".join(lines)  # 改行で結合して返す
 
         except Exception as e:
-            logger.error(f"⚠️ レポート生成でエラー: {e}")  # エラーログ
+            logger.error(f"レポート生成でエラー: {e}")  # エラーログ
             return f"レポートの生成に失敗しました: {e}"  # エラーメッセージ
 
     def load_user_mapping(self):
@@ -949,12 +949,12 @@ class DailyAggregator:
 
             sheets = results.get('files', [])  # 結果取得
             if not sheets:
-                logger.warning(f"⚠️ ユーザー名対照表が見つかりません: {mapping_sheet_name}")  # 対照表なし警告
-                logger.info("👉 create_user_mapping_sheet.pyを実行して対照表を作成してください")  # 作成指示
+                logger.warning(f"ユーザー名対照表が見つかりません: {mapping_sheet_name}")  # 対照表なし警告
+                logger.info("create_user_mapping_sheet.pyを実行して対照表を作成してください")  # 作成指示
                 return
 
             sheet_id = sheets[0]['id']  # シートID取得
-            logger.info(f"📝 ユーザー名対照表を読み込み中: {mapping_sheet_name}")  # 読み込みログ
+            logger.info(f"ユーザー名対照表を読み込み中: {mapping_sheet_name}")  # 読み込みログ
 
             # データを読み込み
             range_name = 'A2:E100'  # ヘッダーを除く100行まで
@@ -965,7 +965,7 @@ class DailyAggregator:
 
             values = result.get('values', [])  # データ取得
             if not values:
-                logger.warning("⚠️ 対照表にデータがありません")  # データなし警告
+                logger.warning("対照表にデータがありません")  # データなし警告
                 return
 
             # マッピングを作成
@@ -985,10 +985,10 @@ class DailyAggregator:
                             'slack_mention': slack_mention
                         }
 
-            logger.info(f"✅ {len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
+            logger.info(f"{len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
 
         except Exception as e:
-            logger.warning(f"⚠️ ユーザーマッピングの読み込みでエラー: {e}")  # エラーログ
+            logger.warning(f"ユーザーマッピングの読み込みでエラー: {e}")  # エラーログ
             # エラーがあっても処理を続行
 
     def get_slack_mention(self, discord_id: str, discord_name: str) -> str:
@@ -1051,13 +1051,13 @@ def main():
         try:
             target_date = datetime.strptime(args.date, '%Y-%m-%d').date()
         except ValueError:
-            logger.error(f"⚠️ 日付フォーマットが無効です: {args.date}。YYYY-MM-DD形式で指定してください")  # 日付フォーマットエラー
+            logger.error(f"日付フォーマットが無効です: {args.date}。YYYY-MM-DD形式で指定してください")  # 日付フォーマットエラー
             sys.exit(1)
 
     # 環境の設定
     env = Environment(args.env)  # 環境を設定
     env_name = {Environment.PRD: "本番環境", Environment.TST: "テスト環境", Environment.DEV: "開発環境"}[env]  # 環境名取得
-    logger.info(f"🌐 {env_name}で実行中です")  # 環境ログ出力
+    logger.info(f"{env_name}で実行中です")  # 環境ログ出力
 
     # 集計処理を実行
     aggregator = DailyAggregator(target_date, env, args.output)  # 出力パターンを渡す
