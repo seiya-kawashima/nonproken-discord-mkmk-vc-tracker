@@ -183,15 +183,8 @@ class DailyAggregator:
     def _load_user_mapping(self):
         """ユーザーマッピングシートからデータを読み込み"""
         try:
-            # ハードコードされたシートIDまたは名前で検索
-            # 開発環境用のシートID
-            hardcoded_sheet_ids = {
-                '2_DEV': '1YbYoDIiQfA1NNPl2hiRSZ6iYXQ22E-Pk1-WWQ9i0PWk',
-                '1_TST': '',  # テスト環境用（未作成）
-                '0_PRD': ''   # 本番環境用（未作成）
-            }
-
-            sheet_id = hardcoded_sheet_ids.get(self.suffix)
+            # config.pyから設定されたシートIDを取得
+            sheet_id = self.config.get('user_mapping_sheet_id')
 
             if not sheet_id:
                 # Drive APIでシートを検索
