@@ -35,7 +35,7 @@ from config import get_config, get_environment_from_arg, Environment
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}")  # コンソール出力（メッセージを先に表示）
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名を先に表示）
 
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
