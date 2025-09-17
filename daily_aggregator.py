@@ -764,19 +764,23 @@ class DailyAggregator:
                     # 既存ユーザーの更新
                     stats = stats_dict[user_id]
 
-                    # 連続ログイン日数の計算（営業日ベース）
-                    if stats['last_login_date'] == previous_business_day_str:
-                        stats['consecutive_days'] += 1  # 前営業日もログインしていた
-                    else:
-                        stats['consecutive_days'] = 1  # 連続が途切れた
+                    # 最終ログイン日が今日でない場合のみ更新（同じ日の重複カウントを防ぐ）
+                    if stats['last_login_date'] != today_str:
+                        # 連続ログイン日数の計算（営業日ベース）
+                        if stats['last_login_date'] == previous_business_day_str:
+                            stats['consecutive_days'] += 1  # 前営業日もログインしていた
+                        else:
+                            stats['consecutive_days'] = 1  # 連続が途切れた
 
-                    # 累計ログイン日数
-                    stats['total_days'] += 1
+                        # 累計ログイン日数（今日が新しい日の場合のみインクリメント）
+                        stats['total_days'] += 1
 
-                    # 最終ログイン日と更新日時を更新
-                    stats['last_login_date'] = today_str
-                    stats['last_updated'] = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-                    stats['user_name'] = user_data[user_id]['user_name']  # ユーザー名も更新
+                        # 最終ログイン日と更新日時を更新
+                        stats['last_login_date'] = today_str
+                        stats['last_updated'] = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+
+                    # ユーザー名は常に最新のものに更新
+                    stats['user_name'] = user_data[user_id]['user_name']
 
                 else:
                     # 新規ユーザー
