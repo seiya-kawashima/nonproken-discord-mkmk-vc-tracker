@@ -485,10 +485,10 @@ class DailyAggregator:
 
             # user_statisticsのヘッダー
             stats_headers = [['user_id', 'user_name', 'last_login_date', 'consecutive_days',
-                             'monthly_days', 'total_days', 'last_updated']]
+                             'total_days', 'last_updated']]
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
-                range='user_statistics!A1:G1',
+                range='user_statistics!A1:F1',
                 valueInputOption='RAW',
                 body={'values': stats_headers}
             ).execute()
@@ -560,8 +560,7 @@ class DailyAggregator:
                         'user_name': row[1],
                         'last_login_date': row[2],
                         'consecutive_days': int(row[3]) if row[3] else 0,
-                        'monthly_days': int(row[4]) if row[4] else 0,
-                        'total_days': int(row[5]) if row[5] else 0,
+                        'total_days': int(row[4]) if row[4] else 0,
                         'last_updated': row[6]
                     }
 
@@ -582,13 +581,6 @@ class DailyAggregator:
                     else:
                         stats['consecutive_days'] = 1  # 連続が途切れた
 
-                    # 月間ログイン日数の計算
-                    last_login_date = datetime.strptime(stats['last_login_date'], '%Y/%m/%d').date()
-                    if last_login_date.month == current_month:
-                        stats['monthly_days'] += 1  # 同じ月
-                    else:
-                        stats['monthly_days'] = 1  # 月が変わった
-
                     # 累計ログイン日数
                     stats['total_days'] += 1
 
@@ -603,14 +595,13 @@ class DailyAggregator:
                         'user_name': user_data[user_id]['user_name'],
                         'last_login_date': today_str,
                         'consecutive_days': 1,
-                        'monthly_days': 1,
                         'total_days': 1,
                         'last_updated': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                     }
 
             # シートに書き込むデータを準備
             rows = [['user_id', 'user_name', 'last_login_date', 'consecutive_days',
-                    'monthly_days', 'total_days', 'last_updated']]  # ヘッダー
+                    'total_days', 'last_updated']]  # ヘッダー
 
             for user_id, stats in sorted(stats_dict.items()):
                 rows.append([
@@ -618,7 +609,6 @@ class DailyAggregator:
                     stats['user_name'],
                     stats['last_login_date'],
                     stats['consecutive_days'],
-                    stats['monthly_days'],
                     stats['total_days'],
                     stats['last_updated']
                 ])
@@ -626,7 +616,7 @@ class DailyAggregator:
             # シート全体を更新
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
-                range='user_statistics!A:G',
+                range='user_statistics!A:F',
                 valueInputOption='RAW',
                 body={'values': rows}
             ).execute()
