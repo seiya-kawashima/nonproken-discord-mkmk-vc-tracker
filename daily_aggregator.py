@@ -63,7 +63,7 @@ logger.add(f"logs/csv_fetch_{current_datetime}.log",
           filter=lambda record: "get_csv" in record["function"] or "read_csv" in record["function"])  # CSV取得ログ
 
 # 3. 集計処理のログ
-logger.add(f"logs/aggregation_{current_date}.log",
+logger.add(f"logs/aggregation_{current_datetime}.log",
           rotation="10 MB",
           retention="7 days",
           level="INFO",
