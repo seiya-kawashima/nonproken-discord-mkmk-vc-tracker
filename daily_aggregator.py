@@ -183,17 +183,38 @@ class DailyAggregator:
     def _load_user_mapping(self):
         """ユーザーマッピングシートからデータを読み込み"""
         try:
-            # シートIDが設定されていない場合はエラー
-            if not self.google_drive_discord_slack_mapping_sheet_id:
-                logger.error(f"❌ GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{self.suffix}が設定されていません")  # 設定エラー
-                logger.error(f"   環境変数にシートIDを設定してください: GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{self.suffix}=<シートID>")  # 設定方法
-                raise ValueError(f"Discord-SlackマッピングシートIDが設定されていません（GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{self.suffix}）")  # エラー
+            # パスが設定されていない場合はスキップ
+            if not self.google_drive_discord_slack_mapping_sheet_path:
+                logger.info("📓 Discord-Slackマッピングシートが設定されていません。Discord名を使用します")  # 設定なし
+                return
 
-            logger.info(f"📖 Discord-SlackマッピングシートIDを使用: {self.google_drive_discord_slack_mapping_sheet_id}")  # シートID使用
+            # パスからフォルダとファイル名を取得
+            path_parts = self.google_drive_discord_slack_mapping_sheet_path.split('/')  # パスを分割
+            file_name = path_parts[-1]  # ファイル名（最後の要素）
+
+            logger.info(f"📖 Discord-Slackマッピングシートを検索: {self.google_drive_discord_slack_mapping_sheet_path}")  # シート検索
+
+            # Google Driveでスプレッドシートを検索
+            query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false"  # 検索クエリ
+            results = self.drive_service.files().list(
+                q=query,
+                fields='files(id, name)',
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
+            ).execute()  # 検索実行
+
+            items = results.get('files', [])  # 検索結果
+            if not items:
+                logger.warning(f"⚠️ Discord-Slackマッピングシートが見つかりません: {file_name}")  # シートなし
+                logger.info("📓 Discord名を使用します")  # フォールバック
+                return
+
+            sheet_id = items[0]['id']  # シートID取得
+            logger.info(f"✅ マッピングシートを発見: {file_name} (ID: {sheet_id})")  # シート発見
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=self.google_drive_discord_slack_mapping_sheet_id,
+                spreadsheetId=sheet_id,
                 range='user_mapping!A2:C1000'  # ヘッダーを除くデータ範囲
             ).execute()  # データ取得
 
