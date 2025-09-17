@@ -778,24 +778,44 @@ class DailyAggregator:
             previous_business_day_str = previous_business_day.strftime('%Y/%m/%d')  # 前営業日文字列
 
             for user_id in user_data:
+                user_name = user_data[user_id]['user_name']
+
                 if user_id in stats_dict:
                     # 既存ユーザーの更新
                     stats = stats_dict[user_id]
+                    old_consecutive = stats['consecutive_days']
+                    old_total = stats['total_days']
+                    old_last_login = stats['last_login_date']
+
+                    # デバッグ：更新前の状態を出力（blueさんの場合）
+                    if 'blue' in user_name.lower():
+                        logger.debug(f"=== {user_name} の統計更新 ===")
+                        logger.debug(f"  更新前: 最終ログイン={old_last_login}, 連続={old_consecutive}日, 累計={old_total}日")
+                        logger.debug(f"  今日: {today_str}, 前営業日: {previous_business_day_str}")
 
                     # 最終ログイン日が今日でない場合のみ更新（同じ日の重複カウントを防ぐ）
                     if stats['last_login_date'] != today_str:
                         # 連続ログイン日数の計算（営業日ベース）
                         if stats['last_login_date'] == previous_business_day_str:
                             stats['consecutive_days'] += 1  # 前営業日もログインしていた
+                            if 'blue' in user_name.lower():
+                                logger.debug(f"  → 連続ログイン継続: {old_consecutive} → {stats['consecutive_days']}日")
                         else:
                             stats['consecutive_days'] = 1  # 連続が途切れた
+                            if 'blue' in user_name.lower():
+                                logger.debug(f"  → 連続ログインリセット: {old_consecutive} → 1日（最終ログイン{old_last_login}は前営業日でない）")
 
                         # 累計ログイン日数（今日が新しい日の場合のみインクリメント）
                         stats['total_days'] += 1
+                        if 'blue' in user_name.lower():
+                            logger.debug(f"  → 累計日数更新: {old_total} → {stats['total_days']}日")
 
                         # 最終ログイン日と更新日時を更新
                         stats['last_login_date'] = today_str
                         stats['last_updated'] = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+                    else:
+                        if 'blue' in user_name.lower():
+                            logger.debug(f"  → 既に今日のデータ処理済みのためスキップ")
 
                     # ユーザー名は常に最新のものに更新
                     stats['user_name'] = user_data[user_id]['user_name']
@@ -809,6 +829,9 @@ class DailyAggregator:
                         'total_days': 1,
                         'last_updated': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                     }
+                    if 'blue' in user_name.lower():
+                        logger.debug(f"=== {user_name} 新規登録 ===")
+                        logger.debug(f"  初回ログイン: {today_str}, 連続=1日, 累計=1日")
 
             # シートに書き込むデータを準備
             rows = [['user_id', 'user_name', 'last_login_date', 'consecutive_days',
