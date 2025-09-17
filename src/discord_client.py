@@ -11,21 +11,40 @@ from loguru import logger  # ログ出力用（loguru）
 class DiscordVCPoller:
     """Discord VCの在室メンバーを取得するクラス"""  # クラスの説明
 
-    def __init__(self, token: str, allowed_channel_ids: List[str]):
+    def __init__(self, token: str, allowed_channel_ids: List[str], mask_usernames: bool = False):
         """初期化処理
 
         Args:
             token: Discord Botトークン
             allowed_channel_ids: 監視対象のVCチャンネルIDリスト
+            mask_usernames: ユーザー名をマスキングするかどうか（本番・テスト環境用）
         """  # 初期化処理の説明
         self.token = token  # Botトークンを保存
         self.allowed_channel_ids = allowed_channel_ids  # 監視対象チャンネルIDを保存
+        self.mask_usernames = mask_usernames  # ユーザー名マスキング設定
         self.intents = discord.Intents.default()  # デフォルトのIntentsを取得
         self.intents.voice_states = True  # ボイスステート権限を有効化
         self.intents.guilds = True  # ギルド情報権限を有効化
         self.intents.members = True  # メンバー情報権限を有効化
         self.client = None  # クライアントは後で作成
         self.members_data = []  # メンバー情報を格納するリスト
+
+    def _mask_username(self, username: str) -> str:
+        """ユーザー名をマスキング（最初の3文字のみ表示）
+
+        Args:
+            username: 元のユーザー名
+
+        Returns:
+            マスキングされたユーザー名
+        """
+        if not self.mask_usernames or not username:
+            return username  # マスキング不要または空文字の場合はそのまま返す
+
+        if len(username) <= 3:
+            return username + "***"  # 3文字以下の場合は全体表示+マスク
+        else:
+            return username[:3] + "*" * (len(username) - 3)  # 最初の3文字+残りをマスク
 
     async def get_vc_members(self) -> List[Dict[str, Any]]:
         """VCに在室しているメンバー情報を取得
