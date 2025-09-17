@@ -86,8 +86,6 @@ jobs:
         DISCORD_VOICE_CHANNEL_IDS_0_PRD: ${{ secrets.DISCORD_VOICE_CHANNEL_IDS_0_PRD }}
         SLACK_BOT_TOKEN_0_PRD: ${{ secrets.SLACK_BOT_TOKEN_0_PRD }}
         SLACK_CHANNEL_ID_0_PRD: ${{ secrets.SLACK_CHANNEL_ID_0_PRD }}
-        SLACK_USER_MAPPING_SHEET_URL_0_PRD: ${{ secrets.SLACK_USER_MAPPING_SHEET_URL_0_PRD }}
-        SLACK_USER_MAPPING_SHEET_TAB_NAME_0_PRD: ${{ secrets.SLACK_USER_MAPPING_SHEET_TAB_NAME_0_PRD }}
       run: |
         echo "本番環境で日次集計処理を実行します"
         python daily_aggregator.py --env 0
