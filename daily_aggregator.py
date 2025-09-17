@@ -1103,22 +1103,24 @@ def main():
 
     args = parser.parse_args()
 
-    # デバッグモードの設定
-    if args.debug:
-        logger.remove()  # 既存のハンドラーを削除
-        logger.add(sys.stderr, level="DEBUG", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # DEBUGレベルでコンソール出力（ファイル名と関数名を先に表示）
+    # 現在の日時を取得（YYYYMMDD_HHMMSS形式）
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")  # 日時取得（時分秒まで）
 
-        # デバッグ時も日付付きファイル名でログ出力
-        from datetime import datetime
-        debug_date = datetime.now().strftime("%Y%m%d")  # 日付取得
+    # loguruの設定
+    logger.remove()  # デフォルトハンドラーを削除
 
-        # 全ての処理を含むデバッグログ
-        logger.add(f"logs/debug_{debug_date}.log",
-                  rotation="10 MB",
-                  retention="7 days",
-                  level="DEBUG",
-                  encoding="utf-8",
-                  format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # DEBUGレベルでファイル出力
+    # コンソール出力の設定（デバッグモードで異なるレベル）
+    console_level = "DEBUG" if args.debug else "INFO"
+    logger.add(sys.stderr, level=console_level,
+              format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")
+
+    # ファイル出力の設定（常にDEBUGレベルで記録）
+    logger.add(f"logs/daily_aggregator_{current_datetime}.log",
+              rotation="10 MB",
+              retention="7 days",
+              level="DEBUG",  # 常にDEBUGレベルで記録
+              encoding="utf-8",
+              format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")
 
     # 対象日付の設定
     target_date = None
