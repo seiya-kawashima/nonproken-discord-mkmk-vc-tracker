@@ -89,7 +89,12 @@ async def main(env_arg=None):
         logger.info("Discord VCからメンバー情報を取得中...")  # 処理開始ログ
         # 本番・テスト環境ではユーザー名をマスキング
         mask_usernames = env in [Environment.PRD, Environment.TST]  # 本番・テスト環境の判定
-        discord_client = DiscordVCPoller(discord_token, discord_channel_ids, mask_usernames=mask_usernames)  # Discordクライアント作成
+        discord_client = DiscordVCPoller(
+            discord_token,
+            discord_channel_ids,
+            mask_usernames=mask_usernames,
+            excluded_users=discord_excluded_users
+        )  # Discordクライアント作成（除外ユーザー設定付き）
         vc_members = await discord_client.get_vc_members()  # VCメンバー取得
         
         if not vc_members:  # メンバーがいない場合
