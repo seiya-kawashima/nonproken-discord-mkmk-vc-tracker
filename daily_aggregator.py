@@ -43,41 +43,13 @@ os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在�
 # 現在の日時を取得（YYYYMMDD_HHMMSS形式）
 current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")  # 日時取得（時分秒まで）
 
-# 処理別のログファイル設定
-# 1. メイン処理のログ
+# メイン処理のログ（すべてのログを1つのファイルに集約）
 logger.add(f"logs/daily_aggregator_{current_datetime}.log",
           rotation="10 MB",
           retention="7 days",
           level="INFO",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
-          filter=lambda record: "get_csv" not in record["function"] and "aggregate" not in record["function"])  # メイン処理ログ
-
-# 2. CSVファイル取得処理のログ
-logger.add(f"logs/csv_fetch_{current_datetime}.log",
-          rotation="10 MB",
-          retention="7 days",
-          level="DEBUG",
-          encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
-          filter=lambda record: "get_csv" in record["function"] or "read_csv" in record["function"])  # CSV取得ログ
-
-# 3. 集計処理のログ
-logger.add(f"logs/aggregation_{current_datetime}.log",
-          rotation="10 MB",
-          retention="7 days",
-          level="INFO",
-          encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
-          filter=lambda record: "aggregate" in record["function"] or "write" in record["function"] or "update" in record["function"])  # 集計処理ログ
-
-# 4. エラーログ（全てのエラーを記録）
-logger.add(f"logs/error_{current_datetime}.log",
-          rotation="10 MB",
-          retention="30 days",
-          level="ERROR",
-          encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # エラーログ
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # すべての処理を1つのログファイルに記録
 
 
 class DailyAggregator:
