@@ -12,7 +12,7 @@ import json
 import base64
 import argparse
 from datetime import datetime, timedelta, date
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from collections import defaultdict
 import io
 import jpholiday  # 日本の祝日判定用
@@ -666,14 +666,14 @@ class DailyAggregator:
             logger.error(f"❌ レポート作成エラー: {e}")  # エラー
             raise
 
-    def get_user_statistics_sheet_id(self) -> str:
-        """ユーザー統計シートのIDを取得または作成"""
+    def get_user_statistics_sheet_id(self) -> Optional[str]:
+        """Discord-Slackマッピングシートのスプレッドシート IDを取得"""
         try:
-            # シート名を生成
-            sheet_name = f"UserStatistics_{self.suffix}"  # 統計シート名
+            # マッピングシートのファイル名
+            file_name = f"discord_slack_mapping_{self.suffix}"  # ファイル名
 
-            # シートを検索
-            query = f"name='{sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+            # Google Driveでシートを検索
+            query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
             results = self.drive_service.files().list(
                 q=query,
                 fields="files(id, name)",
@@ -683,44 +683,62 @@ class DailyAggregator:
 
             files = results.get('files', [])  # ファイルリスト
             if files:
-                logger.info(f"📊 既存の統計シートを発見: {sheet_name}")  # 発見
-                return files[0]['id']  # シートID返却
+                sheet_id = files[0]['id']  # シートID
+                logger.info(f"📊 既存のマッピングシートを使用: {file_name} (ID: {sheet_id})")  # 発見
 
-            # シートが存在しない場合は作成
-            logger.info(f"📄 新規統計シートを作成: {sheet_name}")  # 作成ログ
-            spreadsheet = {
-                'properties': {'title': sheet_name},
-                'sheets': [{
-                    'properties': {
-                        'title': 'statistics',
-                        'gridProperties': {'frozenRowCount': 1}
+                # statisticsタブが存在するか確認、なければ作成
+                spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()  # シート情報取得
+                sheet_titles = [sheet['properties']['title'] for sheet in spreadsheet.get('sheets', [])]  # タブ名リスト
+
+                if 'statistics' not in sheet_titles:
+                    # statisticsタブを追加
+                    request = {
+                        'addSheet': {
+                            'properties': {
+                                'title': 'statistics',
+                                'gridProperties': {'frozenRowCount': 1}
+                            }
+                        }
                     }
-                }]
-            }
+                    self.sheets_service.spreadsheets().batchUpdate(
+                        spreadsheetId=sheet_id,
+                        body={'requests': [request]}
+                    ).execute()  # タブ追加
 
-            result = self.sheets_service.spreadsheets().create(body=spreadsheet).execute()  # 作成
-            sheet_id = result['spreadsheetId']  # ID取得
+                    # ヘッダーを設定
+                    headers = [['user_id', 'user_name', 'last_login_date', 'consecutive_days', 'total_days', 'last_updated']]  # ヘッダー
+                    self.sheets_service.spreadsheets().values().update(
+                        spreadsheetId=sheet_id,
+                        range='statistics!A1:F1',
+                        valueInputOption='RAW',
+                        body={'values': headers}
+                    ).execute()  # ヘッダー書き込み
 
-            # ヘッダーを設定
-            headers = [['user_id', 'user_name', 'last_login_date', 'consecutive_days', 'total_days', 'last_updated']]  # ヘッダー
-            self.sheets_service.spreadsheets().values().update(
-                spreadsheetId=sheet_id,
-                range='statistics!A1:F1',
-                valueInputOption='RAW',
-                body={'values': headers}
-            ).execute()  # ヘッダー書き込み
+                    logger.info("✅ statisticsタブを作成しました")  # タブ作成ログ
 
-            return sheet_id  # ID返却
+                return sheet_id  # ID返却
+            else:
+                logger.warning(f"⚠️ マッピングシートが見つかりません: {file_name}")  # シートなし
+                logger.info("📝 統計情報の保存をスキップします")  # スキップ
+                return None
 
         except Exception as e:
-            logger.error(f"❌ 統計シートの取得/作成エラー: {e}")  # エラー
-            raise
+            logger.error(f"❌ マッピングシートの取得エラー: {e}")  # エラー
+            return None
 
     def update_user_statistics(self, user_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
         """ユーザー統計情報を更新して返却"""
         try:
             # 統計シートのIDを取得
             sheet_id = self.get_user_statistics_sheet_id()  # シートID
+
+            if not sheet_id:
+                logger.warning("⚠️ 統計シートが見つからないため、統計情報の更新をスキップします")  # スキップログ
+                # 統計情報なしで返却（連続日数は1日として返す）
+                for user_id in user_data:
+                    user_data[user_id]['consecutive_days'] = 1
+                    user_data[user_id]['total_days'] = 1
+                return user_data
 
             # 既存の統計情報を読み込み
             result = self.sheets_service.spreadsheets().values().get(
