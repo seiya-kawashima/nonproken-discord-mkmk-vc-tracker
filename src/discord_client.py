@@ -87,6 +87,7 @@ class DiscordVCPoller:
                                         "vc_name": channel.name,  # VCの名前
                                         "user_id": str(member.id),  # ユーザーID（文字列）
                                         "user_name": member.name,  # ユーザー名（識別番号は新システムでは不要）
+                                        "display_name": member.display_name,  # サーバーでの表示名（ニックネーム）
                                     }
                                     self.members_data.append(member_data)  # リストに追加
                                     member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
