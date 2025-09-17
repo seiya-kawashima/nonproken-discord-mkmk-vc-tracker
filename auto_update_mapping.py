@@ -116,7 +116,7 @@ class MappingUpdater:
             csv_reader = csv.DictReader(io.StringIO(csv_text))  # CSVリーダー作成
 
             for row in csv_reader:  # 各行に対して
-                discord_id = row.get('discord_id', '').strip()  # Discord ID取得
+                discord_id = row.get('user_id', '').strip()  # Discord ID取得
                 discord_name = row.get('user_name', '').strip()  # Discord名取得
 
                 if discord_id and discord_name:  # IDと名前がある場合
