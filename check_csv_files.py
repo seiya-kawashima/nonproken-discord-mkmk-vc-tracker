@@ -137,17 +137,41 @@ def main(env_arg=None):
     config = get_config(env)  # 環境設定を取得
 
     # 必要な設定値を取得
-    service_account_json = config['google_drive_service_account_json']  # 認証ファイルパス
+    service_account_json = config.get('google_drive_service_account_json')  # 認証ファイルパス
+    service_account_json_base64 = config.get('google_drive_service_account_json_base64')  # Base64認証情報
     shared_drive_id = config.get('google_drive_shared_drive_id')  # 共有ドライブID
     base_folder_name = config['google_drive_base_folder']  # ベースフォルダ名
     suffix = config['suffix']  # 環境サフィックス（0_PRD/1_TST/2_DEV）
     target_csv_file = f"{suffix}.csv"  # 探すCSVファイル名
 
-    # 認証
-    credentials = service_account.Credentials.from_service_account_file(
-        service_account_json,
-        scopes=['https://www.googleapis.com/auth/drive']
-    )
+    # 一時ファイル
+    temp_file = None
+
+    try:
+        # Base64認証情報がある場合はデコードして使用
+        if service_account_json_base64:
+            decoded_bytes = base64.b64decode(service_account_json_base64)  # Base64デコード
+            decoded_str = decoded_bytes.decode('utf-8')  # UTF-8文字列に変換
+            json_data = json.loads(decoded_str)  # JSONパース
+
+            # 一時ファイルに保存
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                json.dump(json_data, f)  # JSONデータを書き込み
+                temp_file = f.name  # ファイルパスを保存
+                service_account_json = temp_file  # 認証ファイルパスを更新
+
+            print("認証情報をBase64からデコードしました")  # デコード成功メッセージ
+
+        # 認証ファイルの存在確認
+        if not service_account_json or not os.path.exists(service_account_json):
+            print(f"エラー: 認証ファイルが見つかりません: {service_account_json}")  # エラー表示
+            sys.exit(1)  # 異常終了
+
+        # 認証
+        credentials = service_account.Credentials.from_service_account_file(
+            service_account_json,
+            scopes=['https://www.googleapis.com/auth/drive']
+        )
 
     # Drive APIサービスの構築
     service = build('drive', 'v3', credentials=credentials)
