@@ -101,6 +101,7 @@ class DailyAggregator:
         self.user_mapping = {}  # Discord ID→SlackメンションIDのマッピング
         self.slack_client = None  # Slack APIクライアント
         self.config = None  # 設定情報
+        self.mapping_sheet_id = None  # マッピングシートのID（キャッシュ用）
 
         # config.pyから設定を取得
         self.config = get_config(env)  # すべての設定を取得
@@ -210,6 +211,7 @@ class DailyAggregator:
                 return
 
             sheet_id = items[0]['id']  # シートID取得
+            self.mapping_sheet_id = sheet_id  # キャッシュに保存
             logger.info(f"マッピングシートを発見: {file_name} (ID: {sheet_id})")  # シート発見
 
             # シートからデータを読み込み
