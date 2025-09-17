@@ -193,7 +193,7 @@ class DailyAggregator:
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=sheet_id,
+                spreadsheetId=self.user_mapping_sheet_id,
                 range='user_mapping!A2:C1000'  # ヘッダーを除くデータ範囲
             ).execute()  # データ取得
 
