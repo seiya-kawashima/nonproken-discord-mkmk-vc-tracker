@@ -79,10 +79,11 @@ Google SheetsにDiscordユーザーIDとSlackメンションIDの対応表を管
 | notes | 備考 | テストユーザー |
 
 #### マッピング処理の流れ
-1. config.pyから`user_mapping_sheet_name`を取得
-2. Google Sheetsからマッピングデータを読み込み
-3. DiscordユーザーIDをキーにメンションIDを取得
-4. マッピングが存在しない場合はDiscord名を使用
+1. config.pyから`google_drive_discord_slack_mapping_sheet_id`を取得
+2. シートIDが設定されていない場合はエラー
+3. Google Sheetsからマッピングデータを読み込み
+4. DiscordユーザーIDをキーにメンションIDを取得
+5. マッピングが存在しない場合はDiscord名を使用
 
 ### Slack投稿設定
 
@@ -90,7 +91,7 @@ Google SheetsにDiscordユーザーIDとSlackメンションIDの対応表を管
 |---------|------|----------------|
 | Slack Botトークン | Slack APIの認証トークン | `slack_token` |
 | SlackチャンネルID | 投稿先のチャンネルID | `slack_channel` |
-| マッピングシート名 | ユーザーマッピング管理シート | `user_mapping_sheet_name` |
+| マッピングシートID | Discord-SlackユーザーマッピングシートID | `google_drive_discord_slack_mapping_sheet_id` |
 
 ### 統計データの保存
 ユーザー統計情報はGoogle Sheetsに保存され、次回の集計時に参照されます：
