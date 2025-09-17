@@ -15,7 +15,10 @@ from datetime import datetime, timedelta, date
 from typing import Dict, List, Optional, Any
 from collections import defaultdict
 import io
+import jpholiday  # 日本の祝日判定用
 from loguru import logger
+from slack_sdk import WebClient  # Slack APIクライアント
+from slack_sdk.errors import SlackApiError  # Slack APIエラー
 
 # Google Drive/Sheets API関連のインポート
 from google.oauth2 import service_account
@@ -95,17 +98,22 @@ class DailyAggregator:
         self.drive_service = None  # Google Drive APIサービス
         self.sheets_service = None  # Google Sheets APIサービス
         self.credentials = None  # 認証情報
-        self.user_mapping = {}  # Discord名→Slack名のマッピング
+        self.user_mapping = {}  # Discord ID→SlackメンションIDのマッピング
+        self.slack_client = None  # Slack APIクライアント
+        self.config = None  # 設定情報
 
         # config.pyから設定を取得
-        config = get_config(env)  # すべての設定を取得
+        self.config = get_config(env)  # すべての設定を取得
 
-        folder_structure = config.get('google_drive_folder_structure', {})  # Google Driveフォルダ構造
-        self.sheet_name = folder_structure.get('spreadsheet', f"もくもくトラッカー_{config['suffix']}")  # Sheets名
-        self.google_drive_folder_path = config.get('google_drive_folder_path', config.get('folder_path'))  # Google Driveベースフォルダパス
-        self.google_drive_folder_structure = config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
-        self.allowed_vc_ids = config.get('discord_channel_ids', config.get('channel_ids'))  # Discord対象VCチャンネルID
-        self.suffix = config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
+        folder_structure = self.config.get('google_drive_folder_structure', {})  # Google Driveフォルダ構造
+        self.sheet_name = folder_structure.get('spreadsheet', f"もくもくトラッカー_{self.config['suffix']}")  # Sheets名
+        self.google_drive_folder_path = self.config.get('google_drive_folder_path', self.config.get('folder_path'))  # Google Driveベースフォルダパス
+        self.google_drive_folder_structure = self.config.get('google_drive_folder_structure')  # Google Driveフォルダ構造定義
+        self.allowed_vc_ids = self.config.get('discord_channel_ids', self.config.get('channel_ids'))  # Discord対象VCチャンネルID
+        self.suffix = self.config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
+        self.user_mapping_sheet_name = self.config.get('user_mapping_sheet_name', f'UserMapping_{self.suffix}')  # ユーザーマッピングシート名
+        self.slack_token = self.config.get('slack_token')  # Slack Botトークン
+        self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
 
         # 初期化処理
         self._initialize_services()
