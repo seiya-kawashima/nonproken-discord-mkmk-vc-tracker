@@ -214,10 +214,25 @@ class DailyAggregator:
             self.mapping_sheet_id = sheet_id  # キャッシュに保存
             logger.info(f"マッピングシートを発見: {file_name} (ID: {sheet_id})")  # シート発見
 
+            # まずシートのタブ一覧を取得
+            spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+            sheet_names = [sheet['properties']['title'] for sheet in spreadsheet.get('sheets', [])]
+            logger.info(f"利用可能なシートタブ: {sheet_names}")  # タブ一覧表示
+
+            # user_mappingタブがあるか確認、なければ最初のタブを使用
+            if 'user_mapping' in sheet_names:
+                range_name = 'user_mapping!A2:C1000'
+            elif sheet_names:  # タブが1つでもある場合
+                range_name = f'{sheet_names[0]}!A2:C1000'  # 最初のタブを使用
+                logger.info(f"user_mappingタブが見つからないため、{sheet_names[0]}タブを使用します")
+            else:
+                logger.warning("読み取り可能なタブがありません")
+                return
+
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=sheet_id,
-                range='user_mapping!A2:C1000'  # ヘッダーを除くデータ範囲
+                range=range_name  # 動的に決定した範囲
             ).execute()  # データ取得
 
             rows = result.get('values', [])  # データ行
