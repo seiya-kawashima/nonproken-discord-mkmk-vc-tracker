@@ -183,16 +183,13 @@ class DailyAggregator:
     def _load_user_mapping(self):
         """ユーザーマッピングシートからデータを読み込み"""
         try:
-            # config.pyから設定されたシートIDを取得
-            sheet_id = self.config.get('user_mapping_sheet_id')
-
-            if not sheet_id:
-                # シートIDが設定されていない場合はエラー
+            # シートIDが設定されていない場合はエラー
+            if not self.user_mapping_sheet_id:
                 logger.error(f"❌ USER_MAPPING_SHEET_ID_{self.suffix}が設定されていません")  # 設定エラー
                 logger.error(f"   環境変数にシートIDを設定してください: USER_MAPPING_SHEET_ID_{self.suffix}=<シートID>")  # 設定方法
                 raise ValueError(f"ユーザーマッピングシートIDが設定されていません（USER_MAPPING_SHEET_ID_{self.suffix}）")  # エラー
 
-            logger.info(f"📖 ユーザーマッピングシートIDを使用: {sheet_id}")  # シートID使用
+            logger.info(f"📖 ユーザーマッピングシートIDを使用: {self.user_mapping_sheet_id}")  # シートID使用
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
