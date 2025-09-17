@@ -832,7 +832,13 @@ class DailyAggregator:
             # 2. 各CSVファイルからデータを読み込み
             all_records = []
             for csv_file in csv_files:
-                records = self.read_csv_content(csv_file['id'], csv_file['name'])
+                # vc_nameを含む新しい形式に対応
+                records = self.read_csv_content(csv_file['id'], csv_file.get('name', ''))
+                # vc_nameが既に設定されている場合はそれを使用
+                if 'vc_name' in csv_file:
+                    for record in records:
+                        if 'vc_name' not in record:
+                            record['vc_name'] = csv_file['vc_name']
                 all_records.extend(records)
 
             logger.info(f"合計{len(all_records)}件のレコードを読み込みました")  # 総レコード数ログ
