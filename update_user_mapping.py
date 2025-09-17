@@ -9,7 +9,7 @@ import sys
 import argparse
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from config import EnvConfig, Environment
+from config import get_config, Environment
 from loguru import logger
 
 logger.remove()
