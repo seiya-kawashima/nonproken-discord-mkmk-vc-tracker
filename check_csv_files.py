@@ -173,63 +173,69 @@ def main(env_arg=None):
             scopes=['https://www.googleapis.com/auth/drive']
         )
 
-    # Drive APIサービスの構築
-    service = build('drive', 'v3', credentials=credentials)
+        # Drive APIサービスの構築
+        service = build('drive', 'v3', credentials=credentials)
 
-    print("🔍 Google Drive上のファイル構造を確認します...")  # 開始メッセージ
-    print("=" * 60)
+        print("🔍 Google Drive上のファイル構造を確認します...")  # 開始メッセージ
+        print("=" * 60)
 
-    # 共有ドライブ情報を表示
-    if shared_drive_id:
-        print(f"🔗 共有ドライブID: {shared_drive_id}")  # 共有ドライブID表示
-    else:
-        print("🔗 マイドライブを使用")  # マイドライブ使用表示
+        # 共有ドライブ情報を表示
+        if shared_drive_id:
+            print(f"🔗 共有ドライブID: {shared_drive_id}")  # 共有ドライブID表示
+        else:
+            print("🔗 マイドライブを使用")  # マイドライブ使用表示
 
-    # ベースフォルダを検索
-    query = f"name='{base_folder_name}' and mimeType='application/vnd.google-apps.folder'"
-    corpora = 'allDrives' if shared_drive_id else 'user'  # 検索範囲設定
+        # ベースフォルダを検索
+        query = f"name='{base_folder_name}' and mimeType='application/vnd.google-apps.folder'"
+        corpora = 'allDrives' if shared_drive_id else 'user'  # 検索範囲設定
 
-    results = service.files().list(
-        q=query,
-        fields="files(id, name)",
-        supportsAllDrives=True,
-        includeItemsFromAllDrives=True,
-        corpora=corpora
-    ).execute()
+        results = service.files().list(
+            q=query,
+            fields="files(id, name)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+            corpora=corpora
+        ).execute()
 
-    folders = results.get('files', [])
+        folders = results.get('files', [])
 
-    if not folders:
-        print(f"❌ {base_folder_name}フォルダが見つかりません")  # フォルダなしエラー
-        return
+        if not folders:
+            print(f"❌ {base_folder_name}フォルダが見つかりません")  # フォルダなしエラー
+            return
 
-    root_folder_id = folders[0]['id']
-    print(f"✅ {base_folder_name} (ID: {root_folder_id})")  # ベースフォルダ確認
+        root_folder_id = folders[0]['id']
+        print(f"✅ {base_folder_name} (ID: {root_folder_id})")  # ベースフォルダ確認
 
-    # フォルダ構造をチェック
-    check_folder_structure(service, root_folder_id, base_folder_name, target_csv_file)
+        # フォルダ構造をチェック
+        check_folder_structure(service, root_folder_id, base_folder_name, target_csv_file)
 
-    print("=" * 60)
+        print("=" * 60)
 
-    # ターゲットファイルを直接検索
-    print(f"\n📍 {target_csv_file}を直接検索...")  # 直接検索開始
-    query = f"name='{target_csv_file}'"
-    results = service.files().list(
-        q=query,
-        fields="files(id, name, parents)",
-        supportsAllDrives=True,
-        includeItemsFromAllDrives=True,
-        corpora=corpora
-    ).execute()
+        # ターゲットファイルを直接検索
+        print(f"\n📍 {target_csv_file}を直接検索...")  # 直接検索開始
+        query = f"name='{target_csv_file}'"
+        results = service.files().list(
+            q=query,
+            fields="files(id, name, parents)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+            corpora=corpora
+        ).execute()
 
-    files = results.get('files', [])
+        files = results.get('files', [])
 
-    if files:
-        print(f"✅ {len(files)}個の{target_csv_file}ファイルが見つかりました:")  # ファイル発見
-        for file in files:
-            print(f"  - {file['name']} (ID: {file['id']}, Parents: {file.get('parents', [])})")  # ファイル詳細
-    else:
-        print(f"❌ {target_csv_file}ファイルが見つかりません")  # ファイルなし
+        if files:
+            print(f"✅ {len(files)}個の{target_csv_file}ファイルが見つかりました:")  # ファイル発見
+            for file in files:
+                print(f"  - {file['name']} (ID: {file['id']}, Parents: {file.get('parents', [])})")  # ファイル詳細
+        else:
+            print(f"❌ {target_csv_file}ファイルが見つかりません")  # ファイルなし
+
+    finally:
+        # 一時ファイルの削除
+        if temp_file and os.path.exists(temp_file):
+            os.unlink(temp_file)  # ファイル削除
+            print("一時ファイルを削除しました")  # 削除メッセージ
 
 
 if __name__ == '__main__':
