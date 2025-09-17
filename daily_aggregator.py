@@ -731,145 +731,183 @@ class DailyAggregator:
             return None
 
     def update_user_statistics(self, user_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-        """ユーザー統計情報を更新して返却"""
+        """CSVファイルから全履歴を読み込み、ユーザー統計情報を計算"""
         try:
-            # 統計シートのIDを取得
-            sheet_id = self.get_user_statistics_sheet_id()  # シートID
+            logger.info("CSVファイルから全履歴を読み込んで統計を計算します")  # 開始ログ
 
-            if not sheet_id:
-                logger.warning("統計シートが見つからないため、統計情報の更新をスキップします")  # スキップログ
-                # 統計情報なしで返却（連続日数は1日として返す）
+            # CSVファイル一覧を取得
+            csv_files = self.get_csv_files_from_drive()
+            if not csv_files:
+                logger.warning("CSVファイルが見つからないため、統計情報の計算をスキップします")  # スキップログ
                 for user_id in user_data:
                     user_data[user_id]['consecutive_days'] = 1
                     user_data[user_id]['total_days'] = 1
                 return user_data
 
-            # 既存の統計情報を読み込み
-            result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=sheet_id,
-                range='statistics!A:F'
-            ).execute()  # データ取得
+            # 全ユーザーの全履歴を収集
+            all_user_history = defaultdict(list)  # user_id: [(date, datetime_jst), ...]
 
-            existing_data = result.get('values', [])  # 既存データ
+            for csv_file in csv_files:
+                try:
+                    # CSVファイル全体を読み込み
+                    request = self.drive_service.files().get_media(fileId=csv_file['id'])
+                    file_content = io.BytesIO()
+                    downloader = MediaIoBaseDownload(file_content, request)
 
-            # ヘッダー行をスキップして、ユーザーIDをキーにした辞書を作成
+                    done = False
+                    while not done:
+                        status, done = downloader.next_chunk()
+
+                    file_content.seek(0)
+                    csv_text = file_content.read().decode('utf-8-sig')  # BOMを自動除去
+
+                    if not csv_text:
+                        continue
+
+                    lines = csv_text.strip().split('\n')
+                    if len(lines) < 2:
+                        continue
+
+                    headers = [h.strip() for h in lines[0].split(',')]
+
+                    for line in lines[1:]:
+                        values = line.split(',')
+                        if len(values) != len(headers):
+                            continue
+
+                        record = dict(zip(headers, values))
+
+                        if 'datetime_jst' in record and 'user_id' in record:
+                            datetime_str = record['datetime_jst'].strip()
+                            user_id = record['user_id'].strip()
+
+                            # 日付部分を抽出
+                            date_parts = datetime_str.split(' ')[0].split('/')
+                            if len(date_parts) == 3:
+                                year = int(date_parts[0])
+                                month = int(date_parts[1])
+                                day = int(date_parts[2])
+                                date_obj = date(year, month, day)
+                                all_user_history[user_id].append((date_obj, datetime_str))
+
+                except Exception as e:
+                    logger.error(f"CSVファイル {csv_file['name']} の読み込みエラー: {e}")
+                    continue
+
+            # 統計情報を計算
             stats_dict = {}
-            for row in existing_data[1:] if existing_data else []:
-                if len(row) >= 5:
-                    stats_dict[row[0]] = {
-                        'user_name': row[1],
-                        'last_login_date': row[2],
-                        'consecutive_days': int(row[3]) if row[3] else 0,
-                        'total_days': int(row[4]) if row[4] else 0,
-                        'last_updated': row[5] if len(row) > 5 else ''
-                    }
-
-            # 統計情報を更新
-            today_str = self.target_date.strftime('%Y/%m/%d')  # 今日
-            previous_business_day = self.get_previous_business_day(self.target_date)  # 前営業日
-            previous_business_day_str = previous_business_day.strftime('%Y/%m/%d')  # 前営業日文字列
+            today = self.target_date
 
             for user_id in user_data:
                 user_name = user_data[user_id]['user_name']
 
-                if user_id in stats_dict:
-                    # 既存ユーザーの更新
-                    stats = stats_dict[user_id]
-                    old_consecutive = stats['consecutive_days']
-                    old_total = stats['total_days']
-                    old_last_login = stats['last_login_date']
+                # このユーザーの履歴を取得
+                user_history = all_user_history.get(user_id, [])
 
-                    # デバッグ：更新前の状態を出力（blueさんの場合）
+                if user_history:
+                    # 日付でユニーク化してソート
+                    unique_dates = sorted(list(set([d[0] for d in user_history])))
+
+                    # 累計日数
+                    total_days = len(unique_dates)
+
+                    # 連続日数を計算（営業日ベース）
+                    consecutive_days = 0
+                    if today in unique_dates:
+                        consecutive_days = 1
+                        current_date = today
+
+                        # 今日から遡って連続日数をカウント
+                        while True:
+                            prev_business_day = self.get_previous_business_day(current_date)
+                            if prev_business_day in unique_dates:
+                                consecutive_days += 1
+                                current_date = prev_business_day
+                            else:
+                                break
+
+                    # デバッグ出力（blue_35405の場合）
                     if 'blue' in user_name.lower():
-                        logger.debug(f"=== {user_name} の統計更新 ===")
+                        logger.debug(f"=== {user_name} の統計（CSVベース） ===")
                         logger.debug(f"  ユーザーID: {user_id}")
-                        logger.debug(f"  【統計シート既存値】")
-                        logger.debug(f"    最終ログイン日: {old_last_login}")
-                        logger.debug(f"    連続日数: {old_consecutive}日")
-                        logger.debug(f"    累計日数: {old_total}日")
-                        logger.debug(f"  【処理日情報】")
-                        logger.debug(f"    今日: {today_str}")
-                        logger.debug(f"    前営業日: {previous_business_day_str}")
+                        logger.debug(f"  【累計日数の根拠】")
+                        logger.debug(f"    ログイン日一覧: {[d.strftime('%Y/%m/%d') for d in unique_dates]}")
+                        logger.debug(f"    累計日数: {total_days}日")
+                        logger.debug(f"  【連続日数の根拠】")
 
-                    # 最終ログイン日が今日でない場合のみ更新（同じ日の重複カウントを防ぐ）
-                    if stats['last_login_date'] != today_str:
-                        # 連続ログイン日数の計算（営業日ベース）
-                        if stats['last_login_date'] == previous_business_day_str:
-                            stats['consecutive_days'] += 1  # 前営業日もログインしていた
-                            if 'blue' in user_name.lower():
-                                logger.debug(f"  【連続ログイン判定】")
-                                logger.debug(f"    判定: 継続（最終ログイン日 {old_last_login} = 前営業日 {previous_business_day_str}）")
-                                logger.debug(f"    更新: {old_consecutive}日 → {stats['consecutive_days']}日")
-                        else:
-                            stats['consecutive_days'] = 1  # 連続が途切れた
-                            if 'blue' in user_name.lower():
-                                logger.debug(f"  【連続ログイン判定】")
-                                logger.debug(f"    判定: リセット（最終ログイン日 {old_last_login} ≠ 前営業日 {previous_business_day_str}）")
-                                logger.debug(f"    更新: {old_consecutive}日 → 1日")
+                        if consecutive_days > 0:
+                            consecutive_dates = []
+                            current_date = today
+                            for i in range(consecutive_days):
+                                if i == 0:
+                                    consecutive_dates.append(current_date)
+                                else:
+                                    current_date = self.get_previous_business_day(current_date)
+                                    consecutive_dates.append(current_date)
+                            consecutive_dates.reverse()
+                            logger.debug(f"    連続ログイン日: {[d.strftime('%Y/%m/%d') for d in consecutive_dates]}")
+                        logger.debug(f"    連続日数: {consecutive_days}日")
 
-                        # 累計ログイン日数（今日が新しい日の場合のみインクリメント）
-                        stats['total_days'] += 1
-                        if 'blue' in user_name.lower():
-                            logger.debug(f"  【累計ログイン更新】")
-                            logger.debug(f"    既存累計: {old_total}日")
-                            logger.debug(f"    +1（今日の分）")
-                            logger.debug(f"    新累計: {stats['total_days']}日")
-
-                        # 最終ログイン日と更新日時を更新
-                        stats['last_login_date'] = today_str
-                        stats['last_updated'] = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-                    else:
-                        if 'blue' in user_name.lower():
-                            logger.debug(f"  【処理スキップ】")
-                            logger.debug(f"    理由: 既に今日（{today_str}）のデータ処理済み")
-                            logger.debug(f"    現在の連続日数: {stats['consecutive_days']}日（変更なし）")
-                            logger.debug(f"    現在の累計日数: {stats['total_days']}日（変更なし）")
-
-                    # ユーザー名は常に最新のものに更新
-                    stats['user_name'] = user_data[user_id]['user_name']
-
-                else:
-                    # 新規ユーザー
                     stats_dict[user_id] = {
-                        'user_name': user_data[user_id]['user_name'],
-                        'last_login_date': today_str,
+                        'user_name': user_name,
+                        'last_login_date': today.strftime('%Y/%m/%d'),
+                        'consecutive_days': consecutive_days,
+                        'total_days': total_days,
+                        'last_updated': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+                    }
+                else:
+                    # 履歴がない場合（今日が初日）
+                    stats_dict[user_id] = {
+                        'user_name': user_name,
+                        'last_login_date': today.strftime('%Y/%m/%d'),
                         'consecutive_days': 1,
                         'total_days': 1,
                         'last_updated': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                     }
+
                     if 'blue' in user_name.lower():
-                        logger.debug(f"=== {user_name} 新規登録 ===")
-                        logger.debug(f"  初回ログイン: {today_str}, 連続=1日, 累計=1日")
+                        logger.debug(f"=== {user_name} 初回ログイン ===")
+                        logger.debug(f"  今日が初日: {today.strftime('%Y/%m/%d')}, 連続=1日, 累計=1日")
 
-            # シートに書き込むデータを準備
-            rows = [['user_id', 'user_name', 'last_login_date', 'consecutive_days',
-                    'total_days', 'last_updated']]  # ヘッダー
+            # 統計シートへの書き込み（オプション）
+            try:
+                sheet_id = self.get_user_statistics_sheet_id()
+                if sheet_id:
+                    rows = [['user_id', 'user_name', 'last_login_date', 'consecutive_days',
+                            'total_days', 'last_updated']]  # ヘッダー
 
-            for user_id, stats in sorted(stats_dict.items()):
-                rows.append([
-                    user_id,
-                    stats['user_name'],
-                    stats['last_login_date'],
-                    stats['consecutive_days'],
-                    stats['total_days'],
-                    stats['last_updated']
-                ])
+                    for user_id, stats in sorted(stats_dict.items()):
+                        rows.append([
+                            user_id,
+                            stats['user_name'],
+                            stats['last_login_date'],
+                            stats['consecutive_days'],
+                            stats['total_days'],
+                            stats['last_updated']
+                        ])
 
-            # シート全体を更新
-            self.sheets_service.spreadsheets().values().update(
-                spreadsheetId=sheet_id,
-                range='statistics!A:F',
-                valueInputOption='RAW',
-                body={'values': rows}
-            ).execute()  # 書き込み
+                    # シート全体を更新
+                    self.sheets_service.spreadsheets().values().update(
+                        spreadsheetId=sheet_id,
+                        range='statistics!A:F',
+                        valueInputOption='RAW',
+                        body={'values': rows}
+                    ).execute()
 
-            logger.info(f"{len(stats_dict)}名のユーザー統計情報を更新しました")  # 更新成功ログ
+                    logger.info(f"{len(stats_dict)}名の統計情報をシートに保存しました")
+            except Exception as e:
+                logger.warning(f"統計シートへの保存に失敗しました（処理は継続）: {e}")
 
-            return stats_dict  # 統計情報を返却
+            logger.info(f"{len(stats_dict)}名のユーザー統計情報を計算しました")
+            return stats_dict
 
         except Exception as e:
-            logger.error(f"ユーザー統計情報の更新に失敗しました: {e}")  # エラーログ
-            return {}  # 空の辞書を返却
+            logger.error(f"ユーザー統計情報の計算に失敗しました: {e}")
+            # エラー時はデフォルト値を返す
+            for user_id in user_data:
+                user_data[user_id]['consecutive_days'] = 1
+                user_data[user_id]['total_days'] = 1
+            return user_data
 
     def run(self) -> str:
         """集計処理のメイン実行"""
