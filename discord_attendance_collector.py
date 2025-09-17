@@ -52,7 +52,7 @@ async def main(env_arg=None):
     # 設定値を展開
     discord_token = config['discord_token']  # Discord Botトークン
     discord_channel_ids = config.get('discord_channel_ids', config.get('channel_ids'))  # Discord監視対象VCチャンネルID
-    sheet_name = config.get('google_drive_folder_structure', {}).get('spreadsheet', f"もくもくトラッカー_{config['suffix']}")  # スプレッドシート名
+    sheet_name = f"もくもくトラッカー_{config['suffix']}"  # スプレッドシート名
     google_drive_service_account_json = config.get('google_drive_service_account_json', config.get('service_account_json'))  # Google DriveサービスアカウントJSON
     google_drive_service_account_json_base64 = config.get('google_drive_service_account_json_base64', config.get('service_account_json_base64'))  # Base64エンコードされたGoogle Drive認証情報
     
