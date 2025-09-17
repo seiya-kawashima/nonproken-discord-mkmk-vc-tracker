@@ -40,12 +40,12 @@ logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
 
-# 現在の日付を取得（YYYYMMDD形式）
-current_date = datetime.now().strftime("%Y%m%d")  # 日付取得
+# 現在の日時を取得（YYYYMMDD_HHMMSS形式）
+current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")  # 日時取得（時分秒まで）
 
 # 処理別のログファイル設定
 # 1. メイン処理のログ
-logger.add(f"logs/daily_aggregator_{current_date}.log",
+logger.add(f"logs/daily_aggregator_{current_datetime}.log",
           rotation="10 MB",
           retention="7 days",
           level="INFO",
