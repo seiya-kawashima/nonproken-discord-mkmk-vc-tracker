@@ -9,28 +9,35 @@
 
 Discord VCのログイン履歴から以下の情報を集計・可視化します：
 - その日にVCにログインしたユーザー一覧
-- 各ユーザーの連続ログイン日数
+- 各ユーザーの連続ログイン日数（土日祝日を除く営業日ベース）
 - 各ユーザーの累計ログイン日数
 
 ## 📥 Input（入力）
 
-| 項目 | 型 | 説明 | 例 |
-|------|-----|------|-----|
-| CSV ファイル群 | CSVファイル | Google Drive上の各VCチャンネルのCSVファイル | `general-voice.csv` |
-| 集計対象日 | 日付 | 集計する日付（デフォルトは実行日） | `2025-09-15` |
-| 環境変数 | 文字列 | Google認証情報とSheets名 | 下記参照 |
+| 項目 | 型 | 説明 | 例 | config.py設定元 |
+|------|-----|------|-----|----------------|
+| CSV ファイル群 | CSVファイル | Google Drive上の各VCチャンネルのCSVファイル | `general-voice.csv` | `google_drive_csv_path` |
+| 集計対象日 | 日付 | 集計する日付（デフォルトは実行日） | `2025-09-15` | コマンドライン引数 |
+| Google認証情報 | JSON | Google APIのサービスアカウント認証情報 | service_account.json | `google_drive_service_account_json` |
+| Google Sheets名 | 文字列 | 集計結果を書き込むスプレッドシート名 | VC_Tracker_Database | `GOOGLE_SHEET_NAME` (環境変数) |
+| VCチャンネルID | リスト | 監視対象のVCチャンネルIDリスト | [123456789, 987654321] | `discord_channel_ids` |
+| 実行環境 | 数値 | 0:PRD, 1:TST, 2:DEV | 0 | コマンドライン引数 `--env` |
+| 出力パターン | 文字列 | discord/slack | slack | コマンドライン引数 `--output` |
 
-### 必要な環境変数
+### 環境変数とconfig.pyのマッピング
 
-```env
-# Google Drive/Sheets認証
-GOOGLE_SERVICE_ACCOUNT_JSON=service_account.json
+config.pyが環境ごとに設定を管理します：
+```python
+# config.pyから取得される設定
+config = get_config(env)  # env: 0=PRD, 1=TST, 2=DEV
 
-# 集計結果を書き込むGoogle Sheets名
-GOOGLE_SHEET_NAME=VC_Tracker_Database
-
-# 対象VCチャンネルIDのリスト（カンマ区切り）
-ALLOWED_VOICE_CHANNEL_IDS=123456789,987654321
+# 設定内容
+{
+    'discord_channel_ids': [...],  # VCチャンネルIDリスト
+    'google_drive_service_account_json': '...',  # 認証ファイルパス
+    'google_drive_csv_path': '...',  # CSVファイルパステンプレート
+    # ... その他の設定
+}
 ```
 
 ## 📤 Output（出力）
@@ -67,7 +74,7 @@ ALLOWED_VOICE_CHANNEL_IDS=123456789,987654321
 | user_id | 文字列 | Discord ユーザーID | `111111111111111111` |
 | user_name | 文字列 | Discord ユーザー名 | `kawashima#1234` |
 | last_login_date | 日付 | 最終ログイン日 | `2025/09/15` |
-| consecutive_days | 数値 | 連続ログイン日数 | `7` |
+| consecutive_days | 数値 | 連続ログイン日数（営業日ベース） | `7` |
 | total_days | 数値 | 累計ログイン日数 | `45` |
 | last_updated | 日時 | 最終更新日時 | `2025/09/15 23:00:00` |
 
@@ -100,7 +107,10 @@ graph TD
 3. **統計計算**
    - 前日までの`user_statistics`シートを読み込み
    - 各ユーザーについて：
-     - 連続ログイン日数: 前日ログインしていれば+1、していなければ1にリセット
+     - 連続ログイン日数:
+       - 前営業日にログインしていれば+1
+       - 前営業日にログインしていなければ1にリセット
+       - 土日祝日はスキップして判定（例：金曜ログイン後、月曜にログインした場合は連続）
      - 累計ログイン日数: 常に+1
 
 4. **データ出力**
@@ -155,6 +165,24 @@ jobs:
           GOOGLE_SHEET_NAME: ${{ secrets.GOOGLE_SHEET_NAME }}
           ALLOWED_VOICE_CHANNEL_IDS: ${{ secrets.ALLOWED_VOICE_CHANNEL_IDS }}
 ```
+
+## 🎅 祝日の取り扱い
+
+### 日本の祝日データ
+`jpholiday`ライブラリを使用して日本の祝日を判定します。
+
+### 営業日の判定ロジック
+```python
+def is_business_day(date):
+    """営業日か否かを判定"""
+    # 土日祝日でなければ営業日
+    return not (date.weekday() >= 5 or jpholiday.is_holiday(date))
+```
+
+### 連続ログイン日数の計算例
+- 金曜日にログイン → 月曜日にログイン：連続（2日目）
+- 金曜日にログイン → 火曜日にログイン：リセット（1日目）
+- 木曜日にログイン → 金曜日（祝日）をスキップ → 月曜日にログイン：連続（2日目）
 
 ## ⚠️ 注意事項
 
