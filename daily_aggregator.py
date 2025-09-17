@@ -47,7 +47,7 @@ current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")  # 日時取得（�
 logger.add(f"logs/daily_aggregator_{current_datetime}.log",
           rotation="10 MB",
           retention="7 days",
-          level="INFO",
+          level="DEBUG",  # DEBUGレベルに変更してより詳細なログを出力
           encoding="utf-8",
           format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # すべての処理を1つのログファイルに記録
 
