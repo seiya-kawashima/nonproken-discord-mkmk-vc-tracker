@@ -133,6 +133,16 @@ class DailyAggregator:
             self.sheets_service = build('sheets', 'v4', credentials=self.credentials)
             logger.info("📊 Google Sheetsへの接続が完了しました")  # 初期化成功ログ
 
+            # Slackクライアントの初期化
+            if self.slack_token:
+                self.slack_client = WebClient(token=self.slack_token)
+                logger.info("💬 Slackクライアントを初期化しました")  # Slack初期化
+            else:
+                logger.warning("⚠️ Slackトークンが設定されていません")  # Slack未設定
+
+            # ユーザーマッピングを読み込み
+            self._load_user_mapping()
+
         except Exception as e:
             logger.error(f"⚠️ サービスの初期化に失敗しました: {e}")  # エラーログ
             raise
