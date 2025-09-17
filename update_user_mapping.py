@@ -20,10 +20,10 @@ def update_user_mapping(env: Environment):
     """ユーザー名対照表にサンプルデータを追加"""
 
     # 設定を取得
-    sheets_config = EnvConfig.get_google_sheets_config(env)
+    config = get_config(env)
 
     # 認証
-    service_account_json = sheets_config['service_account_json']
+    service_account_json = config['google_drive_service_account_json']
     credentials = service_account.Credentials.from_service_account_file(
         service_account_json,
         scopes=[
