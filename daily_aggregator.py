@@ -72,7 +72,7 @@ logger.add(f"logs/aggregation_{current_datetime}.log",
           filter=lambda record: "aggregate" in record["function"] or "write" in record["function"] or "update" in record["function"])  # 集計処理ログ
 
 # 4. エラーログ（全てのエラーを記録）
-logger.add(f"logs/error_{current_date}.log",
+logger.add(f"logs/error_{current_datetime}.log",
           rotation="10 MB",
           retention="30 days",
           level="ERROR",
