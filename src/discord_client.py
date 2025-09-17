@@ -77,6 +77,12 @@ class DiscordVCPoller:
                                 logger.info(f"  現在のメンバー数: {len(channel.members)}名")  # メンバー数を出力
 
                                 for member in channel.members:  # VCのメンバーをループ
+                                    # 除外ユーザーをスキップ
+                                    if member.name in self.excluded_users:  # 除外リストに含まれている場合
+                                        masked_name = self._mask_username(member.name)  # ログ用にマスキング
+                                        logger.info(f"  メンバーをスキップ（除外対象）: {masked_name}")  # 除外ログ
+                                        continue  # 次のメンバーへ
+
                                     member_data = {  # メンバー情報を辞書に格納
                                         "vc_name": channel.name,  # VCの名前
                                         "user_id": str(member.id),  # ユーザーID（文字列）
