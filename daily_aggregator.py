@@ -108,9 +108,7 @@ class DailyAggregator:
 
         # Google Drive関連の設定を取得（デフォルト値を設定）
         self.google_drive_folder_path = self.config.get('google_drive_base_folder', 'discord_mokumoku_tracker')  # Google Driveベースフォルダパス
-        folder_structure = self.config.get('google_drive_folder_structure', {})  # Google Driveフォルダ構造
-        self.sheet_name = folder_structure.get('spreadsheet', f"もくもくトラッカー_{self.config['suffix']}")  # Sheets名
-        self.google_drive_folder_structure = folder_structure  # Google Driveフォルダ構造定義
+        self.sheet_name = f"もくもくトラッカー_{self.config['suffix']}"  # Sheets名
         self.allowed_vc_ids = self.config.get('discord_channel_ids', self.config.get('channel_ids'))  # Discord対象VCチャンネルID
         self.suffix = self.config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
         self.google_drive_discord_slack_mapping_sheet_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')  # Discord-Slackユーザーマッピングシートパス
