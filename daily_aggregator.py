@@ -185,9 +185,9 @@ class DailyAggregator:
         try:
             # シートIDが設定されていない場合はエラー
             if not self.google_drive_discord_slack_mapping_sheet_id:
-                logger.error(f"❌ USER_MAPPING_SHEET_ID_{self.suffix}が設定されていません")  # 設定エラー
-                logger.error(f"   環境変数にシートIDを設定してください: USER_MAPPING_SHEET_ID_{self.suffix}=<シートID>")  # 設定方法
-                raise ValueError(f"ユーザーマッピングシートIDが設定されていません（USER_MAPPING_SHEET_ID_{self.suffix}）")  # エラー
+                logger.error(f"❌ GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{self.suffix}が設定されていません")  # 設定エラー
+                logger.error(f"   環境変数にシートIDを設定してください: GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{self.suffix}=<シートID>")  # 設定方法
+                raise ValueError(f"Discord-SlackマッピングシートIDが設定されていません（GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{self.suffix}）")  # エラー
 
             logger.info(f"📖 Discord-SlackマッピングシートIDを使用: {self.google_drive_discord_slack_mapping_sheet_id}")  # シートID使用
 
