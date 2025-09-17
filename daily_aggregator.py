@@ -263,16 +263,37 @@ class DailyAggregator:
     def get_csv_files_from_drive(self) -> List[Dict[str, str]]:
         """
         Google DriveからCSVファイル一覧を取得
+        configのgoogle_drive_csv_pathテンプレートに基づいてファイルを探す
 
         Returns:
-            CSVファイル情報のリスト [{id, name}, ...]
+            CSVファイル情報のリスト [{id, name, vc_name}, ...]
         """
         try:
             logger.info(f"CSVファイルの検索を開始します")  # 検索開始ログ
-            logger.info(f"検索パス: {self.google_drive_folder_path}")  # 検索パス表示
 
-            # フォルダパスからフォルダ階層を取得
-            folder_parts = self.google_drive_folder_path.split('/')  # パスを分割
+            # configから設定されたCSVパステンプレートを使用
+            if self.google_drive_csv_path:
+                logger.info(f"CSVパステンプレート: {self.google_drive_csv_path}")  # テンプレート表示
+
+                # パステンプレートを解析 (例: discord_mokumoku_tracker/csv/{vc_name}_0_PRD.csv)
+                # {vc_name}より前の部分を抽出してフォルダパスとする
+                path_parts = self.google_drive_csv_path.split('{vc_name}')
+                if len(path_parts) >= 2:
+                    # フォルダパスとファイルパターンを取得
+                    folder_path = path_parts[0].rstrip('/')  # 末尾の/を削除
+                    file_pattern = path_parts[1].lstrip('_')  # 先頭の_を削除（例: 0_PRD.csv）
+
+                    logger.info(f"フォルダパス: {folder_path}")  # フォルダパス表示
+                    logger.info(f"ファイルパターン: *_{file_pattern}")  # パターン表示
+                else:
+                    logger.error(f"CSVパステンプレートの形式が不正です: {self.google_drive_csv_path}")
+                    return []
+            else:
+                logger.error("CSVパステンプレートが設定されていません")
+                return []
+
+            # フォルダ階層を探索
+            folder_parts = folder_path.split('/')  # パスを分割
             if not folder_parts:
                 logger.warning("フォルダパスが無効です")  # 無効なパス警告
                 return []
@@ -293,11 +314,10 @@ class DailyAggregator:
                 logger.warning(f"Google Drive上に '{root_folder_name}' フォルダが見つかりません")  # フォルダ未発見警告
                 return []
 
-            folder_id = folders[0]['id']  # フォルダID取得
-            logger.info(f"フォルダを発見: {folders[0]['name']}")  # フォルダ発見ログ
+            current_folder_id = folders[0]['id']  # フォルダID取得
+            logger.info(f"ルートフォルダを発見: {folders[0]['name']} (ID: {current_folder_id})")  # フォルダ発見ログ
 
             # 残りのフォルダ階層を順に探索
-            current_folder_id = folder_id
             for folder_name in folder_parts[1:]:
                 subfolder_query = f"'{current_folder_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder'"
                 subfolder_results = self.drive_service.files().list(
@@ -313,77 +333,44 @@ class DailyAggregator:
                     return []
 
                 current_folder_id = subfolders[0]['id']  # 次のフォルダID
-                logger.info(f"サブフォルダを発見: {folder_name}")  # フォルダ発見ログ
+                logger.info(f"サブフォルダを発見: {folder_name} (ID: {current_folder_id})")  # フォルダ発見ログ
 
-            # 最終的なフォルダIDを保存（discord_mokumoku_trackerフォルダ）
-            base_folder_id = current_folder_id
+            # 最終フォルダ（csvフォルダ）内のCSVファイルを検索
+            target_folder_id = current_folder_id
+            logger.info(f"CSVファイルを検索中...")  # 検索ログ
 
-            # discord_mokumoku_tracker内のVCチャンネルフォルダを検索
-            full_path = '/'.join(folder_parts)  # 完全なパスを構築
-            logger.info(f"現在のフォルダ: {full_path}")  # 現在位置ログ
-            logger.info(f"VCチャンネルフォルダを検索中...")  # チャンネルフォルダ検索ログ
-            channel_folder_query = f"'{base_folder_id}' in parents and mimeType='application/vnd.google-apps.folder'"
-            channel_folder_results = self.drive_service.files().list(
-                q=channel_folder_query,
+            # ファイルパターンに基づいて検索（例: *_0_PRD.csv）
+            csv_query = f"'{target_folder_id}' in parents and name contains '_{file_pattern}'"
+            csv_results = self.drive_service.files().list(
+                q=csv_query,
                 fields="files(id, name)",
                 supportsAllDrives=True,
                 includeItemsFromAllDrives=True
             ).execute()
 
-            channel_folders = channel_folder_results.get('files', [])
-            logger.info(f"{len(channel_folders)}個のVCチャンネルフォルダを発見しました")  # チャンネルフォルダ数ログ
-            if channel_folders:
-                logger.info(f"発見したチャンネルフォルダ: {', '.join([f['name'] for f in channel_folders])}")  # チャンネル名一覧
+            csv_files = csv_results.get('files', [])
 
-            csv_files = []
-            # 各VCチャンネルフォルダ内のcsvサブフォルダを検索
-            for channel_folder in channel_folders:
-                channel_folder_id = channel_folder['id']
-                channel_name = channel_folder['name']
+            # vc_nameを抽出してファイル情報に追加
+            result_files = []
+            for csv_file in csv_files:
+                file_name = csv_file['name']
+                # ファイル名からVCチャンネル名を抽出（例: ☁もくもく広場_0_PRD.csv → ☁もくもく広場）
+                if file_name.endswith(f'_{file_pattern}'):
+                    vc_name = file_name.replace(f'_{file_pattern}', '')
+                    result_files.append({
+                        'id': csv_file['id'],
+                        'name': file_name,
+                        'vc_name': vc_name
+                    })
+                    logger.info(f"  CSVファイルを発見: {file_name} (VCチャンネル: {vc_name})")  # ファイル発見ログ
 
-                # csvサブフォルダを検索
-                csv_folder_query = f"'{channel_folder_id}' in parents and name='csv' and mimeType='application/vnd.google-apps.folder'"
-                csv_folder_results = self.drive_service.files().list(
-                    q=csv_folder_query,
-                    fields="files(id, name)",
-                    supportsAllDrives=True,
-                    includeItemsFromAllDrives=True
-                ).execute()
+            logger.info(f"合計{len(result_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
+            return result_files
 
-                csv_folders = csv_folder_results.get('files', [])
-                if not csv_folders:
-                    logger.info(f"  {channel_name}フォルダ内にcsvフォルダがありません")  # csvフォルダなしログ
-                    continue
-
-                csv_folder_id = csv_folders[0]['id']
-
-                # csvフォルダ内の環境に応じたCSVファイルを検索
-                target_csv_name = f"{self.suffix}.csv"  # 対象CSVファイル名
-                search_path = f"{full_path}/{channel_name}/csv/{target_csv_name}"  # 検索パスを構築
-                logger.debug(f"CSVファイルを検索中: {search_path}")  # デバッグログ
-                csv_query = f"'{csv_folder_id}' in parents and name='{target_csv_name}'"
-                csv_results = self.drive_service.files().list(
-                    q=csv_query,
-                    fields="files(id, name)",
-                    supportsAllDrives=True,
-                    includeItemsFromAllDrives=True
-                ).execute()
-
-                channel_csv_files = csv_results.get('files', [])
-                csv_files.extend(channel_csv_files)
-                if channel_csv_files:
-                    for csv_file in channel_csv_files:
-                        logger.debug(f"  発見: {search_path}")  # CSVファイル名表示
-                        logger.info(f"  CSVファイルを発見: {search_path}")  # CSVファイル発見通知
-                else:
-                    logger.debug(f"  {target_csv_name}が見つかりません")  # CSVファイルなしログ
-                    logger.info(f"  {channel_name}/csvフォルダ内に{target_csv_name}がありません")  # 詳細情報
-            logger.info(f"合計{len(csv_files)}個のCSVファイルを発見しました")  # CSVファイル数ログ
-
-            return csv_files
-
-        except HttpError as e:
+        except Exception as e:
             logger.error(f"CSVファイルの取得に失敗しました: {e}")  # エラーログ
+            import traceback
+            logger.error(traceback.format_exc())  # スタックトレース
             return []
 
     def read_csv_content(self, file_id: str, file_name: str) -> List[Dict[str, str]]:
