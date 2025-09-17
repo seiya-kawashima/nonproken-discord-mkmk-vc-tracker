@@ -225,13 +225,9 @@ class DailyAggregator:
                 sheet_names = [sheet['properties']['title'] for sheet in spreadsheet.get('sheets', [])]
 
                 if tab_name not in sheet_names:
-                    logger.warning(f"指定されたタブ '{tab_name}' が見つかりません。利用可能なタブ: {sheet_names}")
-                    if sheet_names:  # 代替タブがある場合
-                        tab_name = sheet_names[0]
-                        logger.info(f"代替として {tab_name} タブを使用します")
-                    else:
-                        logger.warning("読み取り可能なタブがありません")
-                        return
+                    logger.error(f"指定されたタブ '{tab_name}' が見つかりません。利用可能なタブ: {sheet_names}")
+                    logger.error(f"config.pyで正しいタブ名を設定してください: google_drive_discord_slack_mapping_sheet_tab_name")
+                    raise ValueError(f"タブ '{tab_name}' がスプレッドシートに存在しません")
             except Exception as e:
                 logger.warning(f"タブ一覧の取得に失敗しました: {e}")
                 # タブ確認に失敗してもconfigの設定を信じて続行
