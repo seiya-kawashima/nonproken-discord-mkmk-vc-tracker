@@ -112,7 +112,7 @@ class DailyAggregator:
         self.google_drive_folder_structure = folder_structure  # Google Driveフォルダ構造定義
         self.allowed_vc_ids = self.config.get('discord_channel_ids', self.config.get('channel_ids'))  # Discord対象VCチャンネルID
         self.suffix = self.config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
-        self.user_mapping_sheet_id = self.config.get('user_mapping_sheet_id')  # ユーザーマッピングシートID
+        self.google_drive_discord_slack_mapping_sheet_id = self.config.get('google_drive_discord_slack_mapping_sheet_id')  # Discord-Slackユーザーマッピングシート ID
         self.slack_token = self.config.get('slack_token')  # Slack Botトークン
         self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
 
@@ -184,16 +184,16 @@ class DailyAggregator:
         """ユーザーマッピングシートからデータを読み込み"""
         try:
             # シートIDが設定されていない場合はエラー
-            if not self.user_mapping_sheet_id:
+            if not self.google_drive_discord_slack_mapping_sheet_id:
                 logger.error(f"❌ USER_MAPPING_SHEET_ID_{self.suffix}が設定されていません")  # 設定エラー
                 logger.error(f"   環境変数にシートIDを設定してください: USER_MAPPING_SHEET_ID_{self.suffix}=<シートID>")  # 設定方法
                 raise ValueError(f"ユーザーマッピングシートIDが設定されていません（USER_MAPPING_SHEET_ID_{self.suffix}）")  # エラー
 
-            logger.info(f"📖 ユーザーマッピングシートIDを使用: {self.user_mapping_sheet_id}")  # シートID使用
+            logger.info(f"📖 Discord-SlackマッピングシートIDを使用: {self.google_drive_discord_slack_mapping_sheet_id}")  # シートID使用
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=self.user_mapping_sheet_id,
+                spreadsheetId=self.google_drive_discord_slack_mapping_sheet_id,
                 range='user_mapping!A2:C1000'  # ヘッダーを除くデータ範囲
             ).execute()  # データ取得
 
