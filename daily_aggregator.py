@@ -54,7 +54,7 @@ logger.add(f"logs/daily_aggregator_{current_datetime}.log",
           filter=lambda record: "get_csv" not in record["function"] and "aggregate" not in record["function"])  # メイン処理ログ
 
 # 2. CSVファイル取得処理のログ
-logger.add(f"logs/csv_fetch_{current_date}.log",
+logger.add(f"logs/csv_fetch_{current_datetime}.log",
           rotation="10 MB",
           retention="7 days",
           level="DEBUG",
