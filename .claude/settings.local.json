@@ -44,7 +44,8 @@
       "Bash(dir logs)",
       "Bash(xargs:*)",
       "Bash(sed:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
