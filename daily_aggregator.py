@@ -675,25 +675,38 @@ class DailyAggregator:
     def get_user_statistics_sheet_id(self) -> Optional[str]:
         """Discord-Slackマッピングシートのスプレッドシート IDを取得"""
         try:
-            # マッピングシートのファイル名（configから取得したパスの最後の部分を使用）
-            if self.google_drive_discord_slack_mapping_sheet_path:
-                file_name = self.google_drive_discord_slack_mapping_sheet_path.split('/')[-1]  # パスから名前を取得
+            # すでにキャッシュにIDがある場合はそれを使用
+            if self.mapping_sheet_id:
+                logger.info(f"キャッシュからマッピングシートIDを使用: {self.mapping_sheet_id}")  # キャッシュ使用
+                sheet_id = self.mapping_sheet_id
             else:
-                file_name = f"discord_slack_mapping_{self.suffix}"  # フォールバック
+                # マッピングシートが設定されていない場合
+                if not self.google_drive_discord_slack_mapping_sheet_path:
+                    logger.warning("マッピングシートが設定されていません")  # 設定なし
+                    logger.info("統計情報の保存をスキップします")  # スキップ
+                    return None
 
-            # Google Driveでシートを検索
-            query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
-            results = self.drive_service.files().list(
-                q=query,
-                fields="files(id, name)",
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True
-            ).execute()  # 検索実行
+                # パスからファイル名を取得
+                file_name = self.google_drive_discord_slack_mapping_sheet_path.split('/')[-1]  # パスから名前を取得
 
-            files = results.get('files', [])  # ファイルリスト
-            if files:
+                # Google Driveでシートを検索
+                query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+                results = self.drive_service.files().list(
+                    q=query,
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True
+                ).execute()  # 検索実行
+
+                files = results.get('files', [])  # ファイルリスト
+                if not files:
+                    logger.warning(f"マッピングシートが見つかりません: {file_name}")  # シートなし
+                    logger.info("統計情報の保存をスキップします")  # スキップ
+                    return None
+
                 sheet_id = files[0]['id']  # シートID
-                logger.info(f"既存のマッピングシートを使用: {file_name} (ID: {sheet_id})")  # 発見
+                self.mapping_sheet_id = sheet_id  # キャッシュに保存
+                logger.info(f"マッピングシートを発見: {file_name} (ID: {sheet_id})")  # 発見
 
                 # statisticsタブが存在するか確認、なければ作成
                 spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()  # シート情報取得
