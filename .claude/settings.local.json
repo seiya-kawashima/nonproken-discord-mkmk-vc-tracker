@@ -51,7 +51,8 @@
       "Bash(gh api:*)",
       "Bash(gh run list:*)",
       "Bash(set GOOGLE_SERVICE_ACCOUNT_JSON_2_DEV=C:UsersSeiyaKawashimaDownloadsservice_account.json)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Read(//g/共有ドライブ/DEV/discord_mokumoku_tracker/csv/**)"
     ],
     "deny": [],
     "ask": []
