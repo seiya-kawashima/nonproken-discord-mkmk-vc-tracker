@@ -669,8 +669,11 @@ class DailyAggregator:
     def get_user_statistics_sheet_id(self) -> Optional[str]:
         """Discord-Slackマッピングシートのスプレッドシート IDを取得"""
         try:
-            # マッピングシートのファイル名
-            file_name = f"discord_slack_mapping_{self.suffix}"  # ファイル名
+            # マッピングシートのファイル名（configから取得したパスの最後の部分を使用）
+            if self.google_drive_discord_slack_mapping_sheet_path:
+                file_name = self.google_drive_discord_slack_mapping_sheet_path.split('/')[-1]  # パスから名前を取得
+            else:
+                file_name = f"discord_slack_mapping_{self.suffix}"  # フォールバック
 
             # Google Driveでシートを検索
             query = f"name='{file_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
