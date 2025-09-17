@@ -629,15 +629,20 @@ class DailyAggregator:
             message = "\n".join(message_lines)
 
             # Slackに投稿
-            if self.slack_client and self.slack_channel:
-                response = self.slack_client.chat_postMessage(
-                    channel=self.slack_channel,
-                    text=message
-                )
-                logger.info(f"✅ Slackにレポートを投稿しました")  # 投稿成功
+            if self.output_pattern == 'slack' and self.slack_client and self.slack_channel:
+                try:
+                    response = self.slack_client.chat_postMessage(
+                        channel=self.slack_channel,
+                        text=message
+                    )
+                    logger.info(f"✅ Slackにレポートを投稿しました")  # 投稿成功
+                except SlackApiError as e:
+                    logger.warning(f"⚠️ Slack投稿エラー: {e.response['error']}")  # Slackエラー
+                    logger.info("📝 コンソールに出力します")  # コンソール出力
+                    print(message)
             else:
-                # Slackが設定されていない場合はコンソール出力
-                logger.info("⚠️ Slackが設定されていないため、コンソールに出力します")  # Slack未設定
+                # Discord出力モードまたはSlackが設定されていない場合はコンソール出力
+                logger.info("📝 コンソールに出力します")  # コンソール出力
                 print(message)
 
             return message
