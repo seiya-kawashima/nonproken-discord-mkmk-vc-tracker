@@ -82,7 +82,8 @@ class DiscordVCPoller:
                                     }
                                     self.members_data.append(member_data)  # リストに追加
                                     member_name = member_data.get('user_name', 'unknown')  # ユーザー名を取得
-                                    logger.info(f"  メンバーを発見: {member_name}")  # メンバー発見をログ出力
+                                    masked_name = self._mask_username(member_name)  # ログ用にマスキング
+                                    logger.info(f"  メンバーを発見: {masked_name}")  # メンバー発見をログ出力（マスキング済み）
 
                     logger.info(f"取得完了: 合計{len(self.members_data)}名のメンバーを取得")  # 取得完了ログ
                 finally:
