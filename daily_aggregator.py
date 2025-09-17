@@ -864,9 +864,8 @@ class DailyAggregator:
                         'last_updated': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                     }
 
-                    if 'blue' in user_name.lower():
-                        logger.debug(f"=== {user_name} 初回ログイン ===")
-                        logger.debug(f"  今日が初日: {today.strftime('%Y/%m/%d')}, 連続=1日, 累計=1日")
+                    logger.debug(f"=== {user_name} 初回ログイン ===")
+                    logger.debug(f"  今日が初日: {today.strftime('%Y/%m/%d')}, 連続=1日, 累計=1日")
 
             # 統計シートへの書き込み（オプション）
             try:
