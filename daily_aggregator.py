@@ -675,9 +675,9 @@ class DailyAggregator:
     def get_user_statistics_sheet_id(self) -> Optional[str]:
         """Discord-Slackマッピングシートのスプレッドシート IDを取得"""
         try:
-            # すでにキャッシュにIDがある場合はそれを使用
+            # すでにIDを取得済みの場合はそれを使用
             if self.mapping_sheet_id:
-                logger.info(f"キャッシュからマッピングシートIDを使用: {self.mapping_sheet_id}")  # キャッシュ使用
+                logger.info(f"既に取得済みのマッピングシートIDを使用: {self.mapping_sheet_id}")  # ID再利用
                 sheet_id = self.mapping_sheet_id
             else:
                 # マッピングシートが設定されていない場合
