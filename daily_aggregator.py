@@ -677,7 +677,7 @@ class DailyAggregator:
         try:
             # すでにIDを取得済みの場合はそれを使用
             if self.mapping_sheet_id:
-                logger.info(f"既に取得済みのマッピングシートIDを使用: {self.mapping_sheet_id}")  # ID再利用
+                logger.info(f"config設定パス({self.google_drive_discord_slack_mapping_sheet_path})のシートIDを使用: {self.mapping_sheet_id}")  # ID再利用
                 sheet_id = self.mapping_sheet_id
             else:
                 # マッピングシートが設定されていない場合
