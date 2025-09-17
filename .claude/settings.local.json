@@ -45,7 +45,8 @@
       "Bash(xargs:*)",
       "Bash(sed:*)",
       "Bash(dir:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(gh repo edit:*)"
     ],
     "deny": [],
     "ask": []
