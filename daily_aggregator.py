@@ -472,10 +472,13 @@ class DailyAggregator:
         user_data = defaultdict(lambda: {
             'user_name': '',
             'vc_channels': set(),
-            'login_count': 0
+            'login_count': 0,
+            'records': []  # デバッグ用：該当レコードを保存
         })
 
-        for record in all_records:
+        logger.debug(f"集計対象レコード数: {len(all_records)}")  # 全レコード数
+
+        for idx, record in enumerate(all_records):
             # present列が削除されたため、全レコードを集計対象とする
             user_id = record.get('user_id', '')
             if user_id:
@@ -485,9 +488,24 @@ class DailyAggregator:
                 user_data[user_id]['vc_channels'].add(vc_name)  # VCチャンネル追加
                 user_data[user_id]['login_count'] += 1  # ログイン回数カウント
 
-        # セットを文字列に変換
+                # デバッグ用：レコードの詳細を保存
+                user_data[user_id]['records'].append({
+                    'index': idx,
+                    'datetime': record.get('datetime_jst', ''),
+                    'vc_name': vc_name,
+                    'user_name': record.get('user_name', '')
+                })
+
+        # セットを文字列に変換＋デバッグ出力
         for user_id, data in user_data.items():
             data['vc_channels'] = ', '.join(sorted(data['vc_channels']))
+
+            # デバッグ：特定ユーザーの詳細を出力
+            if 'blue' in data['user_name'].lower():
+                logger.debug(f"=== {data['user_name']} (ID: {user_id}) のレコード一覧 ===")
+                logger.debug(f"  総レコード数: {len(data['records'])}")
+                for rec in data['records']:
+                    logger.debug(f"  - 行{rec['index']+1}: {rec['datetime']} @ {rec['vc_name']}")
 
         logger.info(f"{len(user_data)}名のユーザーデータを集計しました")  # 集計結果ログ
         return dict(user_data)
