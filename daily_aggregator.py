@@ -215,20 +215,28 @@ class DailyAggregator:
             self.mapping_sheet_id = sheet_id  # キャッシュに保存
             logger.info(f"マッピングシートを発見: {file_name} (ID: {sheet_id})")  # シート発見
 
-            # まずシートのタブ一覧を取得
-            spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
-            sheet_names = [sheet['properties']['title'] for sheet in spreadsheet.get('sheets', [])]
-            logger.info(f"利用可能なシートタブ: {sheet_names}")  # タブ一覧表示
+            # configで指定されたタブ名を使用
+            tab_name = self.google_drive_discord_slack_mapping_sheet_tab_name
+            logger.info(f"config設定タブ名を使用: {tab_name}")  # タブ名表示
 
-            # user_mappingタブがあるか確認、なければ最初のタブを使用
-            if 'user_mapping' in sheet_names:
-                range_name = 'user_mapping!A2:C1000'
-            elif sheet_names:  # タブが1つでもある場合
-                range_name = f'{sheet_names[0]}!A2:C1000'  # 最初のタブを使用
-                logger.info(f"user_mappingタブが見つからないため、{sheet_names[0]}タブを使用します")
-            else:
-                logger.warning("読み取り可能なタブがありません")
-                return
+            # タブの存在確認（エラー防止のため）
+            try:
+                spreadsheet = self.sheets_service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+                sheet_names = [sheet['properties']['title'] for sheet in spreadsheet.get('sheets', [])]
+
+                if tab_name not in sheet_names:
+                    logger.warning(f"指定されたタブ '{tab_name}' が見つかりません。利用可能なタブ: {sheet_names}")
+                    if sheet_names:  # 代替タブがある場合
+                        tab_name = sheet_names[0]
+                        logger.info(f"代替として {tab_name} タブを使用します")
+                    else:
+                        logger.warning("読み取り可能なタブがありません")
+                        return
+            except Exception as e:
+                logger.warning(f"タブ一覧の取得に失敗しました: {e}")
+                # タブ確認に失敗してもconfigの設定を信じて続行
+
+            range_name = f'{tab_name}!A2:C1000'  # config設定または代替タブを使用
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
