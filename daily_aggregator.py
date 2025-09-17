@@ -651,11 +651,15 @@ class DailyAggregator:
                 except SlackApiError as e:
                     logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
                     logger.info("コンソールに出力します")  # コンソール出力
+                    print("\n" + "="*60)  # 区切り線
                     print(message)
+                    print("="*60 + "\n")  # 区切り線
             else:
                 # Discord出力モードまたはSlackが設定されていない場合はコンソール出力
                 logger.info("コンソールに出力します")  # コンソール出力
+                print("\n" + "="*60)  # 区切り線
                 print(message)
+                print("="*60 + "\n")  # 区切り線
 
             return message
 
