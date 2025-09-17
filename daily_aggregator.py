@@ -648,43 +648,95 @@ class DailyAggregator:
             logger.error(f"❌ レポート作成エラー: {e}")  # エラー
             raise
 
-    def update_user_statistics(self, sheet_id: str, user_data: Dict[str, Dict[str, Any]]):
-        """ユーザー統計情報を更新"""
+    def get_user_statistics_sheet_id(self) -> str:
+        """ユーザー統計シートのIDを取得または作成"""
         try:
+            # シート名を生成
+            sheet_name = f"UserStatistics_{self.suffix}"  # 統計シート名
+
+            # シートを検索
+            query = f"name='{sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+            results = self.drive_service.files().list(
+                q=query,
+                fields="files(id, name)",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True
+            ).execute()  # 検索実行
+
+            files = results.get('files', [])  # ファイルリスト
+            if files:
+                logger.info(f"📊 既存の統計シートを発見: {sheet_name}")  # 発見
+                return files[0]['id']  # シートID返却
+
+            # シートが存在しない場合は作成
+            logger.info(f"📄 新規統計シートを作成: {sheet_name}")  # 作成ログ
+            spreadsheet = {
+                'properties': {'title': sheet_name},
+                'sheets': [{
+                    'properties': {
+                        'title': 'statistics',
+                        'gridProperties': {'frozenRowCount': 1}
+                    }
+                }]
+            }
+
+            result = self.sheets_service.spreadsheets().create(body=spreadsheet).execute()  # 作成
+            sheet_id = result['spreadsheetId']  # ID取得
+
+            # ヘッダーを設定
+            headers = [['user_id', 'user_name', 'last_login_date', 'consecutive_days', 'total_days', 'last_updated']]  # ヘッダー
+            self.sheets_service.spreadsheets().values().update(
+                spreadsheetId=sheet_id,
+                range='statistics!A1:F1',
+                valueInputOption='RAW',
+                body={'values': headers}
+            ).execute()  # ヘッダー書き込み
+
+            return sheet_id  # ID返却
+
+        except Exception as e:
+            logger.error(f"❌ 統計シートの取得/作成エラー: {e}")  # エラー
+            raise
+
+    def update_user_statistics(self, user_data: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        """ユーザー統計情報を更新して返却"""
+        try:
+            # 統計シートのIDを取得
+            sheet_id = self.get_user_statistics_sheet_id()  # シートID
+
             # 既存の統計情報を読み込み
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=sheet_id,
-                range='user_statistics!A:G'
-            ).execute()
+                range='statistics!A:F'
+            ).execute()  # データ取得
 
-            existing_data = result.get('values', [])
+            existing_data = result.get('values', [])  # 既存データ
 
             # ヘッダー行をスキップして、ユーザーIDをキーにした辞書を作成
             stats_dict = {}
             for row in existing_data[1:] if existing_data else []:
-                if len(row) >= 7:
+                if len(row) >= 5:
                     stats_dict[row[0]] = {
                         'user_name': row[1],
                         'last_login_date': row[2],
                         'consecutive_days': int(row[3]) if row[3] else 0,
                         'total_days': int(row[4]) if row[4] else 0,
-                        'last_updated': row[6]
+                        'last_updated': row[5] if len(row) > 5 else ''
                     }
 
             # 統計情報を更新
-            today_str = self.target_date.strftime('%Y/%m/%d')
-            yesterday = self.target_date - timedelta(days=1)
-            yesterday_str = yesterday.strftime('%Y/%m/%d')
-            current_month = self.target_date.month
+            today_str = self.target_date.strftime('%Y/%m/%d')  # 今日
+            previous_business_day = self.get_previous_business_day(self.target_date)  # 前営業日
+            previous_business_day_str = previous_business_day.strftime('%Y/%m/%d')  # 前営業日文字列
 
             for user_id in user_data:
                 if user_id in stats_dict:
                     # 既存ユーザーの更新
                     stats = stats_dict[user_id]
 
-                    # 連続ログイン日数の計算
-                    if stats['last_login_date'] == yesterday_str:
-                        stats['consecutive_days'] += 1  # 前日もログインしていた
+                    # 連続ログイン日数の計算（営業日ベース）
+                    if stats['last_login_date'] == previous_business_day_str:
+                        stats['consecutive_days'] += 1  # 前営業日もログインしていた
                     else:
                         stats['consecutive_days'] = 1  # 連続が途切れた
 
@@ -723,15 +775,18 @@ class DailyAggregator:
             # シート全体を更新
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
-                range='user_statistics!A:F',
+                range='statistics!A:F',
                 valueInputOption='RAW',
                 body={'values': rows}
-            ).execute()
+            ).execute()  # 書き込み
 
             logger.info(f"✅ {len(stats_dict)}名のユーザー統計情報を更新しました")  # 更新成功ログ
 
+            return stats_dict  # 統計情報を返却
+
         except Exception as e:
             logger.error(f"⚠️ ユーザー統計情報の更新に失敗しました: {e}")  # エラーログ
+            return {}  # 空の辞書を返却
 
     def run(self) -> str:
         """集計処理のメイン実行"""
