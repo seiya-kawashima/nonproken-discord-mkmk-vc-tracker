@@ -49,7 +49,9 @@
       "Bash(gh repo edit:*)",
       "Bash(gh workflow:*)",
       "Bash(gh api:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(set GOOGLE_SERVICE_ACCOUNT_JSON_2_DEV=C:UsersSeiyaKawashimaDownloadsservice_account.json)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
