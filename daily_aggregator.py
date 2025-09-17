@@ -814,21 +814,11 @@ class DailyAggregator:
                 logger.info("📈 集計するユーザーデータがありません")  # 集約データなしログ
                 return "本日の参加者はいませんでした。"
 
-            # 4. ユーザー名マッピングを読み込み
-            self.load_user_mapping()  # ユーザー名対照表を読み込み
+            # 4. ユーザー統計情報を更新
+            stats_dict = self.update_user_statistics(user_data)  # 統計更新
 
-            # 5. 出席レポートを生成
-            report = self.generate_attendance_report(user_data)  # レポート生成
-
-            # レポートをログに出力
-            logger.info("\n" + report)  # レポート出力
-
-            # Google Sheetsへの書き込みはスキップ（オプション）
-            # sheet_id = self.get_sheet_id()
-            # if sheet_id:
-            #     self.ensure_sheets_exist(sheet_id)
-            #     self.write_daily_summary(sheet_id, user_data)
-            #     self.update_user_statistics(sheet_id, user_data)
+            # 5. Slackに投稿
+            report = self.post_to_slack(user_data, stats_dict)  # Slack投稿
 
             logger.info("🎉 データ集計が正常に完了しました！")  # 完了ログ
 
@@ -838,9 +828,13 @@ class DailyAggregator:
             logger.error(f"⚠️ データ集計に失敗しました: {e}")  # エラーログ
             raise
 
+    def load_user_mapping(self):
+        """ユーザーマッピングシートを再読み込み（プライベートメソッドのエイリアス）"""
+        self._load_user_mapping()  # プライベートメソッドを呼び出し
+
     def generate_attendance_report(self, user_data: Dict[str, Dict[str, Any]]) -> str:
         """
-        出席レポートを文字列として生成
+        出席レポートを文字列として生成（互換性のため残す）
 
         Args:
             user_data: ユーザーごとの集計データ
@@ -866,7 +860,7 @@ class DailyAggregator:
             # ユーザー名でソート
             sorted_users = sorted(user_data.items(), key=lambda x: x[1]['user_name'])  # 名前順ソート
 
-            # 連続ログイン日数を簡易計算（今後実装可能）
+            # 連続ログイン日数を簡易計算（互換性のため残す）
             for user_id, data in sorted_users:
                 user_name = data['user_name'] or 'Unknown'  # Discordユーザー名
 
