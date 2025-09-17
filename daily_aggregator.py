@@ -826,27 +826,26 @@ class DailyAggregator:
                             else:
                                 break
 
-                    # デバッグ出力（blue_35405の場合）
-                    if 'blue' in user_name.lower():
-                        logger.debug(f"=== {user_name} の統計（CSVベース） ===")
-                        logger.debug(f"  ユーザーID: {user_id}")
-                        logger.debug(f"  【累計日数の根拠】")
-                        logger.debug(f"    ログイン日一覧: {[d.strftime('%Y/%m/%d') for d in unique_dates]}")
-                        logger.debug(f"    累計日数: {total_days}日")
-                        logger.debug(f"  【連続日数の根拠】")
+                    # 全ユーザーのデバッグ出力
+                    logger.debug(f"=== {user_name} の統計（CSVベース） ===")
+                    logger.debug(f"  ユーザーID: {user_id}")
+                    logger.debug(f"  【累計日数の根拠】")
+                    logger.debug(f"    ログイン日一覧: {[d.strftime('%Y/%m/%d') for d in unique_dates]}")
+                    logger.debug(f"    累計日数: {total_days}日")
+                    logger.debug(f"  【連続日数の根拠】")
 
-                        if consecutive_days > 0:
-                            consecutive_dates = []
-                            current_date = today
-                            for i in range(consecutive_days):
-                                if i == 0:
-                                    consecutive_dates.append(current_date)
-                                else:
-                                    current_date = self.get_previous_business_day(current_date)
-                                    consecutive_dates.append(current_date)
-                            consecutive_dates.reverse()
-                            logger.debug(f"    連続ログイン日: {[d.strftime('%Y/%m/%d') for d in consecutive_dates]}")
-                        logger.debug(f"    連続日数: {consecutive_days}日")
+                    if consecutive_days > 0:
+                        consecutive_dates = []
+                        current_date = today
+                        for i in range(consecutive_days):
+                            if i == 0:
+                                consecutive_dates.append(current_date)
+                            else:
+                                current_date = self.get_previous_business_day(current_date)
+                                consecutive_dates.append(current_date)
+                        consecutive_dates.reverse()
+                        logger.debug(f"    連続ログイン日: {[d.strftime('%Y/%m/%d') for d in consecutive_dates]}")
+                    logger.debug(f"    連続日数: {consecutive_days}日")
 
                     stats_dict[user_id] = {
                         'user_name': user_name,
