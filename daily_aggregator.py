@@ -33,23 +33,10 @@ load_dotenv()
 # config.pyから設定を読み込み
 from config import get_config, get_environment_from_arg, Environment
 
-# loguruの設定
-logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力（ファイル名と関数名を先に表示）
-
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
 
-# 現在の日時を取得（YYYYMMDD_HHMMSS形式）
-current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")  # 日時取得（時分秒まで）
-
-# メイン処理のログ（すべてのログを1つのファイルに集約）
-logger.add(f"logs/daily_aggregator_{current_datetime}.log",
-          rotation="10 MB",
-          retention="7 days",
-          level="DEBUG",  # DEBUGレベルに変更してより詳細なログを出力
-          encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # すべての処理を1つのログファイルに記録
+# loguruの初期設定は後でmain()関数内で行う
 
 
 class DailyAggregator:
