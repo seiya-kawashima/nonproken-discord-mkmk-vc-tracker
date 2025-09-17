@@ -50,7 +50,7 @@ logger.add(f"logs/daily_aggregator_{current_datetime}.log",
           retention="7 days",
           level="INFO",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
           filter=lambda record: "get_csv" not in record["function"] and "aggregate" not in record["function"])  # メイン処理ログ
 
 # 2. CSVファイル取得処理のログ
@@ -59,7 +59,7 @@ logger.add(f"logs/csv_fetch_{current_datetime}.log",
           retention="7 days",
           level="DEBUG",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
           filter=lambda record: "get_csv" in record["function"] or "read_csv" in record["function"])  # CSV取得ログ
 
 # 3. 集計処理のログ
@@ -68,7 +68,7 @@ logger.add(f"logs/aggregation_{current_datetime}.log",
           retention="7 days",
           level="INFO",
           encoding="utf-8",
-          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message} | {name}.py | def: {function}",
+          format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}",
           filter=lambda record: "aggregate" in record["function"] or "write" in record["function"] or "update" in record["function"])  # 集計処理ログ
 
 # 4. エラーログ（全てのエラーを記録）
