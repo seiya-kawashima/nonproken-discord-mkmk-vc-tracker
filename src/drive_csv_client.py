@@ -397,7 +397,7 @@ class DriveCSVClient:
         # CSVデータを作成
         output = io.StringIO()  # メモリ上の文字列ストリーム
         if data:  # データがある場合
-            fieldnames = ['datetime_jst', 'user_id', 'user_name']  # CSVのヘッダー（present列削除）
+            fieldnames = ['datetime_jst', 'user_id', 'user_name', 'display_name']  # CSVのヘッダー（display_name列追加）
             writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore', lineterminator='\n')  # CSV書き込みオブジェクト（改行コードをLFに統一）
             writer.writeheader()  # ヘッダー書き込み
             writer.writerows(data)  # データ書き込み
@@ -547,6 +547,7 @@ class DriveCSVClient:
                         'datetime_jst': datetime_jst,  # 日付と時刻
                         'user_id': member['user_id'],  # ユーザーID
                         'user_name': member['user_name'],  # ユーザー名
+                        'display_name': member.get('display_name', member['user_name']),  # 表示名（ニックネーム）、なければユーザー名
                     }
                     new_rows.append(new_row)  # 新規データリストに追加
                     new_count += 1  # カウンタ増加
