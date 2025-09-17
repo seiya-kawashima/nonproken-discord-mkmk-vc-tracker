@@ -172,9 +172,9 @@ class TestDailyAggregator(unittest.TestCase):
         # 既存統計データのモック
         existing_stats = {
             'values': [
-                ['user_id', 'user_name', 'last_login_date', 'consecutive_days', 'monthly_days', 'total_days', 'last_updated'],
-                ['111', 'user1', '2025/09/14', '5', '10', '30', '2025/09/14 23:00:00'],  # 前日ログイン
-                ['222', 'user2', '2025/09/13', '1', '8', '20', '2025/09/13 23:00:00'],  # 2日前ログイン
+                ['user_id', 'user_name', 'last_login_date', 'consecutive_days', 'total_days', 'last_updated'],
+                ['111', 'user1', '2025/09/14', '5', '30', '2025/09/14 23:00:00'],  # 前日ログイン
+                ['222', 'user2', '2025/09/13', '1', '20', '2025/09/13 23:00:00'],  # 2日前ログイン
             ]
         }
         self.mock_sheets_service.spreadsheets().values().get().execute.return_value = existing_stats
@@ -198,20 +198,17 @@ class TestDailyAggregator(unittest.TestCase):
         # ユーザー111の更新確認（連続ログイン日数が6に増加）
         user111_row = next(row for row in updated_values if row[0] == '111')
         self.assertEqual(user111_row[3], 6)  # consecutive_days: 5 + 1 = 6
-        self.assertEqual(user111_row[4], 11)  # monthly_days: 10 + 1 = 11
-        self.assertEqual(user111_row[5], 31)  # total_days: 30 + 1 = 31
+        self.assertEqual(user111_row[4], 31)  # total_days: 30 + 1 = 31
 
         # ユーザー222の確認（今日はログインしていないので変更なし）
         user222_row = next(row for row in updated_values if row[0] == '222')
         self.assertEqual(user222_row[3], 1)  # consecutive_days: そのまま
-        self.assertEqual(user222_row[4], 8)  # monthly_days: そのまま
-        self.assertEqual(user222_row[5], 20)  # total_days: そのまま
+        self.assertEqual(user222_row[4], 20)  # total_days: そのまま
 
         # ユーザー333の確認（新規ユーザー）
         user333_row = next(row for row in updated_values if row[0] == '333')
         self.assertEqual(user333_row[3], 1)  # consecutive_days: 1
-        self.assertEqual(user333_row[4], 1)  # monthly_days: 1
-        self.assertEqual(user333_row[5], 1)  # total_days: 1
+        self.assertEqual(user333_row[4], 1)  # total_days: 1
 
     @patch('daily_aggregator.service_account.Credentials')
     @patch('daily_aggregator.build')
