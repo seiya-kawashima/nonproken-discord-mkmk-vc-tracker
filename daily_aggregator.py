@@ -797,16 +797,23 @@ class DailyAggregator:
                         if stats['last_login_date'] == previous_business_day_str:
                             stats['consecutive_days'] += 1  # 前営業日もログインしていた
                             if 'blue' in user_name.lower():
-                                logger.debug(f"  → 連続ログイン継続: {old_consecutive} → {stats['consecutive_days']}日")
+                                logger.debug(f"  【連続ログイン判定】")
+                                logger.debug(f"    判定: 継続（最終ログイン日 {old_last_login} = 前営業日 {previous_business_day_str}）")
+                                logger.debug(f"    更新: {old_consecutive}日 → {stats['consecutive_days']}日")
                         else:
                             stats['consecutive_days'] = 1  # 連続が途切れた
                             if 'blue' in user_name.lower():
-                                logger.debug(f"  → 連続ログインリセット: {old_consecutive} → 1日（最終ログイン{old_last_login}は前営業日でない）")
+                                logger.debug(f"  【連続ログイン判定】")
+                                logger.debug(f"    判定: リセット（最終ログイン日 {old_last_login} ≠ 前営業日 {previous_business_day_str}）")
+                                logger.debug(f"    更新: {old_consecutive}日 → 1日")
 
                         # 累計ログイン日数（今日が新しい日の場合のみインクリメント）
                         stats['total_days'] += 1
                         if 'blue' in user_name.lower():
-                            logger.debug(f"  → 累計日数更新: {old_total} → {stats['total_days']}日")
+                            logger.debug(f"  【累計ログイン更新】")
+                            logger.debug(f"    既存累計: {old_total}日")
+                            logger.debug(f"    +1（今日の分）")
+                            logger.debug(f"    新累計: {stats['total_days']}日")
 
                         # 最終ログイン日と更新日時を更新
                         stats['last_login_date'] = today_str
