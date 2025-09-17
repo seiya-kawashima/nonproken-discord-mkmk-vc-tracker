@@ -986,7 +986,7 @@ class DailyAggregator:
             sheets = results.get('files', [])  # 結果取得
             if not sheets:
                 logger.warning(f"ユーザー名対照表が見つかりません: {mapping_sheet_name}")  # 対照表なし警告
-                logger.info("create_user_mapping_sheet.pyを実行して対照表を作成してください")  # 作成指示
+                logger.info("Google Drive上に対照表スプレッドシートを作成してください")  # 作成指示
                 return
 
             sheet_id = sheets[0]['id']  # シートID取得
