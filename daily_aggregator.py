@@ -591,48 +591,62 @@ class DailyAggregator:
         except Exception as e:
             logger.error(f"⚠️ ヘッダーの設定に失敗しました: {e}")  # エラーログ
 
-    def write_daily_summary(self, sheet_id: str, user_data: Dict[str, Dict[str, Any]]):
-        """日次サマリーをシートに書き込み"""
+    def post_to_slack(self, user_data: Dict[str, Dict[str, Any]], stats_dict: Dict[str, Dict[str, Any]]) -> str:
+        """集計結果をSlackに投稿"""
         try:
-            # 書き込むデータを準備
-            rows = []
-            date_str = self.target_date.strftime('%Y/%m/%d')
+            # メッセージを構築
+            date_str = self.target_date.strftime('%Y年%m月%d日')
+            message_lines = [f"📅 [{date_str}] のVCログインレポート", ""]
 
-            for user_id, data in user_data.items():
-                rows.append([
-                    date_str,
-                    user_id,
-                    data['user_name'],
-                    data['vc_channels'],
-                    data['login_count']
-                ])
+            if user_data:
+                message_lines.append("本日の参加者：")
 
-            if not rows:
-                logger.info("📝 daily_summaryに書き込むデータがありません")  # データなしログ
-                return
+                # ユーザー情報を整形
+                for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
+                    # 統計情報を取得
+                    stats = stats_dict.get(user_id, {})
+                    consecutive = stats.get('consecutive_days', 1)
+                    total = stats.get('total_days', 1)
 
-            # 既存データの最終行を取得
-            result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=sheet_id,
-                range='daily_summary!A:A'
-            ).execute()
+                    # ユーザー名を取得（マッピングまたはDiscord名）
+                    if self.output_pattern == 'slack' and user_id in self.user_mapping:
+                        user_display = f"<@{self.user_mapping[user_id]}>"
+                    else:
+                        user_display = data['user_name']
 
-            existing_rows = result.get('values', [])
-            next_row = len(existing_rows) + 1
+                    # メッセージを構築
+                    if consecutive == 1:
+                        message_lines.append(f"{user_display} さん　１日目のログイン（累計{total}日）")
+                    else:
+                        message_lines.append(f"{user_display} さん　{consecutive}日連続ログイン（累計{total}日）")
 
-            # データを追記
-            range_name = f'daily_summary!A{next_row}:E{next_row + len(rows) - 1}'
-            self.sheets_service.spreadsheets().values().update(
-                spreadsheetId=sheet_id,
-                range=range_name,
-                valueInputOption='RAW',
-                body={'values': rows}
-            ).execute()
+                message_lines.append("")
+                message_lines.append(f"本日の参加者数： {len(user_data)}名")
+            else:
+                message_lines.append("本日のVCログイン者はいませんでした。")
 
-            logger.info(f"✅ daily_summaryシートに{len(rows)}件のデータを書き込みました")  # 書き込み成功ログ
+            message = "\n".join(message_lines)
 
+            # Slackに投稿
+            if self.slack_client and self.slack_channel:
+                response = self.slack_client.chat_postMessage(
+                    channel=self.slack_channel,
+                    text=message
+                )
+                logger.info(f"✅ Slackにレポートを投稿しました")  # 投稿成功
+            else:
+                # Slackが設定されていない場合はコンソール出力
+                logger.info("⚠️ Slackが設定されていないため、コンソールに出力します")  # Slack未設定
+                print(message)
+
+            return message
+
+        except SlackApiError as e:
+            logger.error(f"❌ Slack投稿エラー: {e.response['error']}")  # Slackエラー
+            raise
         except Exception as e:
-            logger.error(f"⚠️ daily_summaryの書き込みに失敗しました: {e}")  # エラーログ
+            logger.error(f"❌ レポート作成エラー: {e}")  # エラー
+            raise
 
     def update_user_statistics(self, sheet_id: str, user_data: Dict[str, Dict[str, Any]]):
         """ユーザー統計情報を更新"""
