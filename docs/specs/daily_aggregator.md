@@ -42,41 +42,65 @@ config = get_config(env)  # env: 0=PRD, 1=TST, 2=DEV
 
 ## 📤 Output（出力）
 
-### レポート出力
-プログラムは参加者レポートを生成し、以下の形式で出力します：
+### Slackへの直接投稿
+プログラムは集計結果をSlackチャンネルに直接投稿します。
+
+#### 投稿形式
+```
+📅 [2025年9月15日] のVCログインレポート
+
+本日の参加者：
+<@U12345678> さん　７日連続ログイン（累計45日）
+<@U87654321> さん　１日目のログイン（累計12日）
+...
+
+本日の参加者数： 15名
+```
 
 #### 出力パターン
 | パターン | 説明 | 使用例 |
 |----------|------|--------|
-| `discord` | Discord名で出力（モック/テスト用） | `kawashima#1234 さん　15日目のログインになります。` |
-| `slack` | Slackメンションで出力（本番用） | `<@U12345678> さん　15日目のログインになります。` |
+| `discord` | Discord名で出力（テスト用） | `kawashima#1234 さん` |
+| `slack` | Slackメンションで出力（本番用） | `<@U12345678> さん` |
 
 ※ `--output` オプションで指定可能（デフォルトは `slack`）
 
-### Google Sheetsへの出力
+### ユーザーマッピング処理
 
-#### 1. daily_summary シート
-当日のログインユーザー情報
+#### マッピングシートの構成
+Google SheetsにDiscordユーザーIDとSlackメンションIDの対応表を管理：
 
-| 項目 | 型 | 説明 | 例 |
-|------|-----|------|-----|
-| date | 日付 | 集計日 | `2025/09/15` |
-| user_id | 文字列 | Discord ユーザーID | `111111111111111111` |
-| user_name | 文字列 | Discord ユーザー名 | `kawashima#1234` |
-| vc_channels | 文字列 | ログインしたVCチャンネル名リスト | `general-voice, study-room` |
-| login_count | 数値 | その日のログイン回数 | `3` |
+| 列名 | 説明 | 例 |
+|------|------|-----|
+| discord_user_id | DiscordユーザーID | 111111111111111111 |
+| discord_user_name | Discordユーザー名 | kawashima#1234 |
+| slack_mention_id | SlackメンションID | U12345678 |
+| slack_user_name | Slackユーザー名 | kawashima.seiya |
+| notes | 備考 | テストユーザー |
 
-#### 2. user_statistics シート
-ユーザーごとの統計情報
+#### マッピング処理の流れ
+1. config.pyから`user_mapping_sheet_name`を取得
+2. Google Sheetsからマッピングデータを読み込み
+3. DiscordユーザーIDをキーにメンションIDを取得
+4. マッピングが存在しない場合はDiscord名を使用
 
-| 項目 | 型 | 説明 | 例 |
-|------|-----|------|-----|
-| user_id | 文字列 | Discord ユーザーID | `111111111111111111` |
-| user_name | 文字列 | Discord ユーザー名 | `kawashima#1234` |
-| last_login_date | 日付 | 最終ログイン日 | `2025/09/15` |
-| consecutive_days | 数値 | 連続ログイン日数（営業日ベース） | `7` |
-| total_days | 数値 | 累計ログイン日数 | `45` |
-| last_updated | 日時 | 最終更新日時 | `2025/09/15 23:00:00` |
+### Slack投稿設定
+
+| 設定項目 | 説明 | config.py設定元 |
+|---------|------|----------------|
+| Slack Botトークン | Slack APIの認証トークン | `slack_token` |
+| SlackチャンネルID | 投稿先のチャンネルID | `slack_channel` |
+| マッピングシート名 | ユーザーマッピング管理シート | `user_mapping_sheet_name` |
+
+### 統計データの保存
+ユーザー統計情報はGoogle Sheetsに保存され、次回の集計時に参照されます：
+
+| 項目 | 型 | 説明 |
+|------|-----|------|
+| user_id | 文字列 | DiscordユーザーID |
+| last_login_date | 日付 | 最終ログイン日 |
+| consecutive_days | 数値 | 連続ログイン日数（営業日ベース） |
+| total_days | 数値 | 累計ログイン日数 |
 
 ## 🔧 処理の流れ
 
