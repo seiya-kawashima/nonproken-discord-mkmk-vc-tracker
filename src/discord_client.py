@@ -11,17 +11,19 @@ from loguru import logger  # ログ出力用（loguru）
 class DiscordVCPoller:
     """Discord VCの在室メンバーを取得するクラス"""  # クラスの説明
 
-    def __init__(self, token: str, allowed_channel_ids: List[str], mask_usernames: bool = False):
+    def __init__(self, token: str, allowed_channel_ids: List[str], mask_usernames: bool = False, excluded_users: List[str] = None):
         """初期化処理
 
         Args:
             token: Discord Botトークン
             allowed_channel_ids: 監視対象のVCチャンネルIDリスト
             mask_usernames: ユーザー名をマスキングするかどうか（本番・テスト環境用）
+            excluded_users: 記録から除外するユーザー名のリスト
         """  # 初期化処理の説明
         self.token = token  # Botトークンを保存
         self.allowed_channel_ids = allowed_channel_ids  # 監視対象チャンネルIDを保存
         self.mask_usernames = mask_usernames  # ユーザー名マスキング設定
+        self.excluded_users = excluded_users or []  # 除外ユーザーリスト（デフォルト空リスト）
         self.intents = discord.Intents.default()  # デフォルトのIntentsを取得
         self.intents.voice_states = True  # ボイスステート権限を有効化
         self.intents.guilds = True  # ギルド情報権限を有効化
