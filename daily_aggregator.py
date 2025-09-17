@@ -820,7 +820,10 @@ class DailyAggregator:
                         stats['last_updated'] = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
                     else:
                         if 'blue' in user_name.lower():
-                            logger.debug(f"  → 既に今日のデータ処理済みのためスキップ")
+                            logger.debug(f"  【処理スキップ】")
+                            logger.debug(f"    理由: 既に今日（{today_str}）のデータ処理済み")
+                            logger.debug(f"    現在の連続日数: {stats['consecutive_days']}日（変更なし）")
+                            logger.debug(f"    現在の累計日数: {stats['total_days']}日（変更なし）")
 
                     # ユーザー名は常に最新のものに更新
                     stats['user_name'] = user_data[user_id]['user_name']
