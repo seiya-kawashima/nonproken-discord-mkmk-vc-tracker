@@ -183,21 +183,32 @@ class DailyAggregator:
     def _load_user_mapping(self):
         """ユーザーマッピングシートからデータを読み込み"""
         try:
-            # Drive APIでシートを検索
-            query = f"name='{self.user_mapping_sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
-            results = self.drive_service.files().list(
-                q=query,
-                fields="files(id, name)",
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True
-            ).execute()  # 検索実行
+            # ハードコードされたシートIDまたは名前で検索
+            # 開発環境用のシートID
+            hardcoded_sheet_ids = {
+                '2_DEV': '1YbYoDIiQfA1NNPl2hiRSZ6iYXQ22E-Pk1-WWQ9i0PWk',
+                '1_TST': '',  # テスト環境用（未作成）
+                '0_PRD': ''   # 本番環境用（未作成）
+            }
 
-            files = results.get('files', [])  # ファイルリスト
-            if not files:
-                logger.warning(f"⚠️ ユーザーマッピングシート '{self.user_mapping_sheet_name}' が見つかりません")  # シート未発見
-                return
+            sheet_id = hardcoded_sheet_ids.get(self.suffix)
 
-            sheet_id = files[0]['id']  # シートID
+            if not sheet_id:
+                # Drive APIでシートを検索
+                query = f"name='{self.user_mapping_sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+                results = self.drive_service.files().list(
+                    q=query,
+                    fields="files(id, name)",
+                    supportsAllDrives=True,
+                    includeItemsFromAllDrives=True
+                ).execute()  # 検索実行
+
+                files = results.get('files', [])  # ファイルリスト
+                if not files:
+                    logger.warning(f"⚠️ ユーザーマッピングシート '{self.user_mapping_sheet_name}' が見つかりません")  # シート未発見
+                    return
+
+                sheet_id = files[0]['id']  # シートID
             logger.info(f"📖 ユーザーマッピングシートを発見: {self.user_mapping_sheet_name}")  # シート発見
 
             # シートからデータを読み込み
