@@ -40,7 +40,7 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'google_drive_base_folder': 'discord_mokumoku_tracker',  # Google Drive上のベースフォルダ名（すべてのデータはこのフォルダ内に保存）
         'google_drive_csv_path': 'discord_mokumoku_tracker/csv/{vc_name}_' + f'{suffix}.csv',  # CSVファイルのフルパス（例: discord_mokumoku_tracker/csv/一般_0_PRD.csv）
         'google_drive_spreadsheet_path': 'discord_mokumoku_tracker/{vc_name}/' + f'もくもくトラッカー_{suffix}',  # スプレッドシートのフルパス（例: discord_mokumoku_tracker/一般/もくもくトラッカー_0_PRD）
-        'google_drive_discord_slack_mapping_sheet_id': os.getenv(f'GOOGLE_DRIVE_DISCORD_SLACK_MAPPING_SHEET_ID_{suffix}'),  # Discord-Slackユーザーマッピング用GoogleスプレッドシートのID（必須）
+        'google_drive_discord_slack_mapping_sheet_path': 'discord_mokumoku_tracker/discord_slack_mapping_' + f'{suffix}',  # Discord-Slackユーザーマッピング用スプレッドシートのパス
         'slack_token': os.getenv(f'SLACK_BOT_TOKEN_{suffix}'),  # Slack通知用のBotトークン（Slackにメッセージを送るためのパスワード）
         'slack_channel': os.getenv(f'SLACK_CHANNEL_ID_{suffix}'),  # 通知先のSlackチャンネルID
         'suffix': suffix,  # 環境識別子（0_PRD/1_TST/2_DEV）を他の処理でも使えるように保存
