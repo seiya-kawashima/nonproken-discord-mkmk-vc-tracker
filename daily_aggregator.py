@@ -738,11 +738,7 @@ class DailyAggregator:
 
                     logger.info("statisticsタブを作成しました")  # タブ作成ログ
 
-                return sheet_id  # ID返却
-            else:
-                logger.warning(f"マッピングシートが見つかりません: {file_name}")  # シートなし
-                logger.info("統計情報の保存をスキップします")  # スキップ
-                return None
+            return sheet_id  # ID返却
 
         except Exception as e:
             logger.error(f"マッピングシートの取得エラー: {e}")  # エラー
