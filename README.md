@@ -30,10 +30,8 @@ Discord の特定ボイスチャンネルで
 | A | `date_jst`  | 2025/9/11          |
 | B | `user_id`   | 111111111111111111 |
 | C | `user_name` | kawashima#1234     |
-| D | `present`   | TRUE               |
 
 * `(date_jst, user_id)` の組み合わせで **一意**
-* すでに TRUE の場合は更新不要（Upsert方式）
 
 ---
 
