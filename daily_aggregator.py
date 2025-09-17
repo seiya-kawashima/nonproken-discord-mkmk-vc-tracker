@@ -114,6 +114,7 @@ class DailyAggregator:
         self.allowed_vc_ids = self.config.get('discord_channel_ids', self.config.get('channel_ids'))  # Discord対象VCチャンネルID
         self.suffix = self.config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
         self.google_drive_discord_slack_mapping_sheet_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')  # Discord-Slackユーザーマッピングシートパス
+        self.google_drive_discord_slack_mapping_sheet_tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')  # マッピングシート内のタブ名（デフォルト: Sheet1）
         self.slack_token = self.config.get('slack_token')  # Slack Botトークン
         self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
 
