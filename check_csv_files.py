@@ -7,6 +7,9 @@ Google Drive上のCSVファイルを確認するスクリプト
 import os
 import sys
 import argparse
+import base64
+import json
+import tempfile
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from config import get_config, get_environment_from_arg, Environment
