@@ -187,22 +187,12 @@ class DailyAggregator:
             sheet_id = self.config.get('user_mapping_sheet_id')
 
             if not sheet_id:
-                # Drive APIでシートを検索
-                query = f"name='{self.user_mapping_sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
-                results = self.drive_service.files().list(
-                    q=query,
-                    fields="files(id, name)",
-                    supportsAllDrives=True,
-                    includeItemsFromAllDrives=True
-                ).execute()  # 検索実行
+                # シートIDが設定されていない場合はエラー
+                logger.error(f"❌ USER_MAPPING_SHEET_ID_{self.suffix}が設定されていません")  # 設定エラー
+                logger.error(f"   環境変数にシートIDを設定してください: USER_MAPPING_SHEET_ID_{self.suffix}=<シートID>")  # 設定方法
+                raise ValueError(f"ユーザーマッピングシートIDが設定されていません（USER_MAPPING_SHEET_ID_{self.suffix}）")  # エラー
 
-                files = results.get('files', [])  # ファイルリスト
-                if not files:
-                    logger.warning(f"⚠️ ユーザーマッピングシート '{self.user_mapping_sheet_name}' が見つかりません")  # シート未発見
-                    return
-
-                sheet_id = files[0]['id']  # シートID
-            logger.info(f"📖 ユーザーマッピングシートを発見: {self.user_mapping_sheet_name}")  # シート発見
+            logger.info(f"📖 ユーザーマッピングシートIDを使用: {sheet_id}")  # シートID使用
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
