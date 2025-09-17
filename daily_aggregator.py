@@ -112,7 +112,7 @@ class DailyAggregator:
         self.google_drive_folder_structure = folder_structure  # Google Driveフォルダ構造定義
         self.allowed_vc_ids = self.config.get('discord_channel_ids', self.config.get('channel_ids'))  # Discord対象VCチャンネルID
         self.suffix = self.config['suffix']  # 環境サフィックス (0_PRD/1_TST/2_DEV)
-        self.user_mapping_sheet_name = self.config.get('user_mapping_sheet_name', f'UserMapping_{self.suffix}')  # ユーザーマッピングシート名
+        self.user_mapping_sheet_id = self.config.get('user_mapping_sheet_id')  # ユーザーマッピングシートID
         self.slack_token = self.config.get('slack_token')  # Slack Botトークン
         self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
 
