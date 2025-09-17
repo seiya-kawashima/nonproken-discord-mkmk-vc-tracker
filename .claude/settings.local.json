@@ -46,7 +46,10 @@
       "Bash(sed:*)",
       "Bash(dir:*)",
       "Bash(git checkout:*)",
-      "Bash(gh repo edit:*)"
+      "Bash(gh repo edit:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh api:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": [],
     "ask": []
