@@ -492,12 +492,11 @@ class DailyAggregator:
         for user_id, data in user_data.items():
             data['vc_channels'] = ', '.join(sorted(data['vc_channels']))
 
-            # デバッグ：特定ユーザーの詳細を出力
-            if 'blue' in data['user_name'].lower():
-                logger.debug(f"=== {data['user_name']} (ID: {user_id}) のレコード一覧 ===")
-                logger.debug(f"  総レコード数: {len(data['records'])}")
-                for rec in data['records']:
-                    logger.debug(f"  - 行{rec['index']+1}: {rec['datetime']} @ {rec['vc_name']}")
+            # 全ユーザーのデバッグ詳細を出力
+            logger.debug(f"=== {data['user_name']} (ID: {user_id}) のレコード一覧 ===")
+            logger.debug(f"  総レコード数: {len(data['records'])}")
+            for rec in data['records']:
+                logger.debug(f"  - 行{rec['index']+1}: {rec['datetime']} @ {rec['vc_name']}")
 
         logger.info(f"{len(user_data)}名のユーザーデータを集計しました")  # 集計結果ログ
         return dict(user_data)
