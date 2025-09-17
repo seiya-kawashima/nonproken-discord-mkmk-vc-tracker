@@ -423,10 +423,7 @@ class DailyAggregator:
             target_date_str_no_pad = self.target_date.strftime('%Y/%-m/%-d') if os.name != 'nt' else self.target_date.strftime('%Y/%#m/%#d')  # ゼロパディングなし
             logger.info(f"検索対象日付: {target_date_str} または {target_date_str_no_pad}")  # 検索日付ログ
 
-            # 最初の数行をサンプル表示
-            sample_count = min(3, len(lines) - 1)  # 最大3行表示
-            if sample_count > 0:
-                logger.debug(f"CSVデータサンプル（最初の{sample_count}行）:")  # サンプルデータヘッダー
+            # サンプル表示は削除（不要なログ）  # サンプルデータヘッダー
 
             for idx, line in enumerate(lines[1:]):
                 values = line.split(',')
@@ -435,12 +432,7 @@ class DailyAggregator:
 
                 record = dict(zip(headers, values))
 
-                # サンプルデータ表示
-                if idx < sample_count:
-                    if 'datetime_jst' in record:
-                        logger.debug(f"  行{idx+1}: datetime_jst='{record['datetime_jst']}'")  # サンプルデータ表示
-                    else:
-                        logger.debug(f"  行{idx+1}: {record}")  # サンプルデータ全体
+                # サンプル表示は削除（不要なログ）
 
                 # 対象日のレコードのみ抽出
                 if 'datetime_jst' in record:
@@ -450,7 +442,7 @@ class DailyAggregator:
                         # VCチャンネル名を追加（ファイル名から拡張子を除いたもの）
                         record['vc_name'] = file_name.replace('.csv', '')
                         records.append(record)
-                        logger.debug(f"  マッチ: {datetime_value}")  # マッチしたレコード
+                        # マッチログは削除（不要）  # マッチしたレコード
 
             logger.info(f"{file_name}から{target_date_str}の{len(records)}件のデータを読み込みました")  # 読み込み結果ログ
             return records
