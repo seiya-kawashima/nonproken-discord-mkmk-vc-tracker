@@ -293,7 +293,9 @@ ERROR: Failed to connect to Discord
 
 ### Q1: 手動で実行できますか？
 **A:** はい、以下の方法で可能です：
-- ローカル: `python poll_once.py`
+- 本番環境: `python discord_attendance_collector.py --env 0`
+- テスト環境: `python discord_attendance_collector.py --env 1`
+- 開発環境: `python discord_attendance_collector.py --env 2`
 - GitHub: Actionsページから「Run workflow」
 
 ### Q2: 実行頻度を変更できますか？
