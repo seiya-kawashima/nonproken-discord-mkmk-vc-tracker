@@ -38,8 +38,8 @@ class MockInputData:
 
     # CSVテンプレートデータ（既存の出席記録）
     @staticmethod
-    def get_mock_template_csv() -> str:
-        """既存のCSVテンプレートデータを返す"""
+    def get_template_csv() -> str:
+        """既存のCSVテンプレートデータ（テスト入力用）"""
         return """日付,田中,佐藤,鈴木
 2025-01-13,0,0,0
 2025-01-14,1,0,1
@@ -47,9 +47,32 @@ class MockInputData:
 2025-01-16,1,1,0
 2025-01-17,0,1,1"""
 
+    # 本日（2025-01-18）のメンバー出席データ
+    @staticmethod
+    def get_today_members() -> List[str]:
+        """本日のVC参加メンバーリスト（入力用）"""
+        return ["田中", "佐藤", "鈴木"]
+
+    # 集計用のテストデータ（1週間分）
+    @staticmethod
+    def get_aggregation_test_csv() -> str:
+        """集計テスト用のCSVデータ（1週間分の入力）"""
+        return """日付,田中,佐藤,鈴木,山田
+2025-01-13,1,0,1,1
+2025-01-14,1,0,1,0
+2025-01-15,1,1,0,1
+2025-01-16,1,1,0,1
+2025-01-17,0,1,1,0
+2025-01-18,1,1,1,0"""
+
+
+
+class ExpectedData:
+    """テスト結果検証用の期待値データクラス"""
+
     # 新規メンバーが追加された後の期待されるCSVデータ
     @staticmethod
-    def get_expected_csv_after_append() -> str:
+    def get_csv_after_append() -> str:
         """メンバー追加後の期待されるCSVデータ"""
         return """日付,田中,佐藤,鈴木
 2025-01-13,0,0,0
@@ -59,10 +82,10 @@ class MockInputData:
 2025-01-17,0,1,1
 2025-01-18,1,1,1"""
 
-    # 本日（2025-01-18）のメンバー出席データ
+    # 期待されるメンバーリスト（Discord VCから取得）
     @staticmethod
-    def get_today_members() -> List[str]:
-        """本日のVC参加メンバーリスト"""
+    def get_member_names() -> List[str]:
+        """期待されるメンバー名リスト"""
         return ["田中", "佐藤", "鈴木"]
 
     # 期待されるSlack通知メッセージ
@@ -91,28 +114,14 @@ class MockInputData:
 ────────────────────
 ✨ 素晴らしい継続です！みんなで頑張りましょう！"""
 
-    # 集計用のテストデータ（1週間分）
-    @staticmethod
-    def get_aggregation_test_csv() -> str:
-        """集計テスト用のCSVデータ（1週間分）"""
-        return """日付,田中,佐藤,鈴木,山田
-2025-01-13,1,0,1,1
-2025-01-14,1,0,1,0
-2025-01-15,1,1,0,1
-2025-01-16,1,1,0,1
-2025-01-17,0,1,1,0
-2025-01-18,1,1,1,0"""
-
-    # ボイスチャンネルIDは環境変数から取得するため、モックデータには含めない
-    # channel_idは環境変数 DISCORD_VOICE_CHANNEL_IDS から実際に取得される
-
     # Discord Botトークンのモック（テスト用）
     @staticmethod
     def get_mock_bot_token() -> str:
         """テスト用のBotトークン（実際には使用されない）"""
         return "MOCK_BOT_TOKEN_FOR_TESTING_ONLY"
 
-    # Slackの統計データ辞書
+
+    # 期待されるSlackの統計データ辞書
     @staticmethod
     def get_stats_dict() -> Dict[str, Dict[str, Any]]:
         """統計情報の辞書形式データ"""
@@ -134,7 +143,7 @@ class MockInputData:
             }
         }
 
-    # ユーザーデータ（出席履歴）
+    # 期待されるユーザーデータ（出席履歴）
     @staticmethod
     def get_user_data() -> Dict[str, Dict[str, Any]]:
         """ユーザー別の出席履歴データ"""
