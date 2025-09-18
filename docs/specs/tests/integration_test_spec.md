@@ -183,6 +183,48 @@ def test_integration_with_mock():
     # 土曜日だが、平日の連続出席を正しく計算
     assert "連続出席: 3日" in message  # 田中: 木金土で3日連続
     assert "連続出席: 2日" in message  # 佐藤: 金土で2日連続
+
+# エンドツーエンドテスト: discord_attendance_collector.py
+def test_e2e_discord_attendance_collector():
+    """discord_attendance_collector.pyの全体フローテスト"""
+    import discord_attendance_collector
+
+    # Discord APIとGoogle Drive APIをモック化
+    with patch('discord.Client') as mock_discord:
+        with patch('googleapiclient.discovery.build') as mock_drive:
+            # モックの設定
+            mock_discord.return_value.guilds = [mock_guild]
+            mock_drive.return_value.files.return_value.create.return_value.execute.return_value = {'id': 'test_file_id'}
+
+            # main関数を直接呼び出し（テスト環境）
+            sys.argv = ['discord_attendance_collector.py', '--env', '1']
+            exit_code = discord_attendance_collector.main()
+
+            # 検証
+            assert exit_code == 0, "プログラムが正常終了しなかった"
+            assert mock_discord.called, "Discord APIが呼び出されなかった"
+            assert mock_drive.called, "Google Drive APIが呼び出されなかった"
+
+# エンドツーエンドテスト: daily_aggregator.py
+def test_e2e_daily_aggregator():
+    """daily_aggregator.pyの全体フローテスト"""
+    import daily_aggregator
+
+    # Google Drive APIとSlack APIをモック化
+    with patch('googleapiclient.discovery.build') as mock_drive:
+        with patch('slack_sdk.WebClient') as mock_slack:
+            # モックの設定
+            mock_drive.return_value.files.return_value.get.return_value.execute.return_value = mock_csv_data
+            mock_slack.return_value.chat_postMessage.return_value = {'ok': True}
+
+            # main関数を直接呼び出し（テスト環境）
+            sys.argv = ['daily_aggregator.py', '--env', '1']
+            exit_code = daily_aggregator.main()
+
+            # 検証
+            assert exit_code == 0, "プログラムが正常終了しなかった"
+            assert mock_drive.called, "Google Drive APIが呼び出されなかった"
+            assert mock_slack.called, "Slack APIが呼び出されなかった"
 ```
 
 ## ⚠️ 注意事項
