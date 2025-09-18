@@ -109,20 +109,23 @@ def test_authentication():
 # 統合テスト（モックデータ使用）
 def test_integration_with_mock():
     """モックデータで全機能を統合テスト"""
-    # 1. VCメンバー取得（モック）
-    mock_members = MockData.get_mock_members()
-    members = get_vc_members_mock(mock_members)
-    assert members == ["田中", "佐藤", "鈴木"]
+    # 1. VCメンバー取得（入力データ → 期待値と比較）
+    input_members = MockInputData.get_mock_members()
+    members = get_vc_members_mock(input_members)
+    expected_names = ExpectedData.get_member_names()
+    assert members == expected_names  # ["田中", "佐藤", "鈴木"]
 
-    # 2. CSV追記処理
-    template_csv = MockData.get_mock_template_csv()
-    updated_csv = append_to_csv(template_csv, members, "2025-01-18")
-    expected_csv = MockData.get_expected_csv_after_append()
+    # 2. CSV追記処理（入力データ → 期待値と比較）
+    template_csv = MockInputData.get_template_csv()
+    today_members = MockInputData.get_today_members()
+    updated_csv = append_to_csv(template_csv, today_members, "2025-01-18")
+    expected_csv = ExpectedData.get_csv_after_append()
     assert updated_csv == expected_csv
 
-    # 3. Slack通知（土日祝の連続計算確認）
-    stats = calculate_stats(updated_csv, "2025-01-18")
-    message = generate_slack_message(stats)
+    # 3. Slack通知（期待値データで検証）
+    expected_stats = ExpectedData.get_stats_dict()
+    message = generate_slack_message(expected_stats)
+    expected_message = ExpectedData.get_expected_slack_message()
 
     # 土曜日だが、平日の連続出席を正しく計算
     assert "連続出席: 3日" in message  # 田中: 木金土で3日連続
