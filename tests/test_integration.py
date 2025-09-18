@@ -20,6 +20,20 @@ from src.drive_csv_client import DriveCSVClient as CSVClient  # CSV処理
 from daily_aggregator import DailyAggregator  # 日次集計
 from tests.fixtures.mock_data import MockData  # モックデータ
 
+# Slack通知用のクラスを追加
+class SlackNotifier:
+    """Slack通知用モッククラス"""
+    def __init__(self, webhook_url):
+        self.webhook_url = webhook_url  # WebhookURL保存
+
+    def send_message(self, message):
+        """メッセージ送信（モック）"""
+        return 200  # 成功ステータス
+
+    def post_to_slack(self, user_data, stats_dict):
+        """Slackメッセージ生成（モック）"""
+        return ""  # 空文字を返す
+
 # ========== 認証系接続テスト ==========
 
 class TestAuthentication:
