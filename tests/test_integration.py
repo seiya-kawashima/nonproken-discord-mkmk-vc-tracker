@@ -166,10 +166,10 @@ class TestIntegrationWithMock:
 
         try:
             # 集計処理実行（適切にモック化）
-                aggregator = DailyAggregator()  # 引数なしで初期化
+            aggregator = DailyAggregator()  # 引数なしで初期化
 
-                # aggregate_dataメソッドをモック化
-                with patch.object(aggregator, 'aggregate_data') as mock_aggregate:
+            # aggregate_dataメソッドをモック化
+            with patch.object(aggregator, 'aggregate_data') as mock_aggregate:
                     # モックデータを返す
                     mock_user_data = MockData.get_user_data()
                     mock_stats_dict = MockData.get_stats_dict()
