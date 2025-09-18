@@ -137,8 +137,8 @@ class TestIntegrationWithMock:
 
                 mock_upsert.side_effect = append_simulation  # モック動作を設定
 
-                # CSV記録実行
-                csv_client = CSVClient('mock_credentials.json')
+                # CSV記録実行（必要な引数を追加）
+                csv_client = CSVClient('mock_credentials.json', 'mock_folder', '1_TST')
                 result = csv_client.upsert_presence(today_members)
 
                 # 更新後のCSVを読み込み
