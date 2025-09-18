@@ -46,6 +46,21 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 | mock_csv_data | str | 集計対象のCSVデータ（テスト2の結果） | "日付,田中,佐藤,鈴木\n2025-01-16,1,1,0\n2025-01-17,0,1,1\n2025-01-18,1,1,1" |
 | target_date | str | 集計対象日（土曜日） | "2025-01-18" |
 
+### エンドツーエンドテスト: discord_attendance_collector.py
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| env_arg | str | 環境引数 | "1" （テスト環境） |
+| mock_discord_api | Mock | Discord APIのモック | VC参加者リストを返すモック |
+| mock_drive_api | Mock | Google Drive APIのモック | CSV書き込みをモック |
+
+### エンドツーエンドテスト: daily_aggregator.py
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| env_arg | str | 環境引数 | "1" （テスト環境） |
+| target_date | date | 集計対象日 | "2025-01-18" |
+| mock_csv_data | str | CSVデータ | 1週間分の出席データ |
+| mock_slack_api | Mock | Slack APIのモック | メッセージ送信をモック |
+
 ## 📤 Output（期待値データ - ExpectedData）
 
 ### 認証系テスト
