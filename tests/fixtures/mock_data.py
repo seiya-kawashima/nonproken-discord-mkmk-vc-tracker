@@ -103,11 +103,8 @@ class MockData:
 2025-01-17,0,1,1,0
 2025-01-18,1,1,1,0"""
 
-    # ボイスチャンネルIDのモック（実際の.envの値を使用）
-    @staticmethod
-    def get_mock_voice_channel_id() -> str:
-        """テスト用ボイスチャンネルID（実際のチャンネルID）"""
-        return "762140202625925151"  # 実際のVCチャンネルIDを使用
+    # ボイスチャンネルIDは環境変数から取得するため、モックデータには含めない
+    # channel_idは環境変数 DISCORD_VOICE_CHANNEL_IDS から実際に取得される
 
     # Discord Botトークンのモック（テスト用）
     @staticmethod
