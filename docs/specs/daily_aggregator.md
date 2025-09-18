@@ -14,15 +14,20 @@ Discord VCのログイン履歴から以下の情報を集計・可視化しま�
 
 ## 📥 Input（入力）
 
-| 項目 | 型 | 説明 | 例 | config.py設定元 |
-|------|-----|------|-----|----------------|
-| CSV ファイル群 | CSVファイル | Google Drive上の各VCチャンネルのCSVファイル | `general-voice.csv` | `google_drive_csv_path` |
-| 集計対象日 | 日付 | 集計する日付（デフォルトは実行日） | `2025-09-15` | コマンドライン引数 |
-| Google認証情報 | JSON | Google APIのサービスアカウント認証情報 | service_account.json | `google_drive_service_account_json` |
-| Google Sheets名 | 文字列 | 集計結果を書き込むスプレッドシート名 | VC_Tracker_Database | `GOOGLE_SHEET_NAME` (環境変数) |
-| VCチャンネルID | リスト | 監視対象のVCチャンネルIDリスト | [123456789, 987654321] | `discord_channel_ids` |
-| 実行環境 | 数値 | 0:PRD, 1:TST, 2:DEV | 0 | コマンドライン引数 `--env` |
-| 出力パターン | 文字列 | discord/slack | slack | コマンドライン引数 `--output` |
+### コマンドライン引数
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| --env | 数値 | 実行環境（0=本番, 1=テスト, 2=開発） | 1 |
+| --date | 日付 | 集計対象日（省略時は実行日） | 2025-01-18 |
+| --output | 文字列 | 出力形式（discord/slack） | slack |
+
+### 環境変数（環境別）
+| 項目 | 型 | 説明 | config.py設定元 |
+|------|-----|------|----------------|
+| GOOGLE_SERVICE_ACCOUNT_JSON_{環境} | パス | Google認証ファイル | `google_drive_service_account_json` |
+| SLACK_BOT_TOKEN_{環境} | 文字列 | Slack Botトークン | `slack_token` |
+| SLACK_CHANNEL_ID_{環境} | 文字列 | Slack投稿先チャンネル | `slack_channel` |
+| GOOGLE_SHARED_DRIVE_ID_{環境} | 文字列 | 共有ドライブID | `google_shared_drive_id` |
 
 ### 環境変数とconfig.pyのマッピング
 
