@@ -165,12 +165,7 @@ class TestIntegrationWithMock:
             tmp_file_path = tmp_file.name
 
         try:
-            # DailyAggregatorをモック化して処理
-            with patch.object(DailyAggregator, 'load_csv_data') as mock_load:
-                # CSVデータを返すモック
-                mock_load.return_value = aggregation_csv
-
-                # 集計処理実行（適切にモック化）
+            # 集計処理実行（適切にモック化）
                 aggregator = DailyAggregator()  # 引数なしで初期化
 
                 # aggregate_dataメソッドをモック化
