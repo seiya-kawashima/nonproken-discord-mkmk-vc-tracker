@@ -16,9 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # テスト対象のモジュールをインポート
 from src.discord_client import DiscordVCPoller  # Discord処理
-from src.csv_client import CSVClient  # CSV処理
-from src.slack_notifier import SlackNotifier  # Slack通知
-from src.daily_aggregator import DailyAggregator  # 日次集計
+from src.drive_csv_client import DriveCSVClient as CSVClient  # CSV処理
 from tests.fixtures.mock_data import MockData  # モックデータ
 
 # ========== 認証系接続テスト ==========
