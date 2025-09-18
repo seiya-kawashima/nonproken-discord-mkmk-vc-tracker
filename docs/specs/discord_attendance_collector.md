@@ -1,4 +1,4 @@
-# メイン処理（poll_once.py）仕様書
+# Discord出席収集処理（discord_attendance_collector.py）仕様書
 
 ## 📌 このドキュメントについて
 
