@@ -10,6 +10,18 @@ from unittest.mock import AsyncMock, MagicMock, patch  # モック用
 from datetime import datetime  # 日時処理用
 import tempfile  # 一時ファイル用
 import json  # JSON処理用
+from loguru import logger  # ログ出力用（loguru）
+
+# loguruの設定
+logger.remove()  # デフォルトハンドラーを削除
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力
+
+# logsフォルダが存在しない場合は作成
+os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在する場合はスキップ）
+
+# ログファイル名を生成（実行時刻を含む）
+log_filename = f"logs/test_integration_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"  # ファイル名に実行時刻を含める
+logger.add(log_filename, level="DEBUG", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力
 
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
