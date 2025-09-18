@@ -90,8 +90,8 @@ class TestIntegrationWithMock:
     @pytest.mark.asyncio
     async def test_discord_vc_member_retrieval(self):
         """テスト1: Discord VCメンバー取得（モック）"""
-        mock_members = MockData.get_mock_members()  # モックメンバー取得
-        channel_id = MockData.get_mock_voice_channel_id()  # モックチャンネルID
+        mock_members = MockInputData.get_mock_members()  # 入力用モックメンバー取得
+        channel_id = os.getenv('DISCORD_VOICE_CHANNEL_IDS_1_TST', '762140202625925151')  # 環境変数から取得
 
         # on_readyイベントをモック化
         with patch.object(DiscordVCPoller, 'get_vc_members', new_callable=AsyncMock) as mock_get_members:
@@ -102,15 +102,16 @@ class TestIntegrationWithMock:
             poller = DiscordVCPoller('mock_token', [channel_id])
             members = await poller.get_vc_members(channel_id)
 
-            # 検証: 正しくメンバーが取得できたか
-            assert members == ["田中", "佐藤", "鈴木"]
+            # 検証: 期待値と比較
+            expected_members = ExpectedData.get_member_names()  # 期待されるメンバーリスト
+            assert members == expected_members
             assert len(members) == 3
 
     def test_csv_append_process(self):
         """テスト2: CSV記録処理（アペンド）"""
         # 既存のCSVデータを準備
-        template_csv = MockData.get_mock_template_csv()  # テンプレートCSV
-        today_members = MockData.get_today_members()  # 本日の出席者
+        template_csv = MockInputData.get_template_csv()  # 入力用テンプレートCSV
+        today_members = MockInputData.get_today_members()  # 入力用の本日の出席者
 
         # 一時ファイルでCSVをシミュレート
         with tempfile.NamedTemporaryFile(mode='w+', suffix='.csv', delete=False, encoding='utf-8') as tmp_file:
@@ -146,7 +147,7 @@ class TestIntegrationWithMock:
                     updated_csv = f.read()
 
                 # 期待値と比較
-                expected_csv = MockData.get_expected_csv_after_append()
+                expected_csv = ExpectedData.get_csv_after_append()  # 期待されるCSV
                 assert updated_csv.strip() == expected_csv.strip(), "CSV追記が正しく行われませんでした"
 
         finally:
@@ -156,7 +157,7 @@ class TestIntegrationWithMock:
     def test_daily_aggregation_and_slack_notification(self):
         """テスト3: 日次集計とSlack通知（土日祝の連続計算）"""
         # テスト用のCSVデータ
-        aggregation_csv = MockData.get_aggregation_test_csv()  # 集計用CSV
+        aggregation_csv = MockInputData.get_aggregation_test_csv()  # 入力用集計CSV
         target_date = "2025-01-18"  # 土曜日をテスト
 
         # 一時ファイルでCSVをシミュレート
@@ -170,14 +171,14 @@ class TestIntegrationWithMock:
 
             # aggregate_user_dataメソッドをモック化
             with patch.object(aggregator, 'aggregate_user_data') as mock_aggregate:
-                # モックデータを返す
-                mock_user_data = MockData.get_user_data()
-                mock_aggregate.return_value = mock_user_data
+                # 期待値データを返す
+                expected_user_data = ExpectedData.get_user_data()  # 期待されるユーザーデータ
+                mock_aggregate.return_value = expected_user_data
 
                 # 集計実行（仮のレコードデータ）
                 dummy_records = []  # ダミーレコード
                 user_data = aggregator.aggregate_user_data(dummy_records)
-                stats_dict = MockData.get_stats_dict()  # 統計データを直接取得
+                stats_dict = ExpectedData.get_stats_dict()  # 期待される統計データ
 
                 # Slack通知メッセージ生成
                 with patch.object(SlackNotifier, 'post_to_slack') as mock_slack:
@@ -223,17 +224,21 @@ class TestIntegrationWithMock:
              patch.object(CSVClient, 'upsert_presence') as mock_csv, \
              patch.object(SlackNotifier, 'send_message') as mock_slack:
 
-            # 1. Discord VCメンバー取得
-            mock_members = MockData.get_mock_members()
-            member_names = [m['display_name'] for m in mock_members]
+            # 1. Discord VCメンバー取得（入力データ）
+            input_members = MockInputData.get_mock_members()  # 入力用メンバー
+            member_names = [m['display_name'] for m in input_members]
+
+            # 期待値と比較
+            expected_names = ExpectedData.get_member_names()  # 期待されるメンバー名
+            assert member_names == expected_names, "メンバー名が期待値と一致しません"
 
             # 2. CSV記録
             mock_csv.return_value = True  # 成功を返す
             csv_result = mock_csv(member_names)
             assert csv_result == True, "CSV記録に失敗"
 
-            # 3. 統計計算
-            stats = MockData.get_stats_dict()
+            # 3. 統計計算（期待値）
+            stats = ExpectedData.get_stats_dict()  # 期待される統計データ
 
             # 4. Slack通知
             mock_slack.return_value = 200  # 成功ステータス
