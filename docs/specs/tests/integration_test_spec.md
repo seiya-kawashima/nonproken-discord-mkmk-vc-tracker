@@ -44,23 +44,30 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 
 ## 📤 Output（出力）
 
-### テスト1: Discord VCメンバー取得
+### 認証系テスト
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| discord_connected | bool | Discord接続成功 | True |
+| google_connected | bool | Google Drive接続成功 | True |
+| slack_connected | bool | Slack接続成功 | True |
+
+### 機能系テスト1: Discord VCメンバー取得
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
 | members_list | List[str] | 取得したメンバー名リスト | ["田中", "佐藤"] |
 | status | bool | 取得成功/失敗 | True |
 
-### テスト2: CSV記録処理
+### 機能系テスト2: CSV記録処理
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
-| updated_csv | str | 更新後のCSVデータ | "日付,田中,佐藤\n2025-01-16,1,0\n2025-01-18,1,0" |
+| updated_csv | str | 更新後のCSVデータ | "日付,田中,佐藤\n2025-01-16,1,0\n2025-01-18,1,1" |
 | is_match | bool | 期待値との一致確認 | True |
 
-### テスト3: 日次集計とSlack通知
+### 機能系テスト3: 日次集計とSlack通知
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
-| slack_message | str | 生成されたSlackメッセージ | "【本日の出席】\n田中: 累計2日, 連続2日" |
-| stats_correct | bool | 統計値の正確性 | True |
+| slack_message | str | 生成されたSlackメッセージ | "【本日の出席】\n田中: 累計4日, 連続3日" |
+| consecutive_calc_correct | bool | 土日祝を除く連続日数計算が正確 | True |
 
 ## 🔧 処理の流れ
 
