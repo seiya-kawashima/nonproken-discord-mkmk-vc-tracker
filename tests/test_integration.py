@@ -59,7 +59,7 @@ class TestAuthentication:
         credentials_path = os.getenv('TEST_GOOGLE_SERVICE_ACCOUNT_JSON', 'mock.json')  # 認証情報パス
 
         # 接続テスト用のモック
-        with patch('src.csv_client.CSVClient') as mock_csv_client:
+        with patch('src.drive_csv_client.DriveCSVClient') as mock_csv_client:
             mock_csv_client.return_value.test_connection = MagicMock(return_value=True)  # 接続成功をモック
 
             # 接続試行
