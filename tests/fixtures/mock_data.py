@@ -8,31 +8,28 @@ from typing import List, Dict, Any  # 型ヒント用
 class MockInputData:
     """テスト入力用のモックデータクラス（固定値）"""
 
-    # Discord VCメンバーのモックデータ
+    # Discord VCメンバーのモックデータ（実際のコードと同じ形式）
     @staticmethod
     def get_mock_members() -> List[Dict[str, Any]]:
-        """Discord VCの擬似メンバー情報を返す"""
+        """Discord VCの擬似メンバー情報を返す（実際のmember_data形式）"""
         return [
             {
-                "id": "123456789",  # ユーザーID
-                "name": "田中太郎",  # ユーザー名
-                "display_name": "田中",  # 表示名
-                "joined_at": "2025-01-18 10:00:00",  # VC参加時刻
-                "status": "online"  # オンラインステータス
+                "vc_name": "もくもく作業部屋",  # VCの名前
+                "user_id": "123456789",  # ユーザーID（文字列）
+                "user_name": "tanaka#1234",  # ユーザー名
+                "display_name": "田中"  # サーバーでの表示名（ニックネーム）
             },
             {
-                "id": "987654321",
-                "name": "佐藤花子",
-                "display_name": "佐藤",
-                "joined_at": "2025-01-18 10:05:00",
-                "status": "online"
+                "vc_name": "もくもく作業部屋",
+                "user_id": "987654321",
+                "user_name": "sato#5678",
+                "display_name": "佐藤"
             },
             {
-                "id": "456789123",
-                "name": "鈴木一郎",
-                "display_name": "鈴木",
-                "joined_at": "2025-01-18 10:10:00",
-                "status": "online"
+                "vc_name": "もくもく作業部屋",
+                "user_id": "456789123",
+                "user_name": "suzuki#9012",
+                "display_name": "鈴木"
             }
         ]
 
