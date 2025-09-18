@@ -71,23 +71,31 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 
 ## 🔧 処理の流れ
 
-### テスト1: Discord VCメンバー取得
-1. Discord APIの`on_ready`イベントをモック化
-2. 固定のmock_membersデータを返すように設定
-3. VCメンバー取得処理を実行
-4. 返されたメンバーリストを検証
+### 認証系テスト
+1. 各サービスへの接続テストを実行
+2. Discord: Botトークンでログイン試行
+3. Google Drive: サービスアカウントで認証試行
+4. Slack: WebhookURLへのテストメッセージ送信
+5. 全ての接続が成功することを確認
 
-### テスト2: CSV記録処理
-1. 既存のCSVファイルをmock_template_dataで上書き
-2. `csv_client.upsert_presence()`をモック化
-3. メンバー情報をCSVに記録
-4. 更新後のCSVデータを期待値と比較
+### 機能系統合テスト
+1. **Discord VCメンバー取得（モック）**
+   - `on_ready`イベントをモック化
+   - 固定のmock_membersデータを返すように設定
+   - VCメンバー取得処理を実行
 
-### テスト3: 日次集計とSlack通知
-1. テスト用CSVデータを準備
-2. daily_aggregatorの集計処理を実行
-3. `post_to_slack()`メソッドの出力を取得
-4. 累計日数・連続ログイン日数（土日祝除く）を検証
+2. **CSV記録処理**
+   - 既存のCSVファイルをmock_template_dataで上書き
+   - `csv_client.upsert_presence()`の前でモック化
+   - メンバー情報をCSVに追記（アペンド）
+   - 更新後のCSVデータを期待値と比較
+
+3. **日次集計とSlack通知**
+   - 追記されたCSVデータを使用
+   - daily_aggregatorの集計処理を実行
+   - `post_to_slack()`メソッドの出力を取得
+   - 土日祝を除く連続ログイン日数を検証
+   - 累計日数の正確性を確認
 
 ## 💡 使用例
 
