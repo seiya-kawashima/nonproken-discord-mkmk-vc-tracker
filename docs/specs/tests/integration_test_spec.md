@@ -17,23 +17,30 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 
 ## 📥 Input（入力）
 
-### テスト1: Discord VCメンバー取得
+### 認証系テスト
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| discord_token | str | Discord Bot Token | 環境変数から取得 |
+| google_credentials | JSON | Google認証情報 | サービスアカウントJSON |
+| slack_webhook_url | str | Slack Webhook URL | 環境変数から取得 |
+
+### 機能系テスト1: Discord VCメンバー取得
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
 | mock_members | List[Dict] | 擬似メンバー情報 | [{"id": "123", "name": "田中", "joined_at": "2025-01-18 10:00:00"}] |
 | channel_id | str | 対象のボイスチャンネルID | "1234567890" |
 
-### テスト2: CSV記録処理
+### 機能系テスト2: CSV記録処理
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
 | mock_template_data | str | 既存のCSVテンプレート | "日付,田中,佐藤\n2025-01-16,1,0" |
 | mock_members | List[Dict] | 記録するメンバー情報 | [{"name": "田中"}] |
 
-### テスト3: 日次集計とSlack通知
+### 機能系テスト3: 日次集計とSlack通知
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
 | mock_csv_data | str | 集計対象のCSVデータ | "日付,田中\n2025-01-16,1\n2025-01-17,1" |
-| target_date | str | 集計対象日 | "2025-01-18" |
+| target_date | str | 集計対象日（土曜日） | "2025-01-18" |
 
 ## 📤 Output（出力）
 
