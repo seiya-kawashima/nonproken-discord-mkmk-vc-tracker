@@ -95,12 +95,15 @@ class TestIntegrationWithMock:
 
         # on_readyイベントをモック化
         with patch.object(DiscordVCPoller, 'get_vc_members', new_callable=AsyncMock) as mock_get_members:
-            # モックデータを返すように設定
-            mock_get_members.return_value = [member['display_name'] for member in mock_members]
+            # モックデータを返すように設定（実際のデータ形式に合わせる）
+            mock_get_members.return_value = mock_members  # member_data形式をそのまま返す
 
             # VCメンバー取得処理を実行
             poller = DiscordVCPoller('mock_token', [channel_id])
-            members = await poller.get_vc_members(channel_id)
+            members_data = await poller.get_vc_members(channel_id)
+
+            # display_nameのリストを抽出
+            members = [member['display_name'] for member in members_data]
 
             # 検証: 期待値と比較
             expected_members = ExpectedData.get_member_names()  # 期待されるメンバーリスト
