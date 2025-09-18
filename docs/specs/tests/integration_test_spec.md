@@ -100,24 +100,34 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 ## 💡 使用例
 
 ```python
-# テスト1: VCメンバー取得
-mock_members = [
-    {"id": "123", "name": "田中", "joined_at": "2025-01-18 10:00:00"},
-    {"id": "456", "name": "佐藤", "joined_at": "2025-01-18 10:05:00"}
-]
-result = test_get_vc_members(mock_members)
-assert result == ["田中", "佐藤"]
+# 認証系テスト
+def test_authentication():
+    """全サービスへの接続確認"""
+    assert test_discord_connection() == True
+    assert test_google_drive_connection() == True
+    assert test_slack_connection() == True
 
-# テスト2: CSV記録
-template = "日付,田中,佐藤\n2025-01-16,1,0"
-members = [{"name": "田中"}]
-updated = test_csv_recording(template, members)
-assert "2025-01-18,1,0" in updated
+# 統合テスト（モックデータ使用）
+def test_integration_with_mock():
+    """モックデータで全機能を統合テスト"""
+    # 1. VCメンバー取得（モック）
+    mock_members = MockData.get_mock_members()
+    members = get_vc_members_mock(mock_members)
+    assert members == ["田中", "佐藤", "鈴木"]
 
-# テスト3: Slack通知
-expected_msg = "【本日の出席】\n田中: 累計2日, 連続2日"
-actual_msg = test_slack_notification()
-assert expected_msg in actual_msg
+    # 2. CSV追記処理
+    template_csv = MockData.get_mock_template_csv()
+    updated_csv = append_to_csv(template_csv, members, "2025-01-18")
+    expected_csv = MockData.get_expected_csv_after_append()
+    assert updated_csv == expected_csv
+
+    # 3. Slack通知（土日祝の連続計算確認）
+    stats = calculate_stats(updated_csv, "2025-01-18")
+    message = generate_slack_message(stats)
+
+    # 土曜日だが、平日の連続出席を正しく計算
+    assert "連続出席: 3日" in message  # 田中: 木金土で3日連続
+    assert "連続出席: 2日" in message  # 佐藤: 金土で2日連続
 ```
 
 ## ⚠️ 注意事項
