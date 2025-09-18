@@ -28,14 +28,19 @@
 
 ## 2. 📥 Input（入力）
 
-### このプログラムが受け取る情報（環境変数）
+### このプログラムが受け取る情報
 
-#### 必須の入力
+#### コマンドライン引数
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
-| **DISCORD_BOT_TOKEN** | 文字列 | Discord Botのパスワード | MTIzNDU2Nzg5... |
-| **GOOGLE_SHEET_NAME** | 文字列 | 記録先のスプレッドシート名 | VC出席記録 |
-| **ALLOWED_VOICE_CHANNEL_IDS** | 文字列 | 監視するVCのID（カンマ区切り） | 123456789,987654321 |
+| **--env** | 数値 | 実行環境（0=本番, 1=テスト, 2=開発） | 1 |
+
+#### 環境変数（環境別）
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| **DISCORD_BOT_TOKEN_{環境}** | 文字列 | Discord Botトークン | DISCORD_BOT_TOKEN_1_TST |
+| **DISCORD_VOICE_CHANNEL_IDS_{環境}** | 文字列 | 監視するVCのID | DISCORD_VOICE_CHANNEL_IDS_1_TST |
+| **GOOGLE_SERVICE_ACCOUNT_JSON_{環境}** | パス | Google認証ファイル | GOOGLE_SERVICE_ACCOUNT_JSON_1_TST |
 
 #### オプションの入力
 | 項目 | 型 | 説明 | 例 |
