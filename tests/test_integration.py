@@ -170,13 +170,13 @@ class TestIntegrationWithMock:
 
             # aggregate_dataメソッドをモック化
             with patch.object(aggregator, 'aggregate_data') as mock_aggregate:
-                    # モックデータを返す
-                    mock_user_data = MockData.get_user_data()
-                    mock_stats_dict = MockData.get_stats_dict()
-                    mock_aggregate.return_value = (mock_user_data, mock_stats_dict)
+                # モックデータを返す
+                mock_user_data = MockData.get_user_data()
+                mock_stats_dict = MockData.get_stats_dict()
+                mock_aggregate.return_value = (mock_user_data, mock_stats_dict)
 
-                    # 集計実行
-                    user_data, stats_dict = aggregator.aggregate_data(target_date)
+                # 集計実行
+                user_data, stats_dict = aggregator.aggregate_data(target_date)
 
                 # Slack通知メッセージ生成
                 with patch.object(SlackNotifier, 'post_to_slack') as mock_slack:
