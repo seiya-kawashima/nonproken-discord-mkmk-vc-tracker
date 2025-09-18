@@ -88,6 +88,22 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 | slack_message | str | 生成されたSlackメッセージ | "【本日の出席】\n田中: 累計4日, 連続3日" |
 | consecutive_calc_correct | bool | 土日祝を除く連続日数計算が正確 | True |
 
+### エンドツーエンドテスト: discord_attendance_collector.py
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| exit_code | int | プログラム終了コード | 0（正常終了） |
+| csv_updated | bool | CSVファイルが更新されたか | True |
+| log_output | str | ログ出力内容 | "処理が完了しました" |
+| error_count | int | エラー発生数 | 0 |
+
+### エンドツーエンドテスト: daily_aggregator.py
+| 項目 | 型 | 説明 | 例 |
+|------|-----|------|-----|
+| exit_code | int | プログラム終了コード | 0（正常終了） |
+| slack_sent | bool | Slackメッセージが送信されたか | True |
+| stats_generated | bool | 統計が正しく生成されたか | True |
+| log_output | str | ログ出力内容 | "集計が完了しました" |
+
 ## 🔧 処理の流れ
 
 ### 認証系テスト
