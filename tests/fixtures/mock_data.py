@@ -5,8 +5,8 @@ from datetime import datetime, timedelta  # 日時操作用ライブラリ
 from typing import List, Dict, Any  # 型ヒント用
 
 
-class MockData:
-    """テスト用モックデータクラス"""
+class MockInputData:
+    """テスト入力用のモックデータクラス（固定値）"""
 
     # Discord VCメンバーのモックデータ
     @staticmethod
