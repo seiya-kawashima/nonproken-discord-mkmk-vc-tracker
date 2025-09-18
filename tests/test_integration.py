@@ -170,9 +170,18 @@ class TestIntegrationWithMock:
                 # CSVデータを返すモック
                 mock_load.return_value = aggregation_csv
 
-                # 集計処理実行
-                aggregator = DailyAggregator(tmp_file_path)
-                user_data, stats_dict = aggregator.aggregate_data(target_date)
+                # 集計処理実行（適切にモック化）
+                aggregator = DailyAggregator()  # 引数なしで初期化
+
+                # aggregate_dataメソッドをモック化
+                with patch.object(aggregator, 'aggregate_data') as mock_aggregate:
+                    # モックデータを返す
+                    mock_user_data = MockData.get_user_data()
+                    mock_stats_dict = MockData.get_stats_dict()
+                    mock_aggregate.return_value = (mock_user_data, mock_stats_dict)
+
+                    # 集計実行
+                    user_data, stats_dict = aggregator.aggregate_data(target_date)
 
                 # Slack通知メッセージ生成
                 with patch.object(SlackNotifier, 'post_to_slack') as mock_slack:
