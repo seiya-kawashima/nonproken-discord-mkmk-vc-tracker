@@ -54,7 +54,8 @@
       "Bash(findstr:*)",
       "Read(//g/共有ドライブ/DEV/discord_mokumoku_tracker/csv/**)",
       "Bash(set LOGLEVEL=DEBUG)",
-      "Bash(set ENV=PRD)"
+      "Bash(set ENV=PRD)",
+      "Bash(pwsh:*)"
     ],
     "deny": [],
     "ask": []
