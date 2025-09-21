@@ -1031,7 +1031,10 @@ class DailyAggregator:
                 else:  # Slackメンションで出力（本番用）
                     # Slackメンションを取得
                     slack_mention = self.get_slack_mention(user_id, user_name)  # Slackメンション取得
-                    message = f"{slack_mention} さん　合計{total_days}日目のログイン（連続{streak_days}日）"  # 新形式のメッセージ
+                    if streak_days == 1:
+                        message = f"{slack_mention} さん　合計{total_days}日目のログイン"  # 連続1日は表示しない
+                    else:
+                        message = f"{slack_mention} さん　合計{total_days}日目のログイン（連続{streak_days}日）"  # 連続2日以上は表示
 
                 lines.append(f"  {message}")  # メッセージ追加
 
