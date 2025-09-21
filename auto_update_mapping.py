@@ -839,12 +839,17 @@ class MappingUpdater:
         logger.info(f"  - 既存マッピング数: {len(existing_ids)}")  # 既存数
         logger.info(f"  - 新規ユーザー数: {len(new_users)}")  # 新規数
 
+        # 既存ユーザーの名前と表示名を更新（毎回実行）
+        if existing_ids:  # 既存ユーザーがある場合
+            logger.info("\n🔄 既存ユーザーの名前と表示名を更新中...")  # 処理開始ログ
+            self.update_existing_users(csv_users, self.discord_members)  # 更新処理
+
         # 新規ユーザーをマッピングシートに追加
         if new_users:  # 新規ユーザーがある場合
             logger.info("\n➕ 新規ユーザーをマッピングシートに追加中...")  # 処理開始ログ
             self.append_new_users(new_users)  # 追加処理
         else:  # 新規ユーザーがない場合
-            logger.info("\n✅ すべてのユーザーは既にマッピング済みです")  # 完了ログ
+            logger.info("\n✅ 新規ユーザーの追加はありません")  # 完了ログ
 
         # Slackユーザー一覧を取得してシートに書き込み
         logger.info("\n👥 Slackユーザー一覧を取得中...")  # 処理開始ログ
