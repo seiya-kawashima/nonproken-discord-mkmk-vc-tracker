@@ -487,6 +487,7 @@ class DailyAggregator:
             user_id = record.get('user_id', '')
             if user_id:
                 user_data[user_id]['user_name'] = record.get('user_name', '')  # ユーザー名
+                user_data[user_id]['display_name'] = record.get('display_name', record.get('user_name', ''))  # Display Name（なければuser_name）
                 # vc_name列がない場合はファイルパスから取得（互換性のため）
                 vc_name = record.get('vc_name', 'unknown')  # VCチャンネル名
                 user_data[user_id]['vc_channels'].add(vc_name)  # VCチャンネル追加
