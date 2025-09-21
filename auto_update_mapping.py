@@ -19,6 +19,8 @@ from config import get_config, Environment
 from loguru import logger
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+import discord
+import asyncio
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
@@ -42,6 +44,7 @@ class MappingUpdater:
         self.drive_service = None  # Drive APIサービス
         self.sheets_service = None  # Sheets APIサービス
         self.slack_client = None  # Slack APIクライアント
+        self.discord_members = {}  # Discordメンバー情報キャッシュ {user_id: display_name}
         self.initialize_services()  # サービス初期化
 
     def initialize_services(self):
@@ -692,6 +695,25 @@ class MappingUpdater:
         # CSVからユーザー情報を取得
         logger.info("\n📁 CSVファイルからユーザー情報を取得中...")  # 処理開始ログ
         csv_users = self.get_users_from_csv()  # CSVユーザー取得
+
+        if csv_users:  # CSVユーザーがある場合
+            # Discord APIから表示名を取得
+            logger.info("\n🎮 Discordからサーバー表示名を取得中...")  # 処理開始ログ
+            user_ids = set(csv_users.keys())  # ユーザーIDのセット
+
+            # 非同期処理を実行
+            loop = asyncio.new_event_loop()  # 新しいイベントループ作成
+            asyncio.set_event_loop(loop)  # イベントループを設定
+            try:
+                self.discord_members = loop.run_until_complete(self.get_discord_display_names(user_ids))  # 表示名取得
+            finally:
+                loop.close()  # イベントループを閉じる
+
+            # 取得した表示名でCSVユーザー情報を更新
+            for user_id in csv_users:  # 各ユーザーID
+                discord_name, _, vc_name = csv_users[user_id]  # 現在の情報
+                display_name = self.discord_members.get(user_id, discord_name.split('#')[0])  # 表示名取得（なければユーザー名）
+                csv_users[user_id] = (discord_name, display_name, vc_name)  # 更新
 
         if not csv_users:  # ユーザーがない場合
             logger.warning("CSVファイルにユーザーが見つかりませんでした")  # 警告出力
