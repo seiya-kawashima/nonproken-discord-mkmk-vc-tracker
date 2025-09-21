@@ -46,14 +46,14 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         'slack_token': os.getenv(f'SLACK_BOT_TOKEN_{suffix}'),  # Slack通知用のBotトークン（Slackにメッセージを送るためのパスワード）
         'slack_channel': os.getenv(f'SLACK_CHANNEL_ID_{suffix}'),  # 通知先のSlackチャンネルID
 
-        # Slack通知メッセージフォーマット設定
+        # Slack通知メッセージフォーマット設定（全環境共通）
         'slack_message_format': {
-            'greeting': os.getenv(f'SLACK_GREETING_{suffix}', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:'),  # 挨拶メッセージ
-            'intro': os.getenv(f'SLACK_INTRO_{suffix}', '本日の参加者は以下の通りです。'),  # 導入メッセージ
-            'user_format_first': os.getenv(f'SLACK_USER_FORMAT_FIRST_{suffix}', '{user} さん　合計{total}日目のログイン'),  # 初回（連続1日）のユーザー表示形式
-            'user_format_streak': os.getenv(f'SLACK_USER_FORMAT_STREAK_{suffix}', '{user} さん　合計{total}日目のログイン（連続{streak}日）'),  # 連続ログインのユーザー表示形式
-            'summary': os.getenv(f'SLACK_SUMMARY_{suffix}', '本日の参加者数： {count}名'),  # 参加者数サマリー
-            'no_participants': os.getenv(f'SLACK_NO_PARTICIPANTS_{suffix}', '本日のVCログイン者はいませんでした。'),  # 参加者なしメッセージ
+            'greeting': os.getenv('SLACK_GREETING', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:'),  # 挨拶メッセージ
+            'intro': os.getenv('SLACK_INTRO', '本日の参加者は以下の通りです。'),  # 導入メッセージ
+            'user_format_first': os.getenv('SLACK_USER_FORMAT_FIRST', '{user} さん　合計{total}日目のログイン'),  # 初回（連続1日）のユーザー表示形式
+            'user_format_streak': os.getenv('SLACK_USER_FORMAT_STREAK', '{user} さん　合計{total}日目のログイン（連続{streak}日）'),  # 連続ログインのユーザー表示形式
+            'summary': os.getenv('SLACK_SUMMARY', '本日の参加者数： {count}名'),  # 参加者数サマリー
+            'no_participants': os.getenv('SLACK_NO_PARTICIPANTS', '本日のVCログイン者はいませんでした。'),  # 参加者なしメッセージ
         },
 
         'suffix': suffix,  # 環境識別子（0_PRD/1_TST/2_DEV）を他の処理でも使えるように保存
