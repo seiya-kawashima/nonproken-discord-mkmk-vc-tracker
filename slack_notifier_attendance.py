@@ -42,7 +42,7 @@ os.makedirs("logs", exist_ok=True)  # logsフォルダを作成（既に存在�
 class DailyAggregator:
     """日次集計処理クラス"""
 
-    def __init__(self, target_date: Optional[date] = None, env: Environment = Environment.PRD, output_pattern: str = 'slack'):
+    def __init__(self, target_date: Optional[date] = None, env: Environment = Environment.PRD, output_pattern: str = 'slack', dry_run: bool = False):
         """
         初期化
 
@@ -50,6 +50,7 @@ class DailyAggregator:
             target_date: 集計対象日（Noneの場合は今日）
             env: 実行環境
             output_pattern: 出力パターン ('discord' or 'slack')
+            dry_run: ドライラン（Slack投稿をスキップ）
         """
         self.target_date = target_date or date.today()  # 集計対象日
         self.env = env  # 実行環境
