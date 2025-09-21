@@ -565,7 +565,7 @@ class MappingUpdater:
             logger.info("⚠️ ドライランモード：Slack通知をスキップ")  # 情報ログ
             logger.info(f"  未マッピングユーザー数: {len(unmapped_users)}名")  # 未マッピング数表示
             for discord_id, name in unmapped_users[:5]:  # 最初の5件を表示
-                logger.info(f"    - {name} (ID: {discord_id})")  # ユーザー情報
+                logger.info(f"    - {name} (Discord表示名) / ID: {discord_id}")  # ユーザー情報
             if len(unmapped_users) > 5:  # 5件以上の場合
                 logger.info(f"    ... 他 {len(unmapped_users) - 5}名")  # 残りの人数
             return  # 処理終了
@@ -575,7 +575,7 @@ class MappingUpdater:
             return  # 処理終了
 
         # 通知メッセージを作成
-        user_list = '\n'.join([f"• {name} (ID: {discord_id})" for discord_id, name in unmapped_users])  # ユーザーリスト作成
+        user_list = '\n'.join([f"• {name} (Discord表示名) / ID: {discord_id}" for discord_id, name in unmapped_users])  # ユーザーリスト作成
 
         message = f""":warning: **Discord-Slackマッピング未設定のユーザーがいます**
 
