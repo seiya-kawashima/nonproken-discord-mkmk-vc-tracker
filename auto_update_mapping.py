@@ -379,7 +379,7 @@ class MappingUpdater:
             return []  # 空のリストを返す
 
     def write_slack_users_to_sheet(self, users: List[Dict[str, str]]):
-        """Slackユーザー一覧をスプレッドシートに書き込み
+        """Slackユーザー一覧をマッピングシートのslack_usersタブに書き込み
 
         Args:
             users: Slackユーザー情報のリスト
@@ -388,78 +388,68 @@ class MappingUpdater:
             logger.info("書き込むSlackユーザーがありません")  # ログ出力
             return  # 処理終了
 
-        # Slackユーザー一覧シート名を設定
-        sheet_name = 'slack_users_list'  # シート名
+        # マッピングシートのパスを取得
+        mapping_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')  # パス取得
+        if not mapping_path:  # パスがない場合
+            logger.error("マッピングシートパスが設定されていません")  # エラー出力
+            return  # 処理終了
 
-        # 共有ドライブIDを取得
-        shared_drive_id = self.config.get('google_drive_shared_drive_id')  # 共有ドライブID
-
-        # ベースフォルダパスを取得
-        base_folder = self.config.get('google_drive_base_folder')  # ベースフォルダ
+        # ファイル名を抽出
+        sheet_name = mapping_path.split('/')[-1]  # ファイル名取得
 
         # シートを検索
         query = f"name='{sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
-
-        if shared_drive_id:  # 共有ドライブの場合
-            # フォルダIDを検索
-            folder_id = self._find_folder_id(base_folder, shared_drive_id)  # フォルダID取得
-            if folder_id:  # フォルダが見つかった場合
-                query += f" and '{folder_id}' in parents"  # 親フォルダ条件追加
-
-            results = self.drive_service.files().list(
-                q=query,
-                fields="files(id, name)",
-                supportsAllDrives=True,
-                includeItemsFromAllDrives=True,
-                corpora='drive',
-                driveId=shared_drive_id
-            ).execute()  # ファイル検索（共有ドライブ）
-        else:  # マイドライブの場合
-            results = self.drive_service.files().list(
-                q=query,
-                fields="files(id, name)"
-            ).execute()  # ファイル検索（マイドライブ）
+        results = self.drive_service.files().list(
+            q=query,
+            fields="files(id, name)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+            corpora='allDrives'
+        ).execute()  # ファイル検索
 
         sheets = results.get('files', [])  # シートリスト取得
+        if not sheets:  # シートが見つからない場合
+            logger.error(f"マッピングシートが見つかりません: {sheet_name}")  # エラー出力
+            return  # 処理終了
 
-        if sheets:  # シートが存在する場合
-            sheet_id = sheets[0]['id']  # シートID取得
-            logger.info(f"既存のSlackユーザーシートを更新: {sheet_name}")  # ログ出力
-        else:  # シートが存在しない場合
-            # 新規シートを作成
-            try:
-                spreadsheet = {
-                    'properties': {
-                        'title': sheet_name  # シート名設定
+        sheet_id = sheets[0]['id']  # シートID取得
+        logger.info(f"マッピングシート発見: {sheet_name}")  # 発見ログ
+
+        # slack_usersタブが存在するか確認
+        tab_name = 'slack_users'  # タブ名
+        try:
+            # 既存のタブ一覧を取得
+            spreadsheet = self.sheets_service.spreadsheets().get(
+                spreadsheetId=sheet_id
+            ).execute()  # スプレッドシート情報取得
+
+            # タブが存在するか確認
+            tab_exists = False  # タブ存在フラグ
+            for sheet in spreadsheet.get('sheets', []):  # 各シートをチェック
+                if sheet['properties']['title'] == tab_name:  # タブ名が一致
+                    tab_exists = True  # 存在フラグを立てる
+                    break  # ループ終了
+
+            if not tab_exists:  # タブが存在しない場合
+                # 新しいタブを追加
+                request = {
+                    'addSheet': {
+                        'properties': {
+                            'title': tab_name  # タブ名設定
+                        }
                     }
-                }  # スプレッドシート定義
+                }  # リクエストボディ
+                self.sheets_service.spreadsheets().batchUpdate(
+                    spreadsheetId=sheet_id,
+                    body={'requests': [request]}
+                ).execute()  # タブ追加
+                logger.info(f"新しいタブを作成: {tab_name}")  # ログ出力
+            else:  # タブが存在する場合
+                logger.info(f"既存のタブを更新: {tab_name}")  # ログ出力
 
-                if shared_drive_id and folder_id:  # 共有ドライブの場合
-                    spreadsheet = self.sheets_service.spreadsheets().create(
-                        body=spreadsheet
-                    ).execute()  # シート作成
-
-                    # 作成したシートを共有ドライブに移動
-                    file_id = spreadsheet['spreadsheetId']  # ファイルID
-                    self.drive_service.files().update(
-                        fileId=file_id,
-                        addParents=folder_id,
-                        removeParents='root',
-                        supportsAllDrives=True
-                    ).execute()  # ファイル移動
-
-                    sheet_id = file_id  # シートID設定
-                else:  # マイドライブの場合
-                    spreadsheet = self.sheets_service.spreadsheets().create(
-                        body=spreadsheet
-                    ).execute()  # シート作成
-                    sheet_id = spreadsheet['spreadsheetId']  # シートID取得
-
-                logger.info(f"新規Slackユーザーシートを作成: {sheet_name}")  # ログ出力
-            except Exception as e:  # エラー時
-                logger.error(f"Slackユーザーシート作成エラー: {e}")  # エラー出力
-                logger.warning("Slackユーザー一覧の出力をスキップします")  # 警告出力
-                return  # 処理中断
+        except Exception as e:  # エラー時
+            logger.error(f"タブ確認エラー: {e}")  # エラー出力
+            return  # 処理終了
 
         # データを準備
         header = [['Slack ID', 'User Name', 'Display Name', 'Real Name']]  # ヘッダー行
