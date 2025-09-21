@@ -546,7 +546,7 @@ class MappingUpdater:
             return  # 処理終了
 
         if not self.enable_slack_notify:  # Slack通知が無効の場合
-            logger.info("⚠️ Slack通知が無効化されているため、通知をスキップ")  # 情報ログ
+            logger.info("⚠️ ドライランモード：Slack通知をスキップ")  # 情報ログ
             logger.info(f"  未マッピングユーザー数: {len(unmapped_users)}名")  # 未マッピング数表示
             for discord_id, name in unmapped_users[:5]:  # 最初の5件を表示
                 logger.info(f"    - {name} (ID: {discord_id})")  # ユーザー情報
@@ -664,14 +664,14 @@ def main():
         help='環境 (0=本番, 1=テスト, 2=開発)'
     )  # 環境引数追加
     parser.add_argument(
-        '--no-slack-notify',
+        '--dry-run',
         action='store_true',
         help='Slack通知を無効化 (デフォルト: 有効)'
-    )  # Slack通知無効化フラグ
+    )  # ドライランモード
     args = parser.parse_args()  # 引数パース
 
     env = Environment(args.env)  # 環境設定
-    enable_slack = not args.no_slack_notify  # Slack通知の有効/無効を設定
+    enable_slack = not args.dry_run  # Slack通知の有効/無効を設定（dry-run時は無効）
     updater = MappingUpdater(env, enable_slack_notify=enable_slack)  # 更新クラス作成
     updater.run()  # 実行
 
