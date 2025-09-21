@@ -633,11 +633,12 @@ class DailyAggregator:
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # ユーザー名を取得（マッピングまたはDiscord名）
+                    # ユーザー名を取得（マッピングまたはDiscord Display Name）
                     if self.output_pattern == 'slack' and user_id in self.user_mapping:
                         user_display = f"<@{self.user_mapping[user_id]}>"
                     else:
-                        user_display = data['user_name']
+                        # マッピングがない場合はDisplay Name（なければuser_name）を使用
+                        user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
                     # メッセージを構築（フォーマット設定を使用）
                     if consecutive == 1:
