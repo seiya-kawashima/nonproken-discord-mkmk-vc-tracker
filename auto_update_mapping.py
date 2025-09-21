@@ -63,11 +63,11 @@ class MappingUpdater:
         if slack_token:  # トークンがある場合
             self.slack_client = WebClient(token=slack_token)  # Slackクライアント作成
 
-    def get_users_from_csv(self) -> Dict[str, Tuple[str, str]]:
+    def get_users_from_csv(self) -> Dict[str, Tuple[str, str, str]]:
         """CSVファイルからユーザー情報を取得
 
         Returns:
-            Dict[discord_id, (discord_name, vc_name)]
+            Dict[discord_id, (discord_name, display_name, vc_name)]
         """
         users = {}  # ユーザー辞書
 
@@ -149,9 +149,13 @@ class MappingUpdater:
             for row in csv_reader:  # 各行に対して
                 discord_id = row.get('user_id', '').strip()  # Discord ID取得
                 discord_name = row.get('user_name', '').strip()  # Discord名取得
+                # display_name列があれば使用、なければuser_nameから#以降を除去
+                display_name = row.get('display_name', '')  # 表示名取得
+                if not display_name and discord_name:  # display_nameがない場合
+                    display_name = discord_name.split('#')[0]  # #以降を除去して表示名とする
 
                 if discord_id and discord_name:  # IDと名前がある場合
-                    users[discord_id] = (discord_name, vc_name)  # ユーザー情報保存
+                    users[discord_id] = (discord_name, display_name, vc_name)  # ユーザー情報保存
 
         logger.info(f"CSVから {len(users)}人のユニークユーザーを取得")  # 取得数ログ
         return users  # ユーザー辞書を返す
@@ -193,7 +197,7 @@ class MappingUpdater:
 
         # 既存データを読み込み
         tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')  # タブ名
-        range_name = f'{tab_name}!A:C'  # 範囲指定
+        range_name = f'{tab_name}!A:D'  # 範囲指定（D列まで）
 
         try:
             result = self.sheets_service.spreadsheets().values().get(
@@ -216,11 +220,11 @@ class MappingUpdater:
         logger.info(f"マッピングシートに {len(existing_ids)}人の既存ユーザー")  # 既存数ログ
         return existing_ids  # 既存IDセットを返す
 
-    def append_new_users(self, new_users: List[Tuple[str, str, str]]):
+    def append_new_users(self, new_users: List[Tuple[str, str, str, str]]):
         """新規ユーザーをマッピングシートに追加
 
         Args:
-            new_users: [(discord_id, discord_name, vc_name), ...]
+            new_users: [(discord_id, discord_name, display_name, vc_name), ...]
         """
         if not new_users:  # 新規ユーザーがない場合
             logger.info("追加する新規ユーザーはありません")  # ログ出力
@@ -250,8 +254,8 @@ class MappingUpdater:
 
         # 追加するデータを準備（Slack IDは空欄）
         new_rows = []  # 新規行リスト
-        for discord_id, discord_name, vc_name in new_users:  # 各新規ユーザー
-            new_rows.append([discord_id, discord_name, ''])  # Slack IDは空で追加
+        for discord_id, discord_name, display_name, vc_name in new_users:  # 各新規ユーザー
+            new_rows.append([discord_id, discord_name, display_name, ''])  # Discord ID、名前、表示名、Slack ID（空）
 
         # データを追加
         body = {'values': new_rows}  # リクエストボディ
@@ -266,11 +270,11 @@ class MappingUpdater:
             existing_rows = len(result.get('values', []))  # 既存行数
             if existing_rows == 0:  # データがない場合
                 # ヘッダーを追加してからデータを追加
-                header = [['Discord User ID', 'Discord User Name', 'Slack Mention ID']]  # ヘッダー
+                header = [['Discord User ID', 'Discord User Name', 'Discord Display Name', 'Slack Mention ID']]  # ヘッダー（Display Name追加）
                 header_body = {'values': header}  # ヘッダーボディ
                 self.sheets_service.spreadsheets().values().update(
                     spreadsheetId=sheet_id,
-                    range=f'{tab_name}!A1:C1',
+                    range=f'{tab_name}!A1:D1',
                     valueInputOption='USER_ENTERED',
                     body=header_body
                 ).execute()  # ヘッダー追加
@@ -279,7 +283,7 @@ class MappingUpdater:
                 start_row = existing_rows + 1  # 次の行から
 
             # 新規データを追加
-            append_range = f'{tab_name}!A{start_row}:C{start_row + len(new_rows) - 1}'  # 追加範囲
+            append_range = f'{tab_name}!A{start_row}:D{start_row + len(new_rows) - 1}'  # 追加範囲（D列まで）
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
                 range=append_range,
@@ -288,8 +292,8 @@ class MappingUpdater:
             ).execute()  # データ追加
 
             logger.info(f"✅ {len(new_users)}人の新規ユーザーをマッピングシートに追加")  # 成功ログ
-            for discord_id, discord_name, vc_name in new_users:  # 各追加ユーザー
-                logger.info(f"  - {discord_name} (ID: {discord_id}, VC: {vc_name})")  # 詳細ログ
+            for discord_id, discord_name, display_name, vc_name in new_users:  # 各追加ユーザー
+                logger.info(f"  - {discord_name} / {display_name} (ID: {discord_id}, VC: {vc_name})")  # 詳細ログ
 
         except Exception as e:  # エラー時
             logger.error(f"データ追加エラー: {e}")  # エラー出力
@@ -524,7 +528,7 @@ class MappingUpdater:
 
         # マッピングデータを読み込み
         tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')  # タブ名
-        range_name = f'{tab_name}!A:C'  # 範囲指定
+        range_name = f'{tab_name}!A:D'  # 範囲指定（D列まで）
 
         try:
             result = self.sheets_service.spreadsheets().values().get(
@@ -539,10 +543,11 @@ class MappingUpdater:
                 if row and len(row) >= 2:  # 行が存在し、少なくとも2列ある場合
                     discord_id = row[0].strip()  # Discord ID
                     discord_name = row[1].strip()  # Discord名
-                    slack_id = row[2].strip() if len(row) > 2 else ''  # Slack ID（あれば）
+                    display_name = row[2].strip() if len(row) > 2 else discord_name.split('#')[0]  # 表示名（あれば）
+                    slack_id = row[3].strip() if len(row) > 3 else ''  # Slack ID（あれば）
 
                     if discord_id and discord_name and not slack_id:  # Slack IDが空の場合
-                        unmapped_users.append((discord_id, discord_name))  # 未マッピングリストに追加
+                        unmapped_users.append((discord_id, display_name))  # 未マッピングリストに追加（表示名を使用）
 
         except Exception as e:  # エラー時
             logger.error(f"マッピングデータ読み込みエラー: {e}")  # エラー出力
@@ -631,10 +636,10 @@ class MappingUpdater:
 
         # 新規ユーザーを特定
         new_users = []  # 新規ユーザーリスト
-        for discord_id, (discord_name, vc_name) in csv_users.items():  # 各CSVユーザー
+        for discord_id, (discord_name, display_name, vc_name) in csv_users.items():  # 各CSVユーザー
             if discord_id not in existing_ids:  # 新規の場合
-                new_users.append((discord_id, discord_name, vc_name))  # リストに追加
-                logger.debug(f"  新規ユーザー検出: {discord_name} (ID: {discord_id})")  # デバッグログ
+                new_users.append((discord_id, discord_name, display_name, vc_name))  # リストに追加
+                logger.debug(f"  新規ユーザー検出: {discord_name} / {display_name} (ID: {discord_id})")  # デバッグログ
 
         # デバッグ: 既存ユーザーと CSV ユーザーの比較
         logger.debug(f"CSV ユーザーID一覧: {set(csv_users.keys())}")  # CSVのID一覧
