@@ -470,19 +470,19 @@ class MappingUpdater:
             # 既存データをクリア
             self.sheets_service.spreadsheets().values().clear(
                 spreadsheetId=sheet_id,
-                range='Sheet1!A:D'
+                range=f'{tab_name}!A:D'
             ).execute()  # データクリア
 
             # 新しいデータを書き込み
             body = {'values': all_data}  # リクエストボディ
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=sheet_id,
-                range='Sheet1!A1',
+                range=f'{tab_name}!A1',
                 valueInputOption='USER_ENTERED',
                 body=body
             ).execute()  # データ書き込み
 
-            logger.info(f"✅ {len(users)}人のSlackユーザー情報をシートに書き込み完了")  # 成功ログ
+            logger.info(f"✅ {len(users)}人のSlackユーザー情報を{tab_name}タブに書き込み完了")  # 成功ログ
 
         except Exception as e:  # エラー時
             logger.error(f"シート書き込みエラー: {e}")  # エラー出力
