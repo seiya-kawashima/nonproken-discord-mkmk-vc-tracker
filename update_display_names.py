@@ -185,6 +185,7 @@ class DisplayNameUpdater:
 
         sheet_id = sheets[0]['id']
         tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')
+        logger.info(f"タブ名: {tab_name}")
 
         result = self.sheets_service.spreadsheets().values().get(
             spreadsheetId=sheet_id,
