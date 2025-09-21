@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # テスト対象のモジュールをインポート
 from src.discord_client import DiscordVCPoller  # Discord処理
 from src.drive_csv_client import DriveCSVClient as CSVClient  # CSV処理
-from daily_aggregator import DailyAggregator  # 日次集計
+from slack_notifier_attendance import DailyAggregator  # 日次集計
 from tests.fixtures.mock_data import MockInputData, ExpectedData  # モックデータと期待値データ
 
 # Slack通知用のクラスを追加
