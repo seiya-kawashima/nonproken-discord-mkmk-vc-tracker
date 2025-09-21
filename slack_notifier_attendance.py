@@ -1132,6 +1132,8 @@ def main():
                        help='実行環境 (0=本番, 1=テスト, 2=開発, デフォルト=2)')  # 環境引数追加
     parser.add_argument('--output', type=str, default='slack', choices=['discord', 'slack'],
                        help='出力形式 (discord=Discord名, slack=Slackメンション, デフォルト=slack)')  # 出力形式引数追加
+    parser.add_argument('--dry-run', action='store_true',
+                       help='ドライラン（Slack投稿をスキップしてログ出力のみ）')  # dry-runオプション追加
 
     args = parser.parse_args()
 
