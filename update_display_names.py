@@ -194,9 +194,15 @@ class DisplayNameUpdater:
         values = result.get('values', [])
         user_ids = set()
 
-        for row in values[1:]:  # ヘッダーをスキップ
-            if row and row[0]:
+        logger.info(f"シートの行数: {len(values)}")
+
+        for i, row in enumerate(values):
+            if i == 0:
+                logger.info(f"ヘッダー: {row}")
+                continue
+            if row and len(row) > 0 and row[0]:
                 user_ids.add(row[0])
+                logger.debug(f"ユーザーID追加: {row[0]}")
 
         logger.info(f"{len(user_ids)}人のユーザーIDを取得")
 
