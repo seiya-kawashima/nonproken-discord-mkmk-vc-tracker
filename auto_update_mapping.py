@@ -10,6 +10,7 @@ import sys
 import csv
 import io
 import argparse
+from datetime import datetime
 from typing import List, Dict, Set, Tuple
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -19,8 +20,15 @@ from loguru import logger
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-logger.remove()
-logger.add(sys.stderr, level="INFO")
+# loguruの設定
+logger.remove()  # デフォルトハンドラーを削除
+logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力
+# logsフォルダが存在しない場合は作成
+os.makedirs("logs", exist_ok=True)  # logsフォルダを作成
+# タイムスタンプベースのログファイル名を生成
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 現在時刻をフォーマット
+log_filename = f"logs/auto_update_mapping_{timestamp}.log"  # タイムスタンプ付きファイル名
+logger.add(log_filename, level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力
 
 
 class MappingUpdater:
