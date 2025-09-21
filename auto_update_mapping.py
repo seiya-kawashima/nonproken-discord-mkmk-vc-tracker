@@ -26,9 +26,10 @@ logger.add(sys.stderr, level="INFO")
 class MappingUpdater:
     """Discord-Slackマッピング更新クラス"""
 
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, enable_slack_notify: bool = True):
         """初期化"""
         self.env = env  # 環境
+        self.enable_slack_notify = enable_slack_notify  # Slack通知の有効/無効
         self.config = get_config(env)  # 設定取得
         self.drive_service = None  # Drive APIサービス
         self.sheets_service = None  # Sheets APIサービス
@@ -544,6 +545,15 @@ class MappingUpdater:
             logger.info("すべてのユーザーがマッピング済みです")  # ログ出力
             return  # 処理終了
 
+        if not self.enable_slack_notify:  # Slack通知が無効の場合
+            logger.info("⚠️ Slack通知が無効化されているため、通知をスキップ")  # 情報ログ
+            logger.info(f"  未マッピングユーザー数: {len(unmapped_users)}名")  # 未マッピング数表示
+            for discord_id, name in unmapped_users[:5]:  # 最初の5件を表示
+                logger.info(f"    - {name} (ID: {discord_id})")  # ユーザー情報
+            if len(unmapped_users) > 5:  # 5件以上の場合
+                logger.info(f"    ... 他 {len(unmapped_users) - 5}名")  # 残りの人数
+            return  # 処理終了
+
         if not self.slack_client:  # Slackクライアントがない場合
             logger.warning("Slack APIが設定されていないため、通知をスキップ")  # 警告出力
             return  # 処理終了
@@ -632,8 +642,9 @@ class MappingUpdater:
         logger.info("\n🔍 未マッピングユーザーをチェック中...")  # 処理開始ログ
         unmapped_users, sheet_url = self.check_unmapped_users()  # 未マッピングチェック
         if unmapped_users:  # 未マッピングユーザーがいる場合
-            logger.info("\n📢 Slackに未マッピングユーザーの通知を送信中...")  # 処理開始ログ
-            self.notify_unmapped_users(unmapped_users, sheet_url)  # Slack通知
+            if self.enable_slack_notify:  # Slack通知が有効の場合
+                logger.info("\n📢 Slackに未マッピングユーザーの通知を送信中...")  # 処理開始ログ
+            self.notify_unmapped_users(unmapped_users, sheet_url)  # Slack通知（フラグに応じて処理）
 
         logger.info("\n" + "=" * 60)  # 区切り線
         logger.info("処理完了")  # 完了ログ
@@ -652,10 +663,16 @@ def main():
         choices=[0, 1, 2],
         help='環境 (0=本番, 1=テスト, 2=開発)'
     )  # 環境引数追加
+    parser.add_argument(
+        '--no-slack-notify',
+        action='store_true',
+        help='Slack通知を無効化 (デフォルト: 有効)'
+    )  # Slack通知無効化フラグ
     args = parser.parse_args()  # 引数パース
 
     env = Environment(args.env)  # 環境設定
-    updater = MappingUpdater(env)  # 更新クラス作成
+    enable_slack = not args.no_slack_notify  # Slack通知の有効/無効を設定
+    updater = MappingUpdater(env, enable_slack_notify=enable_slack)  # 更新クラス作成
     updater.run()  # 実行
 
 
