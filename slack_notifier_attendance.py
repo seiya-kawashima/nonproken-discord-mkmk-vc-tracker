@@ -77,6 +77,7 @@ class DailyAggregator:
         self.google_drive_discord_slack_mapping_sheet_tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')  # マッピングシート内のタブ名（デフォルト: Sheet1）
         self.slack_token = self.config.get('slack_token')  # Slack Botトークン
         self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
+        self.slack_message_format = self.config.get('slack_message_format', {})  # Slackメッセージフォーマット設定
 
         # 初期化処理
         self._initialize_services()
