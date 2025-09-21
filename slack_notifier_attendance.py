@@ -667,7 +667,7 @@ class DailyAggregator:
                         logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}, channel=#{channel_name}")  # APIレスポンス
                         logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
                         logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
-                except SlackApiError as e:
+                    except SlackApiError as e:
                     logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
                     logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
                     # レポート全体を1つのログメッセージとして出力
