@@ -234,6 +234,90 @@ class MappingUpdater:
         logger.info(f"マッピングシートに {len(existing_ids)}人の既存ユーザー")  # 既存数ログ
         return existing_ids  # 既存IDセットを返す
 
+    def update_existing_users(self, csv_users: Dict[str, Tuple[str, str, str]], discord_display_names: Dict[str, str]):
+        """既存ユーザーの名前と表示名を更新
+
+        Args:
+            csv_users: {discord_id: (discord_name, display_name, vc_name)}
+            discord_display_names: {discord_id: display_name} from Discord API
+        """
+        # マッピングシートを取得
+        mapping_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')  # パス取得
+        sheet_name = mapping_path.split('/')[-1]  # ファイル名取得
+
+        # シートを検索
+        query = f"name='{sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
+        results = self.drive_service.files().list(
+            q=query,
+            fields="files(id, name)",
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+            corpora='allDrives'
+        ).execute()  # ファイル検索
+
+        sheets = results.get('files', [])  # シートリスト取得
+        if not sheets:  # シートが見つからない場合
+            logger.error(f"マッピングシートが見つかりません: {sheet_name}")  # エラー出力
+            return  # 処理終了
+
+        sheet_id = sheets[0]['id']  # シートID取得
+        tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')  # タブ名
+
+        # 既存データを読み込み
+        range_name = f'{tab_name}!A:D'  # 範囲指定
+        result = self.sheets_service.spreadsheets().values().get(
+            spreadsheetId=sheet_id,
+            range=range_name
+        ).execute()  # データ取得
+
+        existing_rows = result.get('values', [])  # 既存データ
+
+        if len(existing_rows) <= 1:  # ヘッダーのみまたはデータなし
+            return  # 処理終了
+
+        # 更新データを準備
+        updates = []  # 更新リスト
+        for i, row in enumerate(existing_rows):
+            if i == 0:  # ヘッダー行をスキップ
+                continue
+
+            if len(row) > 0:  # 行にデータがある場合
+                discord_id = row[0]  # Discord ID
+
+                # CSVのユーザー情報がある場合
+                if discord_id in csv_users:
+                    discord_name, _, _ = csv_users[discord_id]  # CSV情報
+                    display_name = discord_display_names.get(discord_id, discord_name.split('#')[0])  # Discord API表示名
+
+                    # 既存の値と比較
+                    old_name = row[1] if len(row) > 1 else ""  # 既存の名前
+                    old_display = row[2] if len(row) > 2 else ""  # 既存の表示名
+
+                    # 更新が必要な場合
+                    if discord_name != old_name or display_name != old_display:
+                        # B列とC列を更新
+                        updates.append({
+                            'range': f'{tab_name}!B{i+1}:C{i+1}',
+                            'values': [[discord_name, display_name]]
+                        })
+                        logger.debug(f"更新: 行{i+1} {old_name}/{old_display} → {discord_name}/{display_name}")  # デバッグログ
+
+        # バッチ更新を実行
+        if updates:  # 更新がある場合
+            body = {
+                'valueInputOption': 'USER_ENTERED',
+                'data': updates
+            }  # リクエストボディ
+
+            self.sheets_service.spreadsheets().values().batchUpdate(
+                spreadsheetId=sheet_id,
+                body=body
+            ).execute()  # バッチ更新
+
+            logger.info(f"✅ {len(updates)}件の既存ユーザー情報を更新")  # 成功ログ
+        else:
+            logger.info("既存ユーザーの更新は不要です")  # ログ出力
+
     def append_new_users(self, new_users: List[Tuple[str, str, str, str]]):
         """新規ユーザーをマッピングシートに追加
 
