@@ -797,9 +797,9 @@ class MappingUpdater:
         csv_users = self.get_users_from_csv()  # CSVユーザー取得
 
         if csv_users:  # CSVユーザーがある場合
-            # Discord APIから表示名を取得
+            # Discord APIから表示名を取得（全ユーザー分）
             logger.info("\n🎮 Discordからサーバー表示名を取得中...")  # 処理開始ログ
-            user_ids = set(csv_users.keys())  # ユーザーIDのセット
+            user_ids = set(csv_users.keys())  # CSVユーザーIDのセット
 
             # 非同期処理を実行
             loop = asyncio.new_event_loop()  # 新しいイベントループ作成
