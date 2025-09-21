@@ -431,10 +431,10 @@ class MappingUpdater:
                             try:
                                 member = guild.get_member(int(user_id))  # メンバー取得
                                 if member:  # メンバーが存在する場合
-                                    # ニックネームがある場合はそれを、なければユーザー名を使用
-                                    display_name = member.nick if member.nick else member.name  # 表示名決定
+                                    # display_nameプロパティを使用（ニックネーム > グローバル名 > ユーザー名の優先順位）
+                                    display_name = member.display_name  # 表示名を取得
                                     display_names[user_id] = display_name  # 表示名を保存
-                                    logger.debug(f"表示名取得: {user_id} -> {display_name}")  # デバッグログ
+                                    logger.debug(f"表示名取得: {user_id} -> {display_name} (nick: {member.nick}, name: {member.name})")  # デバッグログ
                             except Exception as e:  # エラー時
                                 logger.debug(f"メンバー {user_id} の取得エラー: {e}")  # デバッグログ
 
