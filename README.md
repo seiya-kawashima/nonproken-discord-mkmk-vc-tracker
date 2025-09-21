@@ -206,6 +206,7 @@ jobs:
 - 📖 [システム概要](docs/OVERVIEW.md) - 詳細な仕様書
 - 💻 [開発環境ガイド](docs/DEVELOPMENT.md) - セットアップ手順、クロスプラットフォーム対応
 - 🔒 [セキュリティガイド](docs/SECURITY.md) - 機密情報の取り扱い
+- 🐍 [Python 3.12 セットアップ](SETUP_PYTHON312.md) - **重要: discord.py使用のためPython 3.12環境必須**
 
 ---
 
