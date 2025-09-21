@@ -113,8 +113,18 @@ class MappingUpdater:
         files = results.get('files', [])  # ファイルリスト取得
         logger.info(f"CSVファイル {len(files)}個を発見")  # ファイル数ログ
 
+        # 対象環境のCSVファイルのみをフィルタリング
+        target_files = []  # 処理対象ファイルリスト
+        for file in files:  # 各ファイルをチェック
+            if file['name'].endswith(f"_{target_suffix}.csv"):  # 対象環境のファイルか確認
+                target_files.append(file)  # 対象リストに追加
+            else:  # 対象外のファイル
+                logger.debug(f"スキップ: {file['name']} (対象外の環境)")  # デバッグログ
+
+        logger.info(f"処理対象CSVファイル: {len(target_files)}個 (環境: {target_suffix})")  # 対象ファイル数ログ
+
         # 各CSVファイルからユーザー情報を収集
-        for file in files:  # 各ファイルに対して
+        for file in target_files:  # 各対象ファイルに対して
             file_id = file['id']  # ファイルID
             file_name = file['name']  # ファイル名
 
