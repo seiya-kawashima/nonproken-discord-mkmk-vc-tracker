@@ -474,6 +474,7 @@ class DailyAggregator:
         """
         user_data = defaultdict(lambda: {
             'user_name': '',
+            'display_name': '',  # Discord Display Nameを追加
             'vc_channels': set(),
             'login_count': 0,
             'records': []  # デバッグ用：該当レコードを保存
