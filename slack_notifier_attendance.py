@@ -98,6 +98,27 @@ class DailyAggregator:
             if self.slack_token:
                 self.slack_client = WebClient(token=self.slack_token)
                 logger.info("Slackクライアントを初期化しました")  # Slack初期化
+
+                # ワークスペース情報とチャンネル情報を取得してログ出力
+                try:
+                    auth_info = self.slack_client.auth_test()
+                    workspace_name = auth_info.get('team', 'Unknown')
+                    bot_name = auth_info.get('user', 'Unknown')
+                    logger.debug(f"Slackワークスペース: {workspace_name}")  # ワークスペース名
+                    logger.debug(f"Bot名: {bot_name}")  # Bot名
+
+                    if self.slack_channel:
+                        try:
+                            channel_info = self.slack_client.conversations_info(channel=self.slack_channel)
+                            channel_name = channel_info['channel']['name']
+                            is_private = channel_info['channel']['is_private']
+                            channel_type = "プライベート" if is_private else "パブリック"
+                            logger.debug(f"Slackチャンネル: #{channel_name} ({channel_type}, ID: {self.slack_channel})")  # チャンネル情報
+                        except Exception as e:
+                            logger.debug(f"チャンネル情報取得エラー: {e}")  # チャンネル情報エラー
+                            logger.debug(f"SlackチャンネルID: {self.slack_channel}")  # チャンネルIDのみ
+                except Exception as e:
+                    logger.debug(f"Slack認証情報取得エラー: {e}")  # 認証情報エラー
             else:
                 logger.warning("Slackトークンが設定されていません")  # Slack未設定
 
