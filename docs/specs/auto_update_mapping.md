@@ -188,4 +188,7 @@ A: スクリプト実行時にDiscord IDはあるがSlack IDが空のユーザ�
 - `google_drive_shared_drive_id`: 共有ドライブID（オプション）
 - `google_drive_discord_slack_mapping_sheet_path`: マッピングシートのパス
 - `google_drive_discord_slack_mapping_sheet_tab_name`: マッピングシートのタブ名
+- `google_drive_base_folder`: Google Driveベースフォルダ名
+- `slack_token`: Slack Bot OAuth Token
+- `slack_channel`: 通知先のSlackチャンネルID
 - `suffix`: 環境サフィックス（PRD/TST/DEV）
