@@ -19,7 +19,10 @@ from config import get_config, Environment
 from loguru import logger
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-import discord
+try:
+    import discord
+except ImportError:
+    discord = None  # Discord.pyが使用できない場合
 import asyncio
 
 # loguruの設定
