@@ -585,10 +585,9 @@ class DailyAggregator:
         try:
             # メッセージを構築
             date_str = self.target_date.strftime('%Y年%m月%d日')
-            message_lines = [f"📅 [{date_str}] のVCログインレポート", ""]
+            message_lines = ["皆さん、もくもく、おつかれさまでした！ :stmp_fight:", "本日の参加者は以下の通りです。", ""]
 
             if user_data:
-                message_lines.append("本日の参加者：")
 
                 # ユーザー情報を整形
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
