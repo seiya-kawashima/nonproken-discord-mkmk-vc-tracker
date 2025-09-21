@@ -57,7 +57,7 @@ def get_config(env: Environment = Environment.DEV) -> dict:
 
             # メッセージの構成順序を定義（カスタマイズ可能）
             # 利用可能な要素: greeting, intro, users, summary
-            'message_order': os.getenv('SLACK_MESSAGE_ORDER', 'greeting,intro,users,summary').split(','),  # メッセージ表示順序
+            'message_order': os.getenv('SLACK_MESSAGE_ORDER', 'greeting,intro,summary,users').split(','),  # メッセージ表示順序
         },
 
         'suffix': suffix,  # 環境識別子（0_PRD/1_TST/2_DEV）を他の処理でも使えるように保存
