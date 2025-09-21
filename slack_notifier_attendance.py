@@ -632,11 +632,14 @@ class DailyAggregator:
                     else:
                         user_display = data['user_name']
 
-                    # メッセージを構築
+                    # メッセージを構築（フォーマット設定を使用）
                     if consecutive == 1:
-                        message_lines.append(f"{user_display} さん　合計{total}日目のログイン")
+                        user_fmt = fmt.get('user_format_first', '{user} さん　合計{total}日目のログイン')
+                        message = user_fmt.format(user=user_display, total=total)
                     else:
-                        message_lines.append(f"{user_display} さん　合計{total}日目のログイン（連続{consecutive}日）")
+                        user_fmt = fmt.get('user_format_streak', '{user} さん　合計{total}日目のログイン（連続{streak}日）')
+                        message = user_fmt.format(user=user_display, total=total, streak=consecutive)
+                    message_lines.append(message)
 
                 message_lines.append("")
                 message_lines.append(f"本日の参加者数： {len(user_data)}名")
