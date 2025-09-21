@@ -157,6 +157,12 @@ class MappingUpdater:
             for row in csv_reader:  # 各行に対して
                 discord_id = row.get('user_id', '').strip()  # Discord ID取得
                 discord_name = row.get('user_name', '').strip()  # Discord名取得
+
+                # 除外ユーザーをスキップ
+                if discord_name in self.excluded_users:  # 除外リストに含まれている場合
+                    logger.info(f"  除外ユーザーをスキップ: {discord_name}")  # ログ出力
+                    continue  # 次の行へ
+
                 # display_name列があれば使用、なければuser_nameから#以降を除去
                 display_name = row.get('display_name', '')  # 表示名取得
                 if not display_name and discord_name:  # display_nameがない場合
