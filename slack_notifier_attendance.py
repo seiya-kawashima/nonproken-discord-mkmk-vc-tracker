@@ -612,14 +612,19 @@ class DailyAggregator:
 
             # フォーマット設定を取得（デフォルト値付き）
             fmt = self.slack_message_format
-            greeting = fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')
-            intro = fmt.get('intro', '本日の参加者は以下の通りです。')
 
-            message_lines = [greeting, intro, ""]
+            # メッセージコンポーネントを準備
+            components = {}
+
+            # 挨拶メッセージ
+            components['greeting'] = [fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')]
+
+            # 導入メッセージ
+            components['intro'] = [fmt.get('intro', '本日の参加者は以下の通りです。')]
 
             if user_data:
-
                 # ユーザー情報を整形
+                users_list = []
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
