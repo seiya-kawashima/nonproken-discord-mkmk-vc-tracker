@@ -643,12 +643,20 @@ class DailyAggregator:
             # Slackに投稿
             if self.output_pattern == 'slack' and self.slack_client and self.slack_channel:
                 try:
-                    logger.debug(f"Slackに投稿を試みます: channel={self.slack_channel}")  # 投稿試行
+                    # チャンネル名を取得
+                    channel_name = "Unknown"
+                    try:
+                        channel_info = self.slack_client.conversations_info(channel=self.slack_channel)
+                        channel_name = channel_info['channel']['name']
+                    except:
+                        pass
+
+                    logger.debug(f"Slackに投稿を試みます: #{channel_name} (ID: {self.slack_channel})")  # 投稿試行
                     response = self.slack_client.chat_postMessage(
                         channel=self.slack_channel,
                         text=message
                     )
-                    logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}")  # APIレスポンス
+                    logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}, channel=#{channel_name}")  # APIレスポンス
                     logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
                     logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
                 except SlackApiError as e:
