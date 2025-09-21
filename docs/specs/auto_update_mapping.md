@@ -11,7 +11,7 @@
 |------|-----|------|-----|
 | 環境引数 | int | 実行環境の指定（0=本番、1=テスト、2=開発） | `--env 2` |
 | CSVファイル | CSV | Google Drive上の出勤記録CSV | `もくもく会_PRD.csv` |
-| マッピングシート | Googleスプレッドシート | 既存のDiscord-Slackマッピング情報 | `discord_slack_mapping` |
+| マッピングシート | Googleスプレッドシート | 既存のDiscord-Slackマッピング情報（configで設定） | 設定による |
 
 ## 📤 Output（出力）
 | 項目 | 型 | 説明 | 例 |
