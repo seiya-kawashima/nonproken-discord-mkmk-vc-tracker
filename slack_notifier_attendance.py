@@ -1178,8 +1178,12 @@ def main():
     env_name = {Environment.PRD: "本番環境", Environment.TST: "テスト環境", Environment.DEV: "開発環境"}[env]  # 環境名取得
     logger.info(f"{env_name}で実行中です")  # 環境ログ出力
 
+    # ドライランモードのログ出力
+    if args.dry_run:
+        logger.info("🔵 DRY-RUN MODE: 実際のSlack投稿はスキップされます")  # ドライランモード通知
+
     # 集計処理を実行
-    aggregator = DailyAggregator(target_date, env, args.output)  # 出力パターンを渡す
+    aggregator = DailyAggregator(target_date, env, args.output, args.dry_run)  # 出力パターンとdry_runを渡す
     report = aggregator.run()  # レポートを取得
 
     # レポートを文字列として返す（Slack連携などで使用可能）
