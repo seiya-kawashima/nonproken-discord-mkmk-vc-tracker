@@ -644,17 +644,33 @@ class DailyAggregator:
                     else:
                         user_fmt = fmt.get('user_format_streak', '{user} さん　合計{total}日目のログイン（連続{streak}日）')
                         message = user_fmt.format(user=user_display, total=total, streak=consecutive)
-                    message_lines.append(message)
+                    users_list.append(message)
 
-                message_lines.append("")
+                # ユーザーリストをコンポーネントに追加
+                components['users'] = users_list
+
                 # サマリーメッセージ（フォーマット設定を使用）
                 summary_fmt = fmt.get('summary', '本日の参加者数： {count}名')
                 summary_msg = summary_fmt.format(count=len(user_data))
-                message_lines.append(summary_msg)
+                components['summary'] = [summary_msg]
             else:
                 # 参加者なしメッセージ（フォーマット設定を使用）
                 no_participants_msg = fmt.get('no_participants', '本日のVCログイン者はいませんでした。')
-                message_lines.append(no_participants_msg)
+                components['greeting'] = [no_participants_msg]
+                components['intro'] = []
+                components['users'] = []
+                components['summary'] = []
+
+            # メッセージを構成順序に従って組み立て
+            message_order = fmt.get('message_order', ['greeting', 'intro', 'users', 'summary'])
+            message_lines = []
+
+            for component_name in message_order:
+                if component_name in components and components[component_name]:
+                    message_lines.extend(components[component_name])
+                    # usersの後に空行を追加
+                    if component_name == 'users' and components[component_name]:
+                        message_lines.append("")
 
             message = "\n".join(message_lines)
             logger.debug(f"Slackメッセージ長: {len(message)}文字")  # メッセージ長
