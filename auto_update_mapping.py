@@ -399,6 +399,10 @@ class MappingUpdater:
         """
         display_names = {}  # 表示名辞書
 
+        if discord is None:  # Discord.pyが使用できない場合
+            logger.warning("Discord.pyが使用できません。表示名の取得をスキップします")  # 警告出力
+            return display_names  # 空の辞書を返す
+
         discord_token = self.config.get('discord_token')  # Discordトークン取得
         if not discord_token:  # トークンがない場合
             logger.warning("Discordトークンが設定されていません")  # 警告出力
