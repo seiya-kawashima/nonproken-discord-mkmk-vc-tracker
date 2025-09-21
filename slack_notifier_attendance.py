@@ -609,7 +609,13 @@ class DailyAggregator:
         try:
             # メッセージを構築
             date_str = self.target_date.strftime('%Y年%m月%d日')
-            message_lines = ["皆さん、もくもく、おつかれさまでした！ :stmp_fight:", "本日の参加者は以下の通りです。", ""]
+
+            # フォーマット設定を取得（デフォルト値付き）
+            fmt = self.slack_message_format
+            greeting = fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')
+            intro = fmt.get('intro', '本日の参加者は以下の通りです。')
+
+            message_lines = [greeting, intro, ""]
 
             if user_data:
 
