@@ -55,6 +55,7 @@ class DailyAggregator:
         self.target_date = target_date or date.today()  # 集計対象日
         self.env = env  # 実行環境
         self.output_pattern = output_pattern  # 出力パターン
+        self.dry_run = dry_run  # ドライラン設定
         self.drive_service = None  # Google Drive APIサービス
         self.sheets_service = None  # Google Sheets APIサービス
         self.credentials = None  # 認証情報
@@ -643,23 +644,29 @@ class DailyAggregator:
 
             # Slackに投稿
             if self.output_pattern == 'slack' and self.slack_client and self.slack_channel:
+                # チャンネル名を取得
+                channel_name = "Unknown"
                 try:
-                    # チャンネル名を取得
-                    channel_name = "Unknown"
-                    try:
-                        channel_info = self.slack_client.conversations_info(channel=self.slack_channel)
-                        channel_name = channel_info['channel']['name']
-                    except:
-                        pass
+                    channel_info = self.slack_client.conversations_info(channel=self.slack_channel)
+                    channel_name = channel_info['channel']['name']
+                except:
+                    pass
 
-                    logger.debug(f"Slackに投稿を試みます: #{channel_name} (ID: {self.slack_channel})")  # 投稿試行
-                    response = self.slack_client.chat_postMessage(
-                        channel=self.slack_channel,
-                        text=message
-                    )
-                    logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}, channel=#{channel_name}")  # APIレスポンス
-                    logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
-                    logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
+                if self.dry_run:
+                    # ドライランモード
+                    logger.info(f"🔵 DRY-RUN MODE: Slack投稿をスキップします")  # ドライラン通知
+                    logger.info(f"投稿先チャンネル: #{channel_name} (ID: {self.slack_channel})")  # チャンネル情報
+                    logger.info(f"メッセージ内容:\n{'='*60}\n{message}\n{'='*60}")  # メッセージ内容
+                else:
+                    try:
+                        logger.debug(f"Slackに投稿を試みます: #{channel_name} (ID: {self.slack_channel})")  # 投稿試行
+                        response = self.slack_client.chat_postMessage(
+                            channel=self.slack_channel,
+                            text=message
+                        )
+                        logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}, channel=#{channel_name}")  # APIレスポンス
+                        logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
+                        logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
                 except SlackApiError as e:
                     logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
                     logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
