@@ -130,7 +130,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -212,7 +212,7 @@ jobs:
 ## 開発環境
 
 ### 言語・ライブラリ
-* **Python 3.11+**
+* **Python 3.12**（discord.pyの互換性のため、3.13は非推奨）
 * 主要ライブラリ:
   - `discord.py` - Discord Bot開発
   - `google-api-python-client` - Google Drive APIアクセス
@@ -266,9 +266,14 @@ jobs:
 
 ### 開発環境セットアップ
 
+#### Python 3.12 仮想環境の作成（重要）
+
 ```bash
-# 仮想環境作成
-python -m venv .venv
+# Windows: Python 3.12で仮想環境を作成
+py -3.12 -m venv .venv
+
+# Mac/Linux: Python 3.12で仮想環境を作成
+python3.12 -m venv .venv
 
 # 仮想環境有効化（Windows）
 .venv\Scripts\activate
