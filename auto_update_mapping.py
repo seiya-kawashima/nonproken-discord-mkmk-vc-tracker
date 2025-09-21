@@ -24,13 +24,17 @@ import asyncio
 
 # loguruの設定
 logger.remove()  # デフォルトハンドラーを削除
-logger.add(sys.stderr, level="INFO", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力
+
+# ログレベルを環境変数から取得（デフォルトはINFO）
+log_level = os.getenv("LOGLEVEL", "INFO")  # 環境変数LOGLEVELから取得
+
+logger.add(sys.stderr, level=log_level, format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # コンソール出力
 # logsフォルダが存在しない場合は作成
 os.makedirs("logs", exist_ok=True)  # logsフォルダを作成
 # タイムスタンプベースのログファイル名を生成
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 現在時刻をフォーマット
 log_filename = f"logs/auto_update_mapping_{timestamp}.log"  # タイムスタンプ付きファイル名
-logger.add(log_filename, level="INFO", encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力
+logger.add(log_filename, level=log_level, encoding="utf-8", format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")  # ファイル出力
 
 
 class MappingUpdater:
