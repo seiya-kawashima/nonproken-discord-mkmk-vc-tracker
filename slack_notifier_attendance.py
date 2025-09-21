@@ -1113,7 +1113,7 @@ def main():
     logger.remove()  # デフォルトハンドラーを削除
 
     # コンソール出力の設定（デバッグモードで異なるレベル）
-    console_level = "DEBUG" if args.debug else "INFO"
+    console_level = "DEBUG"  # 一時的にDEBUGに固定
     logger.add(sys.stderr, level=console_level,
               format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")
 
