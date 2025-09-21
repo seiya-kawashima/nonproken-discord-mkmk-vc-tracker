@@ -77,6 +77,10 @@ class MappingUpdater:
             logger.error("CSVパステンプレートが設定されていません")  # エラー出力
             return users  # 空の辞書を返す
 
+        # 環境サフィックスを取得
+        target_suffix = self.config.get('suffix')  # 環境サフィックス（0_PRD, 1_TST, 2_DEV）
+        logger.info(f"処理対象: *_{target_suffix}.csv ファイルのみを処理します")  # 対象ファイルログ
+
         # フォルダパスを抽出（{vc_name}より前の部分）
         folder_path = csv_path_template.split('{vc_name}')[0].rstrip('/')  # フォルダパス取得
 
