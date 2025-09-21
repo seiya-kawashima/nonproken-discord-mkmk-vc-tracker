@@ -17,7 +17,7 @@ Discord ボットの主要機能（VCメンバー取得、CSV記録、日次集�
 
 ### エンドツーエンドテスト（E2E）
 1. **discord_attendance_collector.py**の`main()`関数を直接呼び出し、全体フローをテスト
-2. **daily_aggregator.py**の`main()`関数を直接呼び出し、日次集計フローをテスト
+2. **slack_notifier_attendance.py**の`main()`関数を直接呼び出し、日次集計フローをテスト
 3. 実際の処理フローを通して、エラーなく完了することを確認
 
 ## 📥 Input（入力データ - MockInputData）

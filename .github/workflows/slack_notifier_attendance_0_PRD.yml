@@ -88,7 +88,7 @@ jobs:
         SLACK_CHANNEL_ID_0_PRD: ${{ secrets.SLACK_CHANNEL_ID_0_PRD }}
       run: |
         echo "本番環境で日次集計処理を実行します"
-        python daily_aggregator.py --env 0
+        python slack_notifier_attendance.py --env 0
 
     - name: 実行結果の通知（成功）
       if: success() && ((steps.holiday_check.outputs.skip != 'true') || (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_holiday_check == 'true'))
