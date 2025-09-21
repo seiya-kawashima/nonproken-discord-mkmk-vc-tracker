@@ -54,6 +54,10 @@ def get_config(env: Environment = Environment.DEV) -> dict:
             'user_format_streak': os.getenv('SLACK_USER_FORMAT_STREAK', '{user} さん　合計{total}日目のログイン（連続{streak}日）'),  # 連続ログインのユーザー表示形式
             'summary': os.getenv('SLACK_SUMMARY', '本日の参加者数： {count}名'),  # 参加者数サマリー
             'no_participants': os.getenv('SLACK_NO_PARTICIPANTS', '本日のVCログイン者はいませんでした。'),  # 参加者なしメッセージ
+
+            # メッセージの構成順序を定義（カスタマイズ可能）
+            # 利用可能な要素: greeting, intro, users, summary
+            'message_order': os.getenv('SLACK_MESSAGE_ORDER', 'greeting,intro,users,summary').split(','),  # メッセージ表示順序
         },
 
         'suffix': suffix,  # 環境識別子（0_PRD/1_TST/2_DEV）を他の処理でも使えるように保存
