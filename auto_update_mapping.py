@@ -49,6 +49,7 @@ class MappingUpdater:
         self.sheets_service = None  # Sheets APIサービス
         self.slack_client = None  # Slack APIクライアント
         self.discord_members = {}  # Discordメンバー情報キャッシュ {user_id: display_name}
+        self.excluded_users = self.config.get('discord_excluded_users', [])  # 除外ユーザーリスト
         self.initialize_services()  # サービス初期化
 
     def initialize_services(self):
