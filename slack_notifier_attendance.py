@@ -614,15 +614,22 @@ class DailyAggregator:
                 message_lines.append("本日のVCログイン者はいませんでした。")
 
             message = "\n".join(message_lines)
+            logger.debug(f"Slackメッセージ長: {len(message)}文字")  # メッセージ長
+            logger.debug(f"output_pattern: {self.output_pattern}")  # 出力パターン
+            logger.debug(f"slack_client: {self.slack_client is not None}")  # Slackクライアント存在
+            logger.debug(f"slack_channel: {self.slack_channel}")  # SlackチャンネルID
 
             # Slackに投稿
             if self.output_pattern == 'slack' and self.slack_client and self.slack_channel:
                 try:
+                    logger.debug(f"Slackに投稿を試みます: channel={self.slack_channel}")  # 投稿試行
                     response = self.slack_client.chat_postMessage(
                         channel=self.slack_channel,
                         text=message
                     )
+                    logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}")  # APIレスポンス
                     logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
+                    logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
                 except SlackApiError as e:
                     logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
                     logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
