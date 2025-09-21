@@ -668,10 +668,10 @@ class DailyAggregator:
                         logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
                         logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
                     except SlackApiError as e:
-                    logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
-                    logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
-                    # レポート全体を1つのログメッセージとして出力
-                    logger.info(f"\n{'='*60}\n[レポート]\n{message}\n{'='*60}")
+                        logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
+                        logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
+                        # レポート全体を1つのログメッセージとして出力
+                        logger.info(f"\n{'='*60}\n[レポート]\n{message}\n{'='*60}")
             else:
                 # Discord出力モードまたはSlackが設定されていない場合はログ出力
                 logger.debug(f"Slack投稿をスキップ: output_pattern={self.output_pattern}, slack_client={self.slack_client is not None}, slack_channel={self.slack_channel}")  # スキップ理由
