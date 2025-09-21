@@ -19,7 +19,7 @@ from config import get_config, Environment
 from loguru import logger
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-import aiohttp  # HTTP通信用（Discord API用）
+import discord  # Discord API用（Python 3.12環境で使用）
 import asyncio
 
 # loguruの設定
@@ -386,7 +386,7 @@ class MappingUpdater:
             return []  # 空のリストを返す
 
     async def get_discord_display_names(self, user_ids: Set[str]) -> Dict[str, str]:
-        """Discord REST APIを使用してサーバーニックネームを取得
+        """Discord APIを使用してサーバーニックネームを取得
 
         Args:
             user_ids: Discord User IDのセット
@@ -396,73 +396,65 @@ class MappingUpdater:
         """
         display_names = {}  # 結果を格納する辞書
 
-        discord_token = self.config.get('discord_bot_token')  # Discordボットトークン取得
+        discord_token = self.config.get('discord_token')  # Discordトークン取得
         if not discord_token:  # トークンがない場合
             logger.warning("Discord Botトークンが設定されていません")  # 警告出力
             return display_names  # 空の辞書を返す
 
-        # Discord REST APIのベースURL
-        base_url = "https://discord.com/api/v10"  # Discord API v10
-        headers = {
-            "Authorization": f"Bot {discord_token}",  # ボットトークン
-            "Content-Type": "application/json"  # JSONコンテンツ
-        }
-
         try:
-            async with aiohttp.ClientSession() as session:  # HTTPセッション開始
-                # まずBotが所属するギルド一覧を取得
-                async with session.get(f"{base_url}/users/@me/guilds", headers=headers) as resp:  # ギルド取得
-                    if resp.status != 200:  # エラーの場合
-                        logger.error(f"Discord API エラー (ギルド取得): {resp.status}")  # エラーログ
-                        text = await resp.text()  # エラー詳細取得
-                        logger.error(f"エラー詳細: {text}")  # エラー詳細ログ
-                        return display_names  # 空の辞書を返す
-                    guilds = await resp.json()  # ギルドリスト取得
+            # Discord Botクライアントの設定
+            intents = discord.Intents.default()  # デフォルトIntents
+            intents.guilds = True  # ギルド情報権限を有効化
+            intents.members = True  # メンバー情報権限を有効化
 
-                logger.info(f"Discord APIから {len(guilds)} 個のギルドを取得")  # ギルド数ログ
+            client = discord.Client(intents=intents)  # クライアント作成
+            data_collected = asyncio.Event()  # データ収集完了イベント
 
-                # 各ギルドでメンバー情報を検索
-                for guild in guilds:  # 各ギルドに対して
-                    guild_id = guild['id']  # ギルドID
-                    guild_name = guild.get('name', 'Unknown')  # ギルド名
-                    logger.debug(f"ギルド確認中: {guild_name} (ID: {guild_id})")  # デバッグログ
+            @client.event
+            async def on_ready():  # Bot接続完了時の処理
+                try:
+                    logger.info(f"Discord Botとして接続: {client.user}")  # 接続ログ
 
-                    # 各ユーザーIDについてメンバー情報を取得
-                    for user_id in user_ids:  # 各ユーザーIDに対して
-                        if user_id in display_names:  # すでに取得済みの場合
-                            continue  # スキップ
+                    # すべてのギルドを検索
+                    for guild in client.guilds:  # 各ギルドに対して
+                        logger.debug(f"ギルド確認中: {guild.name} (ID: {guild.id})")  # デバッグログ
 
-                        try:
-                            # ギルドメンバー情報を取得
-                            url = f"{base_url}/guilds/{guild_id}/members/{user_id}"  # メンバー取得URL
-                            async with session.get(url, headers=headers) as resp:  # メンバー情報取得
-                                if resp.status == 200:  # 成功の場合
-                                    member = await resp.json()  # メンバー情報取得
+                        # 各ユーザーIDについてメンバー情報を取得
+                        for user_id in user_ids:  # 各ユーザーIDに対して
+                            if user_id in display_names:  # すでに取得済みの場合
+                                continue  # スキップ
 
-                                    # ニックネームがある場合はそれを、なければグローバル名かユーザー名を使用
-                                    if 'nick' in member and member['nick']:  # ニックネームがある場合
-                                        display_name = member['nick']  # ニックネームを使用
-                                    elif 'user' in member:  # ユーザー情報がある場合
-                                        user_info = member['user']  # ユーザー情報取得
-                                        # グローバル名 > ユーザー名の優先順位
-                                        display_name = user_info.get('global_name') or user_info.get('username', '')  # 表示名決定
-                                    else:
-                                        continue  # スキップ
-
+                            try:
+                                member = guild.get_member(int(user_id))  # メンバー取得
+                                if member:  # メンバーが存在する場合
+                                    # ニックネームがある場合はそれを、なければユーザー名を使用
+                                    display_name = member.nick if member.nick else member.name  # 表示名決定
                                     display_names[user_id] = display_name  # 表示名を保存
                                     logger.debug(f"表示名取得: {user_id} -> {display_name}")  # デバッグログ
-                                elif resp.status == 404:  # メンバーが見つからない場合
-                                    logger.debug(f"ユーザー {user_id} はギルド {guild_id} にいません")  # デバッグログ
-                                else:  # その他のエラー
-                                    logger.debug(f"メンバー {user_id} の取得失敗: HTTP {resp.status}")  # デバッグログ
-                        except Exception as e:  # エラー時
-                            logger.debug(f"メンバー {user_id} の取得エラー: {e}")  # デバッグログ
+                            except Exception as e:  # エラー時
+                                logger.debug(f"メンバー {user_id} の取得エラー: {e}")  # デバッグログ
 
-                logger.info(f"Discord表示名を {len(display_names)} 件取得")  # 取得数ログ
+                except Exception as e:  # エラー時
+                    logger.error(f"Discord表示名取得エラー: {e}")  # エラー出力
+                finally:
+                    data_collected.set()  # データ収集完了を通知
+                    await client.close()  # クライアント終了
 
+            # Botを起動（タイムアウト付き）
+            bot_task = asyncio.create_task(client.start(discord_token))  # タスク作成
+
+            # データ取得完了まで待機（最大30秒）
+            await asyncio.wait_for(data_collected.wait(), timeout=30.0)  # タイムアウト付き待機
+
+        except asyncio.TimeoutError:  # タイムアウト時
+            logger.warning("Discord接続タイムアウト")  # 警告出力
         except Exception as e:  # エラー時
             logger.error(f"Discord API呼び出しエラー: {e}")  # エラー出力
+        finally:
+            if 'client' in locals() and not client.is_closed():  # クライアントが存在し閉じていない場合
+                await client.close()  # クライアントを閉じる
 
+        logger.info(f"Discord表示名を {len(display_names)} 件取得")  # 取得数ログ
         return display_names  # 表示名辞書を返す
 
     def write_slack_users_to_sheet(self, users: List[Dict[str, str]]):
