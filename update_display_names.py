@@ -168,7 +168,16 @@ class DisplayNameUpdater:
         logger.info("=" * 50)
 
         # 既存のユーザーIDを取得
-        sheet_name = 'discord_slack_mapping'
+        # マッピングシートのパスを取得
+        mapping_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')
+        if not mapping_path:
+            logger.error("マッピングシートパスが設定されていません")
+            return
+
+        # ファイル名を抽出
+        sheet_name = mapping_path.split('/')[-1]
+
+        # シートを検索
         query = f"name='{sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"
         results = self.drive_service.files().list(
             q=query,
@@ -187,21 +196,12 @@ class DisplayNameUpdater:
         tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')
         logger.info(f"タブ名: {tab_name}")
 
-        try:
-            result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=sheet_id,
-                range=f'{tab_name}!A:D'
-            ).execute()
+        result = self.sheets_service.spreadsheets().values().get(
+            spreadsheetId=sheet_id,
+            range=f'{tab_name}!A:D'
+        ).execute()
 
-            values = result.get('values', [])
-        except Exception as e:
-            logger.error(f"シート読み込みエラー: {e}")
-            # Sheet1がない場合は最初のシートを使う
-            result = self.sheets_service.spreadsheets().values().get(
-                spreadsheetId=sheet_id,
-                range='A:D'
-            ).execute()
-            values = result.get('values', [])
+        values = result.get('values', [])
         user_ids = set()
 
         logger.info(f"シートの行数: {len(values)}")
