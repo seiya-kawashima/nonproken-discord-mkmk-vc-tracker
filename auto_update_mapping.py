@@ -427,34 +427,39 @@ class MappingUpdater:
             logger.info(f"既存のSlackユーザーシートを更新: {sheet_name}")  # ログ出力
         else:  # シートが存在しない場合
             # 新規シートを作成
-            spreadsheet = {
-                'properties': {
-                    'title': sheet_name  # シート名設定
-                }
-            }  # スプレッドシート定義
+            try:
+                spreadsheet = {
+                    'properties': {
+                        'title': sheet_name  # シート名設定
+                    }
+                }  # スプレッドシート定義
 
-            if shared_drive_id and folder_id:  # 共有ドライブの場合
-                spreadsheet = self.sheets_service.spreadsheets().create(
-                    body=spreadsheet
-                ).execute()  # シート作成
+                if shared_drive_id and folder_id:  # 共有ドライブの場合
+                    spreadsheet = self.sheets_service.spreadsheets().create(
+                        body=spreadsheet
+                    ).execute()  # シート作成
 
-                # 作成したシートを共有ドライブに移動
-                file_id = spreadsheet['spreadsheetId']  # ファイルID
-                self.drive_service.files().update(
-                    fileId=file_id,
-                    addParents=folder_id,
-                    removeParents='root',
-                    supportsAllDrives=True
-                ).execute()  # ファイル移動
+                    # 作成したシートを共有ドライブに移動
+                    file_id = spreadsheet['spreadsheetId']  # ファイルID
+                    self.drive_service.files().update(
+                        fileId=file_id,
+                        addParents=folder_id,
+                        removeParents='root',
+                        supportsAllDrives=True
+                    ).execute()  # ファイル移動
 
-                sheet_id = file_id  # シートID設定
-            else:  # マイドライブの場合
-                spreadsheet = self.sheets_service.spreadsheets().create(
-                    body=spreadsheet
-                ).execute()  # シート作成
-                sheet_id = spreadsheet['spreadsheetId']  # シートID取得
+                    sheet_id = file_id  # シートID設定
+                else:  # マイドライブの場合
+                    spreadsheet = self.sheets_service.spreadsheets().create(
+                        body=spreadsheet
+                    ).execute()  # シート作成
+                    sheet_id = spreadsheet['spreadsheetId']  # シートID取得
 
-            logger.info(f"新規Slackユーザーシートを作成: {sheet_name}")  # ログ出力
+                logger.info(f"新規Slackユーザーシートを作成: {sheet_name}")  # ログ出力
+            except Exception as e:  # エラー時
+                logger.error(f"Slackユーザーシート作成エラー: {e}")  # エラー出力
+                logger.warning("Slackユーザー一覧の出力をスキップします")  # 警告出力
+                return  # 処理中断
 
         # データを準備
         header = [['Slack ID', 'User Name', 'Display Name', 'Real Name']]  # ヘッダー行
