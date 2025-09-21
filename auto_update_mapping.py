@@ -639,6 +639,11 @@ class MappingUpdater:
         for discord_id, (discord_name, vc_name) in csv_users.items():  # 各CSVユーザー
             if discord_id not in existing_ids:  # 新規の場合
                 new_users.append((discord_id, discord_name, vc_name))  # リストに追加
+                logger.debug(f"  新規ユーザー検出: {discord_name} (ID: {discord_id})")  # デバッグログ
+
+        # デバッグ: 既存ユーザーと CSV ユーザーの比較
+        logger.debug(f"CSV ユーザーID一覧: {set(csv_users.keys())}")  # CSVのID一覧
+        logger.debug(f"既存マッピングID一覧: {existing_ids}")  # 既存のID一覧
 
         logger.info(f"\n🔍 分析結果:")  # 分析結果ログ
         logger.info(f"  - CSV内のユーザー数: {len(csv_users)}")  # CSV数
