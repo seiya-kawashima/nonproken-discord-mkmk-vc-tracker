@@ -188,7 +188,7 @@ class DisplayNameUpdater:
 
         result = self.sheets_service.spreadsheets().values().get(
             spreadsheetId=sheet_id,
-            range=f'{tab_name}!A:A'
+            range=f'{tab_name}!A:D'
         ).execute()
 
         values = result.get('values', [])
