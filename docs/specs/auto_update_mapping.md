@@ -12,6 +12,7 @@
 | 項目 | 型 | 説明 | 例 |
 |------|-----|------|-----|
 | 環境引数 | int | 実行環境の指定（0=本番、1=テスト、2=開発） | `--env 2` |
+| Slack通知無効化 | bool | Slack通知を無効化するフラグ | `--no-slack-notify` |
 | CSVファイル | CSV | Google Drive上の出勤記録CSV | `もくもく会_PRD.csv` |
 | マッピングシート | Googleスプレッドシート | 既存のDiscord-Slackマッピング情報（configで設定） | 設定による |
 
@@ -84,14 +85,17 @@
 
 ### コマンドライン実行例
 ```bash
-# 開発環境で実行
+# 開発環境で実行（Slack通知あり）
 python auto_update_mapping.py --env 2
 
-# 本番環境で実行
+# 本番環境で実行（Slack通知あり）
 python auto_update_mapping.py --env 0
 
-# テスト環境で実行
-python auto_update_mapping.py --env 1
+# テスト環境で実行（Slack通知なし）
+python auto_update_mapping.py --env 1 --no-slack-notify
+
+# 開発環境でテスト実行（Slack通知なし）
+python auto_update_mapping.py --env 2 --no-slack-notify
 ```
 
 ### 実行結果例
@@ -178,7 +182,10 @@ A: エラーログが出力されますが、処理は停止します。ログ�
 A: 実行するたびに最新のSlackユーザー情報を取得し、既存のデータを完全に置き換えます。
 
 ### Q: 未マッピング通知はいつ送信されますか？
-A: スクリプト実行時にDiscord IDはあるがSlack IDが空のユーザーが1人でも存在する場合に自動送信されます。
+A: スクリプト実行時にDiscord IDはあるがSlack IDが空のユーザーが1人でも存在する場合に自動送信されます。`--no-slack-notify`フラグを使用すると通知を無効化できます。
+
+### Q: Slack通知を一時的に無効化できますか？
+A: はい、`--no-slack-notify`フラグを付けて実行することで、その実行時のみ通知をスキップできます。データの更新処理は通常どおり実行されます。
 
 ## 🔧 設定ファイル関連
 このツールは`config.py`の設定を使用します。以下の設定項目が必要です：
