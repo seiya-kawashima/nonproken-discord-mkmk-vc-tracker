@@ -605,9 +605,9 @@ class DailyAggregator:
 
                     # メッセージを構築
                     if consecutive == 1:
-                        message_lines.append(f"{user_display} さん　１日目のログイン（累計{total}日）")
+                        message_lines.append(f"{user_display} さん　合計{total}日目のログイン（連続1日）")
                     else:
-                        message_lines.append(f"{user_display} さん　{consecutive}日連続ログイン（累計{total}日）")
+                        message_lines.append(f"{user_display} さん　合計{total}日目のログイン（連続{consecutive}日）")
 
                 message_lines.append("")
                 message_lines.append(f"本日の参加者数： {len(user_data)}名")
