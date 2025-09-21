@@ -187,12 +187,21 @@ class DisplayNameUpdater:
         tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')
         logger.info(f"タブ名: {tab_name}")
 
-        result = self.sheets_service.spreadsheets().values().get(
-            spreadsheetId=sheet_id,
-            range=f'{tab_name}!A:D'
-        ).execute()
+        try:
+            result = self.sheets_service.spreadsheets().values().get(
+                spreadsheetId=sheet_id,
+                range=f'{tab_name}!A:D'
+            ).execute()
 
-        values = result.get('values', [])
+            values = result.get('values', [])
+        except Exception as e:
+            logger.error(f"シート読み込みエラー: {e}")
+            # Sheet1がない場合は最初のシートを使う
+            result = self.sheets_service.spreadsheets().values().get(
+                spreadsheetId=sheet_id,
+                range='A:D'
+            ).execute()
+            values = result.get('values', [])
         user_ids = set()
 
         logger.info(f"シートの行数: {len(values)}")
