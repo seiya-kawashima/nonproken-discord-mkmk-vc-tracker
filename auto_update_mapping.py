@@ -413,8 +413,7 @@ class MappingUpdater:
 
             if shared_drive_id and folder_id:  # 共有ドライブの場合
                 spreadsheet = self.sheets_service.spreadsheets().create(
-                    body=spreadsheet,
-                    supportsAllDrives=True
+                    body=spreadsheet
                 ).execute()  # シート作成
 
                 # 作成したシートを共有ドライブに移動
