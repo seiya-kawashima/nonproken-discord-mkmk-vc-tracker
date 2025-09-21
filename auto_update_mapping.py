@@ -382,6 +382,73 @@ class MappingUpdater:
             logger.error(f"予期しないエラー: {e}")  # エラー出力
             return []  # 空のリストを返す
 
+    async def get_discord_display_names(self, user_ids: Set[str]) -> Dict[str, str]:
+        """Discord APIからユーザーのサーバー表示名を取得
+
+        Args:
+            user_ids: Discordユーザー IDのセット
+
+        Returns:
+            Dict[user_id, display_name]: ユーザーIDと表示名の辞書
+        """
+        display_names = {}  # 表示名辞書
+
+        discord_token = self.config.get('discord_token')  # Discordトークン取得
+        if not discord_token:  # トークンがない場合
+            logger.warning("Discordトークンが設定されていません")  # 警告出力
+            return display_names  # 空の辞書を返す
+
+        channel_ids = self.config.get('discord_channel_ids', [])  # チャンネルIDリスト
+        if not channel_ids:  # チャンネルIDがない場合
+            logger.warning("監視対象のボイスチャンネルIDが設定されていません")  # 警告出力
+            return display_names  # 空の辞書を返す
+
+        intents = discord.Intents.default()  # デフォルトのintents
+        intents.guilds = True  # ギルド情報へのアクセスを許可
+        intents.voice_states = True  # ボイス状態へのアクセスを許可
+        intents.members = True  # メンバー情報へのアクセスを許可
+
+        client = discord.Client(intents=intents)  # Discordクライアント作成
+        data_collected = asyncio.Event()  # データ収集完了イベント
+
+        @client.event
+        async def on_ready():  # 接続完了時
+            logger.info(f"Discordに接続しました: {client.user}")  # 接続ログ
+
+            try:
+                for channel_id in channel_ids:  # 各チャンネルIDに対して
+                    try:
+                        channel = client.get_channel(int(channel_id))  # チャンネル取得
+                        if channel:  # チャンネルが存在する場合
+                            for member in channel.members:  # チャンネルのメンバー
+                                user_id = str(member.id)  # ユーザーID
+                                if user_id in user_ids:  # 対象ユーザーの場合
+                                    display_names[user_id] = member.display_name  # 表示名を保存
+                                    logger.debug(f"表示名取得: {member.name} -> {member.display_name}")  # デバッグログ
+                    except Exception as e:  # エラー時
+                        logger.warning(f"チャンネル {channel_id} の処理エラー: {e}")  # 警告出力
+            finally:
+                data_collected.set()  # データ収集完了
+                await client.close()  # クライアントを閉じる
+
+        try:
+            # Botを起動（非同期タスクとして）
+            bot_task = asyncio.create_task(client.start(discord_token))  # タスク作成
+
+            # データ取得完了まで待機（最大30秒）
+            await asyncio.wait_for(data_collected.wait(), timeout=30.0)  # タイムアウト付き待機
+
+        except asyncio.TimeoutError:  # タイムアウト時
+            logger.warning("Discord接続がタイムアウトしました")  # 警告出力
+        except Exception as e:  # エラー時
+            logger.error(f"Discord接続エラー: {e}")  # エラー出力
+        finally:
+            if not client.is_closed():  # クライアントが閉じていない場合
+                await client.close()  # 閉じる
+
+        logger.info(f"Discordから {len(display_names)}人の表示名を取得")  # 取得数ログ
+        return display_names  # 表示名辞書を返す
+
     def write_slack_users_to_sheet(self, users: List[Dict[str, str]]):
         """Slackユーザー一覧をマッピングシートのslack_usersタブに書き込み
 
