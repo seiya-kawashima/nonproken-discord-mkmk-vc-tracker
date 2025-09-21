@@ -642,9 +642,14 @@ class DailyAggregator:
                     message_lines.append(message)
 
                 message_lines.append("")
-                message_lines.append(f"本日の参加者数： {len(user_data)}名")
+                # サマリーメッセージ（フォーマット設定を使用）
+                summary_fmt = fmt.get('summary', '本日の参加者数： {count}名')
+                summary_msg = summary_fmt.format(count=len(user_data))
+                message_lines.append(summary_msg)
             else:
-                message_lines.append("本日のVCログイン者はいませんでした。")
+                # 参加者なしメッセージ（フォーマット設定を使用）
+                no_participants_msg = fmt.get('no_participants', '本日のVCログイン者はいませんでした。')
+                message_lines.append(no_participants_msg)
 
             message = "\n".join(message_lines)
             logger.debug(f"Slackメッセージ長: {len(message)}文字")  # メッセージ長
