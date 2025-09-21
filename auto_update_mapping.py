@@ -16,6 +16,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from config import get_config, Environment
 from loguru import logger
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
