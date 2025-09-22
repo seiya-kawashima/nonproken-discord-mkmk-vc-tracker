@@ -688,7 +688,7 @@ class DailyAggregator:
                         "text": user_display
                     })
 
-                    # 2列目に累計/連続を追加（1つのフィールドにまとめる）
+                    # 2列目に合計/連続を追加（1つのフィールドにまとめる）
                     fields.append({
                         "type": "mrkdwn",
                         "text": f"{total}日目 / {consecutive}日連続"
