@@ -656,26 +656,29 @@ class DailyAggregator:
                 # フィールド形式で表示（Slackのfields機能を使用）
                 fields = []
 
-                # 各ユーザーのデータをフィールドとして追加
+                # 各ユーザーのデータをフィールドとして追加（2列表示）
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # ユーザー名を取得（Slackモードならメンションを使用）
+                    # 1列目: ユーザー名（Slackモードならメンションを使用）
                     if self.output_pattern == 'slack' and user_id in self.user_mapping:
                         user_display = f"<@{self.user_mapping[user_id]}>"
                     else:
                         user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
-                    # フィールドを追加（名前と統計を1つのフィールドに）
-                    # 連続日数は内部的に計算するが表示しない
-                    stat_text = f"合計 {total}日目"
-
+                    # 1列目にユーザー名を追加
                     fields.append({
                         "type": "mrkdwn",
-                        "text": f"{user_display}\n{stat_text}"
+                        "text": user_display
+                    })
+
+                    # 2列目に日数を追加
+                    fields.append({
+                        "type": "mrkdwn",
+                        "text": f"{total}日目"
                     })
 
                 # 2列表示のセクションを作成
