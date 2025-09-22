@@ -1204,7 +1204,7 @@ def main():
               format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}.py | def: {function} | {message}")
 
     # ファイル出力の設定（常にDEBUGレベルで記録）
-    logger.add(f"logs/daily_aggregator_{current_datetime}.log",
+    logger.add(f"logs/slack_notifier_attendance_{current_datetime}.log",
               rotation="10 MB",
               retention="7 days",
               level="DEBUG",  # 常にDEBUGレベルで記録
