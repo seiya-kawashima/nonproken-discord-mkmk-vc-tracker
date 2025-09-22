@@ -671,13 +671,18 @@ class DailyAggregator:
                 if divider_template:
                     blocks.append(divider_template)
 
-                # テーブルヘッダー
-                table_header_template = templates.get('table_header', {})
-                if table_header_template:
-                    blocks.append(table_header_template)
-
-                # フィールド形式で表示（2列表示）
+                # テーブルヘッダーと参加者データを同じセクションにまとめる
                 fields = []
+
+                # テーブルヘッダーを最初に追加
+                fields.append({
+                    "type": "mrkdwn",
+                    "text": "*参加者*"
+                })
+                fields.append({
+                    "type": "mrkdwn",
+                    "text": "*合計 / 連続*"
+                })
 
                 # 各ユーザーのデータをフィールドとして追加（2列表示）
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
@@ -704,7 +709,7 @@ class DailyAggregator:
                         "text": f"{total}日目 / {consecutive}日連続"
                     })
 
-                # 2列表示のセクションを作成
+                # 2列表示のセクションを作成（ヘッダーとデータが統合済み）
                 blocks.append({
                     "type": "section",
                     "fields": fields
