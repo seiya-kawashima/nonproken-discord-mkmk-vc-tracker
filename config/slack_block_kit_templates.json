@@ -1,0 +1,75 @@
+{
+  "attendance_report": {
+    "header": {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "📅 {date} の参加レポート",
+        "emoji": true
+      }
+    },
+    "greeting": {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "{greeting_message}"
+      }
+    },
+    "participant_intro": {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "✨ {intro_message}"
+      }
+    },
+    "divider": {
+      "type": "divider"
+    },
+    "table_header": {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*参加者*"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*合計 / 連続*"
+        }
+      ]
+    },
+    "participant_row": {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "{user_display}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "{total_days}日目 / {consecutive_days}日連続"
+        }
+      ]
+    },
+    "no_participants": {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "{no_participants_message}"
+      }
+    },
+    "summary": {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "{summary_message}"
+      }
+    }
+  },
+  "fallback_messages": {
+    "greeting": "もくもく、おつかれさまでした！ :stmp_fight:",
+    "intro": "本日の参加者は{count}名です。",
+    "no_participants": "本日のVCログイン者はいませんでした。",
+    "summary": ""
+  }
+}
