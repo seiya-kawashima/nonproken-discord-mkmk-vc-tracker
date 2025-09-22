@@ -4,7 +4,7 @@
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "# 📅 {date} の参加レポート\n{greeting_message}\n:sparkles: {intro_message}"
+        "text": "## 📅 {date} の参加レポート\n{greeting_message}\n:sparkles: {intro_message}"
       }
     },
     "divider": {
