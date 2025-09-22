@@ -671,20 +671,24 @@ class DailyAggregator:
                 if divider_template:
                     blocks.append(divider_template)
 
-                # テーブルヘッダーと参加者データを同じセクションにまとめる
-                fields = []
-
-                # テーブルヘッダーを最初に追加
-                fields.append({
-                    "type": "mrkdwn",
-                    "text": "*参加者*"
+                # テーブルヘッダーのセクションを追加
+                header_fields = [
+                    {
+                        "type": "mrkdwn",
+                        "text": "*参加者*"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": "*合計 / 連続*"
+                    }
+                ]
+                blocks.append({
+                    "type": "section",
+                    "fields": header_fields
                 })
-                fields.append({
-                    "type": "mrkdwn",
-                    "text": "*合計 / 連続*"
-                })
 
-                # 各ユーザーのデータをフィールドとして追加（2列表示）
+                # 参加者データをフィールドとして追加（Slackのfieldsは最大10個まで）
+                current_fields = []
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
@@ -698,22 +702,31 @@ class DailyAggregator:
                         user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
                     # 1列目にユーザー名を追加
-                    fields.append({
+                    current_fields.append({
                         "type": "mrkdwn",
                         "text": user_display
                     })
 
                     # 2列目に合計/連続を追加
-                    fields.append({
+                    current_fields.append({
                         "type": "mrkdwn",
                         "text": f"{total}日目 / {consecutive}日連続"
                     })
 
-                # 2列表示のセクションを作成（ヘッダーとデータが統合済み）
-                blocks.append({
-                    "type": "section",
-                    "fields": fields
-                })
+                    # fieldsが10個に達したらセクションを作成してリセット
+                    if len(current_fields) >= 10:
+                        blocks.append({
+                            "type": "section",
+                            "fields": current_fields
+                        })
+                        current_fields = []
+
+                # 残りのフィールドがあればセクションを作成
+                if current_fields:
+                    blocks.append({
+                        "type": "section",
+                        "fields": current_fields
+                    })
 
                 # テーブル終了の区切り線
                 table_footer_divider_template = templates.get('table_footer_divider', {})
