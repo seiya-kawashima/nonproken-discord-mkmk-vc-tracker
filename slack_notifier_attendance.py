@@ -654,8 +654,9 @@ class DailyAggregator:
 
             if user_data:
                 # 挨拶＋参加者数セクション
-                greeting = fmt.get('greeting', fallback_messages.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:'))
-                intro_fmt = fmt.get('intro', fallback_messages.get('intro', '本日の参加者は*{count}名*です。'))
+                # config.pyの設定を優先、なければtemplate.json、それもなければデフォルト値を使用
+                greeting = fmt.get('greeting') or messages.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')
+                intro_fmt = fmt.get('intro') or messages.get('intro', '本日の参加者は{count}名です。')
                 intro_msg = intro_fmt.format(count=len(user_data))
 
                 greeting_template = templates.get('greeting_and_intro', {})
@@ -712,7 +713,7 @@ class DailyAggregator:
                     blocks.append(table_footer_divider_template)
 
                 # サマリーメッセージ
-                summary_fmt = fmt.get('summary', fallback_messages.get('summary', ''))
+                summary_fmt = fmt.get('summary') or messages.get('summary', '')
                 if summary_fmt:
                     summary_msg = summary_fmt.format(count=len(user_data))
                     summary_template = templates.get('summary', {})
@@ -723,7 +724,7 @@ class DailyAggregator:
                         blocks.append(summary_block)
             else:
                 # 参加者なしメッセージ
-                no_participants_msg = fmt.get('no_participants', fallback_messages.get('no_participants', '本日のVCログイン者はいませんでした。'))
+                no_participants_msg = fmt.get('no_participants') or messages.get('no_participants', '本日のVCログイン者はいませんでした。')
                 no_participants_template = templates.get('no_participants', {})
                 if no_participants_template:
                     no_participants_block = no_participants_template.copy()
