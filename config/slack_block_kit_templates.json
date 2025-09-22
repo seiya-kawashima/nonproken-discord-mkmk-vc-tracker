@@ -1,18 +1,10 @@
 {
   "attendance_report": {
-    "header": {
-      "type": "header",
-      "text": {
-        "type": "plain_text",
-        "text": "📅 {date} の参加レポート",
-        "emoji": true
-      }
-    },
-    "greeting": {
+    "header_with_greeting": {
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "{greeting_message}"
+        "text": "# 📅 {date} の参加レポート\n{greeting_message}"
       }
     },
     "participant_intro": {
