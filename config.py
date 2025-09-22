@@ -49,10 +49,10 @@ def get_config(env: Environment = Environment.DEV) -> dict:
         # Slack通知メッセージフォーマット設定（全環境共通）
         'slack_message_format': {
             'greeting': os.getenv('SLACK_GREETING', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:'),  # 挨拶メッセージ
-            'intro': os.getenv('SLACK_INTRO', '本日の参加者は以下の通りです。'),  # 導入メッセージ
+            'intro': os.getenv('SLACK_INTRO', '本日の参加者は{count}名です。'),  # 導入メッセージ（参加者数込み）
             'user_format_first': os.getenv('SLACK_USER_FORMAT_FIRST', '{user} さん　合計{total}日目のログイン'),  # 初回（連続1日）のユーザー表示形式
-            'user_format_streak': os.getenv('SLACK_USER_FORMAT_STREAK', '{user} さん　合計{total}日目のログイン（連続{streak}日）'),  # 連続ログインのユーザー表示形式
-            'summary': os.getenv('SLACK_SUMMARY', '本日の参加者数： {count}名'),  # 参加者数サマリー
+            'user_format_streak': os.getenv('SLACK_USER_FORMAT_STREAK', '{user} さん　合計{total}日目のログイン（{streak}日連続ログイン）'),  # 連続ログインのユーザー表示形式
+            'summary': os.getenv('SLACK_SUMMARY', ''),  # 参加者数サマリー（introに統合したので空文字）
             'no_participants': os.getenv('SLACK_NO_PARTICIPANTS', '本日のVCログイン者はいませんでした。'),  # 参加者なしメッセージ
 
             # メッセージの構成順序を定義（カスタマイズ可能）
