@@ -676,31 +676,38 @@ class DailyAggregator:
                 if table_header_template:
                     blocks.append(table_header_template)
 
-                # 参加者リストを1つのテキストブロックにまとめて余白を詰める
-                participant_lines = []
+                # フィールド形式で表示（2列表示）
+                fields = []
+
+                # 各ユーザーのデータをフィールドとして追加（2列表示）
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # ユーザー名（Slackモードならメンションを使用）
+                    # 1列目: ユーザー名（Slackモードならメンションを使用）
                     if self.output_pattern == 'slack' and user_id in self.user_mapping:
                         user_display = f"<@{self.user_mapping[user_id]}>"
                     else:
                         user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
-                    # 1行にまとめる
-                    participant_lines.append(f"{user_display}　{total}日目 / {consecutive}日連続")
+                    # 1列目にユーザー名を追加
+                    fields.append({
+                        "type": "mrkdwn",
+                        "text": user_display
+                    })
 
-                # 参加者リストを1つのセクションとして追加
-                participant_text = "\n".join(participant_lines)
+                    # 2列目に合計/連続を追加
+                    fields.append({
+                        "type": "mrkdwn",
+                        "text": f"{total}日目 / {consecutive}日連続"
+                    })
+
+                # 2列表示のセクションを作成
                 blocks.append({
                     "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": participant_text
-                    }
+                    "fields": fields
                 })
 
                 # テーブル終了の区切り線
