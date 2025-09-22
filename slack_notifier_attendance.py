@@ -621,10 +621,12 @@ class DailyAggregator:
             # 挨拶メッセージ
             components['greeting'] = [fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')]
 
-            # 導入メッセージ
-            components['intro'] = [fmt.get('intro', '本日の参加者は以下の通りです。')]
-
             if user_data:
+                # 導入メッセージ（参加者数を含む）
+                intro_fmt = fmt.get('intro', '本日の参加者は{count}名です。')
+                intro_msg = intro_fmt.format(count=len(user_data))
+                components['intro'] = [intro_msg]
+
                 # ユーザー情報を整形
                 users_list = []
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
@@ -645,17 +647,20 @@ class DailyAggregator:
                         user_fmt = fmt.get('user_format_first', '{user} さん　合計{total}日目のログイン')
                         message = user_fmt.format(user=user_display, total=total)
                     else:
-                        user_fmt = fmt.get('user_format_streak', '{user} さん　合計{total}日目のログイン（連続{streak}日）')
+                        user_fmt = fmt.get('user_format_streak', '{user} さん　合計{total}日目のログイン（{streak}日連続ログイン）')
                         message = user_fmt.format(user=user_display, total=total, streak=consecutive)
                     users_list.append(message)
 
                 # ユーザーリストをコンポーネントに追加
                 components['users'] = users_list
 
-                # サマリーメッセージ（フォーマット設定を使用）
-                summary_fmt = fmt.get('summary', '本日の参加者数： {count}名')
-                summary_msg = summary_fmt.format(count=len(user_data))
-                components['summary'] = [summary_msg]
+                # サマリーメッセージ（空文字チェック - introに統合された場合）
+                summary_fmt = fmt.get('summary', '')
+                if summary_fmt:  # 空文字でない場合のみ追加
+                    summary_msg = summary_fmt.format(count=len(user_data))
+                    components['summary'] = [summary_msg]
+                else:
+                    components['summary'] = []
             else:
                 # 参加者なしメッセージ（フォーマット設定を使用）
                 no_participants_msg = fmt.get('no_participants', '本日のVCログイン者はいませんでした。')
