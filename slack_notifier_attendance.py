@@ -651,6 +651,21 @@ class DailyAggregator:
 
                 blocks.append({"type": "divider"})
 
+                # テーブルヘッダーを追加
+                blocks.append({
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*参加者*"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*累計日数*"
+                        }
+                    ]
+                })
+
                 # フィールド形式で表示（Slackのfields機能を使用）
                 fields = []
 
