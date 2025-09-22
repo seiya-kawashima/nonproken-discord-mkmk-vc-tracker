@@ -48,18 +48,23 @@ jobs:
         # 土日かどうかをチェック
         is_weekend = today.weekday() >= 5  # 5:土曜, 6:日曜
 
+        import os
+
         if is_holiday:
             print(f"今日は祝日です: {holiday_name}")
-            print("skip=true >> $GITHUB_OUTPUT")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                f.write("skip=true\n")
             sys.exit(0)
         elif is_weekend:
             weekday_names = ['月', '火', '水', '木', '金', '土', '日']
             print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日（週末）です")
-            print("skip=true >> $GITHUB_OUTPUT")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                f.write("skip=true\n")
             sys.exit(0)
         else:
             print(f"今日（{today}）は平日です")
-            print("skip=false >> $GITHUB_OUTPUT")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                f.write("skip=false\n")
         EOF
 
 
