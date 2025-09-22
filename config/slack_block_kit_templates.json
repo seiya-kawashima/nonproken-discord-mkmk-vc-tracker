@@ -63,9 +63,12 @@
     }
   },
   "fallback_messages": {
-    "greeting": "もくもく、おつかれさまでした！ :stmp_fight:",
-    "intro": "本日の参加者は*{count}名*です。",
+    "greeting": "皆さん、もくもく、おつかれさまでした！ :stmp_fight:",
+    "intro": "本日の参加者は{count}名です。",
+    "user_format_first": "{user} さん　合計{total}日目のログイン",
+    "user_format_streak": "{user} さん　合計{total}日目のログイン（{streak}日連続ログイン）",
     "no_participants": "本日のVCログイン者はいませんでした。",
-    "summary": ""
+    "summary": "",
+    "message_order": ["greeting", "intro", "summary", "users"]
   }
 }
