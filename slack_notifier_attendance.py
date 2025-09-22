@@ -667,10 +667,8 @@ class DailyAggregator:
                     user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
                     # フィールドを追加（名前と統計を1つのフィールドに）
-                    if consecutive == 1:
-                        stat_text = f"合計 {total}日目"
-                    else:
-                        stat_text = f"合計 {total}日 / 連続 {consecutive}日"
+                    # 連続日数は内部的に計算するが表示しない
+                    stat_text = f"合計 {total}日目"
 
                     fields.append({
                         "type": "mrkdwn",
