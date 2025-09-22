@@ -1145,18 +1145,23 @@ class DailyAggregator:
             lines.append(f"本日参加した人（{len(user_data)}名）：")  # 参加者数
             lines.append("")  # 空行
 
-            # ユーザー名でソート
-            sorted_users = sorted(user_data.items(), key=lambda x: x[1]['user_name'])  # 名前順ソート
-
-            # 連続ログイン日数を簡易計算（互換性のため残す）
-            for user_id, data in sorted_users:
+            # 各ユーザーの日数を計算して保存
+            user_with_days = []
+            import random  # ランダム
+            for user_id, data in user_data.items():
                 user_name = data['user_name'] or 'Unknown'  # Discordユーザー名
-
                 # ランダムな日数を生成（デモ用）
-                import random  # ランダム
                 random.seed(user_id)  # ユーザーIDでシード固定
                 total_days = random.randint(1, 30)  # 総ログイン日数（デモ）
                 streak_days = min(random.randint(1, 7), total_days)  # 連続日数（デモ）
+                user_with_days.append((user_id, data, total_days, streak_days))
+
+            # 合計日数の降順でソート
+            sorted_users = sorted(user_with_days, key=lambda x: x[2], reverse=True)  # 合計日数の降順
+
+            # 連続ログイン日数を簡易計算（互換性のため残す）
+            for user_id, data, total_days, streak_days in sorted_users:
+                user_name = data['user_name'] or 'Unknown'  # Discordユーザー名
 
                 # 出力パターンに応じてメッセージを生成
                 if self.output_pattern == 'discord':  # Discord名で出力（モック用）
