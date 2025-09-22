@@ -64,7 +64,7 @@
   },
   "fallback_messages": {
     "greeting": "もくもく、おつかれさまでした！ :stmp_fight:",
-    "intro": "本日の参加者は{count}名です。",
+    "intro": "本日の参加者は*{count}名*です。",
     "no_participants": "本日のVCログイン者はいませんでした。",
     "summary": ""
   }
