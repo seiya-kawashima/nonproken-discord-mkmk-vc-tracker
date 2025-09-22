@@ -644,21 +644,27 @@ class DailyAggregator:
             # Block Kit用のブロックを構築
             blocks = []
 
+            # タイトルヘッダー（大きな文字）
+            title_template = templates.get('title_header', {})
+            if title_template:
+                title_block = title_template.copy()
+                title_block['text']['text'] = title_block['text']['text'].format(date=date_str)
+                blocks.append(title_block)
+
             if user_data:
-                # ヘッダー＋挨拶＋参加者数セクション（統合）
+                # 挨拶＋参加者数セクション
                 greeting = fmt.get('greeting', fallback_messages.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:'))
                 intro_fmt = fmt.get('intro', fallback_messages.get('intro', '本日の参加者は{count}名です。'))
                 intro_msg = intro_fmt.format(count=len(user_data))
 
-                header_template = templates.get('header_with_greeting_and_intro', {})
-                if header_template:
-                    header_block = header_template.copy()
-                    header_block['text']['text'] = header_block['text']['text'].format(
-                        date=date_str,
+                greeting_template = templates.get('greeting_and_intro', {})
+                if greeting_template:
+                    greeting_block = greeting_template.copy()
+                    greeting_block['text']['text'] = greeting_block['text']['text'].format(
                         greeting_message=greeting,
                         intro_message=intro_msg
                     )
-                    blocks.append(header_block)
+                    blocks.append(greeting_block)
 
                 # 区切り線
                 divider_template = templates.get('divider', {})
