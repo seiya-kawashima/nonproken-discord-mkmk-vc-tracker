@@ -50,16 +50,16 @@ jobs:
 
         if is_holiday:
             print(f"今日は祝日です: {holiday_name}")
-            print("::set-output name=skip::true")
+            print("skip=true >> $GITHUB_OUTPUT")
             sys.exit(0)
         elif is_weekend:
             weekday_names = ['月', '火', '水', '木', '金', '土', '日']
             print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日（週末）です")
-            print("::set-output name=skip::true")
+            print("skip=true >> $GITHUB_OUTPUT")
             sys.exit(0)
         else:
             print(f"今日（{today}）は平日です")
-            print("::set-output name=skip::false")
+            print("skip=false >> $GITHUB_OUTPUT")
         EOF
 
 
