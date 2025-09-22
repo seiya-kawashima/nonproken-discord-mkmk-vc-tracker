@@ -607,7 +607,7 @@ class DailyAggregator:
             logger.error(f"ヘッダーの設定に失敗しました: {e}")  # エラーログ
 
     def post_to_slack(self, user_data: Dict[str, Dict[str, Any]], stats_dict: Dict[str, Dict[str, Any]]) -> str:
-        """集計結果をSlackに投稿"""
+        """集計結果をSlackに投稿（表形式）"""
         try:
             # メッセージを構築
             date_str = self.target_date.strftime('%Y年%m月%d日')
@@ -615,72 +615,174 @@ class DailyAggregator:
             # フォーマット設定を取得（デフォルト値付き）
             fmt = self.slack_message_format
 
-            # メッセージコンポーネントを準備
-            components = {}
+            # Block Kit用のブロックを構築
+            blocks = []
 
-            # 挨拶メッセージ
-            components['greeting'] = [fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')]
+            # ヘッダーセクション
+            greeting = fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')
+            blocks.append({
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"📅 {date_str} の参加レポート",
+                    "emoji": True
+                }
+            })
+
+            blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": greeting
+                }
+            })
+
+            blocks.append({"type": "divider"})
 
             if user_data:
-                # 導入メッセージ（参加者数を含む）
+                # 参加者数セクション
                 intro_fmt = fmt.get('intro', '本日の参加者は{count}名です。')
                 intro_msg = intro_fmt.format(count=len(user_data))
-                components['intro'] = [intro_msg]
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"✨ {intro_msg}"
+                    }
+                })
 
-                # ユーザー情報を整形
-                users_list = []
+                blocks.append({"type": "divider"})
+
+                # 表形式のヘッダー（コードブロックを使用）
+                table_lines = []
+                table_lines.append("```")
+
+                # カラム幅の計算
+                name_width = 20  # 名前の幅
+                total_width = 12  # 合計日数の幅
+                consecutive_width = 15  # 連続日数の幅
+
+                # ヘッダー行
+                header = f"{'名前':<{name_width}} │ {'合計日数':<{total_width}} │ {'連続日数':<{consecutive_width}}"
+                table_lines.append(header)
+                table_lines.append("─" * (name_width + 1) + "┼" + "─" * (total_width + 2) + "┼" + "─" * (consecutive_width + 1))
+
+                # データ行を準備
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # ユーザー名を取得（マッピングまたはDiscord Display Name）
-                    if self.output_pattern == 'slack' and user_id in self.user_mapping:
-                        user_display = f"<@{self.user_mapping[user_id]}>"
-                    else:
-                        # マッピングがない場合はDisplay Name（なければuser_name）を使用
-                        user_display = data.get('display_name', data.get('user_name', 'Unknown'))
+                    # ユーザー名を取得（表形式ではメンションではなく名前を使用）
+                    user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
-                    # メッセージを構築（フォーマット設定を使用）
+                    # 名前を適切な長さに調整（日本語文字を考慮）
+                    def get_display_width(text):
+                        """日本語文字幅を考慮した表示幅を取得"""
+                        width = 0
+                        for char in text:
+                            if ord(char) > 127:  # 非ASCII文字
+                                width += 2
+                            else:
+                                width += 1
+                        return width
+
+                    def pad_text(text, target_width):
+                        """日本語文字幅を考慮してパディング"""
+                        current_width = get_display_width(text)
+                        padding = target_width - current_width
+                        return text + " " * max(0, padding)
+
+                    # データ行を作成
+                    padded_name = pad_text(user_display[:20], name_width)  # 名前は最大20文字
+                    total_str = pad_text(f"{total}日", total_width)
+
                     if consecutive == 1:
-                        user_fmt = fmt.get('user_format_first', '{user} さん　合計{total}日目のログイン')
-                        message = user_fmt.format(user=user_display, total=total)
+                        consecutive_str = pad_text("今日から", consecutive_width)
                     else:
-                        user_fmt = fmt.get('user_format_streak', '{user} さん　合計{total}日目のログイン（{streak}日連続ログイン）')
-                        message = user_fmt.format(user=user_display, total=total, streak=consecutive)
-                    users_list.append(message)
+                        consecutive_str = pad_text(f"{consecutive}日連続", consecutive_width)
 
-                # ユーザーリストをコンポーネントに追加
-                components['users'] = users_list
+                    row = f"{padded_name} │ {total_str} │ {consecutive_str}"
+                    table_lines.append(row)
 
-                # サマリーメッセージ（空文字チェック - introに統合された場合）
+                table_lines.append("```")
+
+                # 表をブロックに追加
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "\n".join(table_lines)
+                    }
+                })
+
+                # ユーザーメンションセクション（オプション）
+                if self.output_pattern == 'slack':
+                    mention_lines = []
+                    for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
+                        if user_id in self.user_mapping:
+                            mention_lines.append(f"<@{self.user_mapping[user_id]}>")
+
+                    if mention_lines:
+                        blocks.append({"type": "divider"})
+                        blocks.append({
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": "今日の参加者: " + " ".join(mention_lines)
+                            }
+                        })
+
+                # サマリーメッセージ
                 summary_fmt = fmt.get('summary', '')
-                if summary_fmt:  # 空文字でない場合のみ追加
+                if summary_fmt:
                     summary_msg = summary_fmt.format(count=len(user_data))
-                    components['summary'] = [summary_msg]
-                else:
-                    components['summary'] = []
+                    blocks.append({"type": "divider"})
+                    blocks.append({
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": summary_msg
+                        }
+                    })
             else:
-                # 参加者なしメッセージ（フォーマット設定を使用）
+                # 参加者なしメッセージ
                 no_participants_msg = fmt.get('no_participants', '本日のVCログイン者はいませんでした。')
-                components['greeting'] = [no_participants_msg]
-                components['intro'] = []
-                components['users'] = []
-                components['summary'] = []
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": no_participants_msg
+                    }
+                })
 
-            # メッセージを構成順序に従って組み立て
-            message_order = fmt.get('message_order', ['greeting', 'intro', 'users', 'summary'])
+            # テキストメッセージも生成（フォールバック用）
             message_lines = []
+            message_lines.append(f"📅 {date_str} の参加レポート")
+            message_lines.append(greeting)
+            message_lines.append("")
 
-            for component_name in message_order:
-                if component_name in components and components[component_name]:
-                    message_lines.extend(components[component_name])
-                    # usersの後に空行を追加
-                    if component_name == 'users' and components[component_name]:
-                        message_lines.append("")
+            if user_data:
+                intro_fmt = fmt.get('intro', '本日の参加者は{count}名です。')
+                message_lines.append(intro_fmt.format(count=len(user_data)))
+                message_lines.append("")
+
+                for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
+                    stats = stats_dict.get(user_id, {})
+                    consecutive = stats.get('consecutive_days', 1)
+                    total = stats.get('total_days', 1)
+                    user_display = data.get('display_name', data.get('user_name', 'Unknown'))
+
+                    if consecutive == 1:
+                        message_lines.append(f"{user_display} さん　合計{total}日目")
+                    else:
+                        message_lines.append(f"{user_display} さん　合計{total}日目（{consecutive}日連続）")
+            else:
+                message_lines.append(fmt.get('no_participants', '本日のVCログイン者はいませんでした。'))
 
             message = "\n".join(message_lines)
+
             logger.debug(f"Slackメッセージ長: {len(message)}文字")  # メッセージ長
             logger.debug(f"output_pattern: {self.output_pattern}")  # 出力パターン
             logger.debug(f"slack_client: {self.slack_client is not None}")  # Slackクライアント存在
@@ -704,18 +806,30 @@ class DailyAggregator:
                 else:
                     try:
                         logger.debug(f"Slackに投稿を試みます: #{channel_name} (ID: {self.slack_channel})")  # 投稿試行
+                        # Block Kit APIを使用して投稿
                         response = self.slack_client.chat_postMessage(
                             channel=self.slack_channel,
-                            text=message
+                            blocks=blocks,
+                            text=message  # フォールバックテキスト
                         )
                         logger.debug(f"Slack APIレスポンス: ok={response.get('ok')}, ts={response.get('ts')}, channel=#{channel_name}")  # APIレスポンス
-                        logger.info(f"Slackにレポートを投稿しました")  # 投稿成功
+                        logger.info(f"Slackにレポートを投稿しました（Block Kit形式）")  # 投稿成功
                         logger.debug(f"Slackメッセージ内容:\n{message}")  # メッセージ内容
                     except SlackApiError as e:
                         logger.warning(f"Slack投稿エラー: {e.response['error']}")  # Slackエラー
-                        logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
-                        # レポート全体を1つのログメッセージとして出力
-                        logger.info(f"\n{'='*60}\n[レポート]\n{message}\n{'='*60}")
+                        logger.info("Block Kit形式での投稿に失敗したため、テキスト形式で再試行します")  # 再試行
+                        try:
+                            # テキスト形式で再試行
+                            response = self.slack_client.chat_postMessage(
+                                channel=self.slack_channel,
+                                text=message
+                            )
+                            logger.info(f"Slackにレポートを投稿しました（テキスト形式）")  # 投稿成功
+                        except SlackApiError as e2:
+                            logger.warning(f"Slack投稿エラー（再試行）: {e2.response['error']}")  # Slackエラー
+                            logger.info("Slackに投稿できなかったため、ログに出力します")  # ログ出力
+                            # レポート全体を1つのログメッセージとして出力
+                            logger.info(f"\n{'='*60}\n[レポート]\n{message}\n{'='*60}")
             else:
                 # Discord出力モードまたはSlackが設定されていない場合はログ出力
                 logger.debug(f"Slack投稿をスキップ: output_pattern={self.output_pattern}, slack_client={self.slack_client is not None}, slack_channel={self.slack_channel}")  # スキップ理由
