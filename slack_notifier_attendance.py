@@ -728,7 +728,7 @@ class DailyAggregator:
             # テキストメッセージも生成（フォールバック用）
             message_lines = []
             message_lines.append(f"📅 {date_str} の参加レポート")
-            message_lines.append(greeting)
+            message_lines.append("もくもく、おつかれさまでした！ :stmp_fight:")
             message_lines.append("")
 
             if user_data:
