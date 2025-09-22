@@ -684,22 +684,7 @@ class DailyAggregator:
                     "fields": fields
                 })
 
-                # ユーザーメンションセクション（オプション）
-                if self.output_pattern == 'slack':
-                    mention_lines = []
-                    for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
-                        if user_id in self.user_mapping:
-                            mention_lines.append(f"<@{self.user_mapping[user_id]}>")
-
-                    if mention_lines:
-                        blocks.append({"type": "divider"})
-                        blocks.append({
-                            "type": "section",
-                            "text": {
-                                "type": "mrkdwn",
-                                "text": "今日の参加者: " + " ".join(mention_lines)
-                            }
-                        })
+                # メンションセクションは削除（フィールドに統合済み）
 
                 # サマリーメッセージ
                 summary_fmt = fmt.get('summary', '')
