@@ -700,6 +700,9 @@ class DailyAggregator:
                     "fields": fields
                 })
 
+                # 最後に区切り線を追加
+                blocks.append({"type": "divider"})
+
                 # メンションセクションは削除（フィールドに統合済み）
 
                 # サマリーメッセージ
