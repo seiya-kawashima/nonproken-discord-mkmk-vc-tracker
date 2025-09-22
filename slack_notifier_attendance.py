@@ -732,11 +732,11 @@ class DailyAggregator:
             # テキストメッセージも生成（フォールバック用）
             message_lines = []
             message_lines.append(f"📅 {date_str} の参加レポート")
-            message_lines.append("もくもく、おつかれさまでした！ :stmp_fight:")
+            message_lines.append(messages.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:'))
             message_lines.append("")
 
             if user_data:
-                intro_fmt = fmt.get('intro', '本日の参加者は{count}名です。')
+                intro_fmt = messages.get('intro', '本日の参加者は{count}名です。')
                 message_lines.append(intro_fmt.format(count=len(user_data)))
                 message_lines.append("")
 
@@ -749,7 +749,7 @@ class DailyAggregator:
                     # 連続日数は表示しない
                     message_lines.append(f"{user_display} さん　合計{total}日目")
             else:
-                message_lines.append(fmt.get('no_participants', '本日のVCログイン者はいませんでした。'))
+                message_lines.append(messages.get('no_participants', '本日のVCログイン者はいませんでした。'))
 
             message = "\n".join(message_lines)
 
