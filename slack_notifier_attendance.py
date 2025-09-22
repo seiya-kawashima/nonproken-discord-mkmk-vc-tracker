@@ -671,62 +671,39 @@ class DailyAggregator:
                 if divider_template:
                     blocks.append(divider_template)
 
-                # テーブルヘッダーのセクションを追加
-                header_fields = [
-                    {
-                        "type": "mrkdwn",
-                        "text": "*参加者*"
-                    },
-                    {
-                        "type": "mrkdwn",
-                        "text": "*合計 / 連続*"
-                    }
-                ]
-                blocks.append({
-                    "type": "section",
-                    "fields": header_fields
-                })
+                # 参加者リストをまとめて作成
+                participants_list = []
+                stats_list = []
 
-                # 参加者データをフィールドとして追加（Slackのfieldsは最大10個まで）
-                current_fields = []
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # 1列目: ユーザー名（Slackモードならメンションを使用）
+                    # ユーザー名（Slackモードならメンションを使用）
                     if self.output_pattern == 'slack' and user_id in self.user_mapping:
                         user_display = f"<@{self.user_mapping[user_id]}>"
                     else:
                         user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
-                    # 1列目にユーザー名を追加
-                    current_fields.append({
-                        "type": "mrkdwn",
-                        "text": user_display
-                    })
+                    participants_list.append(user_display)
+                    stats_list.append(f"{total}日目 / {consecutive}日連続")
 
-                    # 2列目に合計/連続を追加
-                    current_fields.append({
-                        "type": "mrkdwn",
-                        "text": f"{total}日目 / {consecutive}日連続"
-                    })
-
-                    # fieldsが10個に達したらセクションを作成してリセット
-                    if len(current_fields) >= 10:
-                        blocks.append({
-                            "type": "section",
-                            "fields": current_fields
-                        })
-                        current_fields = []
-
-                # 残りのフィールドがあればセクションを作成
-                if current_fields:
-                    blocks.append({
-                        "type": "section",
-                        "fields": current_fields
-                    })
+                # 参加者と統計情報を1つのフィールドにまとめる
+                blocks.append({
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*参加者*\n" + "\n".join(participants_list)
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*合計 / 連続*\n" + "\n".join(stats_list)
+                        }
+                    ]
+                })
 
                 # テーブル終了の区切り線
                 table_footer_divider_template = templates.get('table_footer_divider', {})
