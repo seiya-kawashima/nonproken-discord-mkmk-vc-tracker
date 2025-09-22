@@ -644,26 +644,21 @@ class DailyAggregator:
             # Block Kit用のブロックを構築
             blocks = []
 
-            # ヘッダー＋挨拶セクション（統合）
-            greeting = fmt.get('greeting', fallback_messages.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:'))
-            header_template = templates.get('header_with_greeting', {})
-            if header_template:
-                header_block = header_template.copy()
-                header_block['text']['text'] = header_block['text']['text'].format(
-                    date=date_str,
-                    greeting_message=greeting
-                )
-                blocks.append(header_block)
-
             if user_data:
-                # 参加者数セクション
+                # ヘッダー＋挨拶＋参加者数セクション（統合）
+                greeting = fmt.get('greeting', fallback_messages.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:'))
                 intro_fmt = fmt.get('intro', fallback_messages.get('intro', '本日の参加者は{count}名です。'))
                 intro_msg = intro_fmt.format(count=len(user_data))
-                intro_template = templates.get('participant_intro', {})
-                if intro_template:
-                    intro_block = intro_template.copy()
-                    intro_block['text']['text'] = intro_block['text']['text'].format(intro_message=intro_msg)
-                    blocks.append(intro_block)
+
+                header_template = templates.get('header_with_greeting_and_intro', {})
+                if header_template:
+                    header_block = header_template.copy()
+                    header_block['text']['text'] = header_block['text']['text'].format(
+                        date=date_str,
+                        greeting_message=greeting,
+                        intro_message=intro_msg
+                    )
+                    blocks.append(header_block)
 
                 # 区切り線
                 divider_template = templates.get('divider', {})
