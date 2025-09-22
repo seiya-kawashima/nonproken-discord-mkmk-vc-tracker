@@ -151,6 +151,9 @@ class DailyAggregator:
                         }
                     ]
                 },
+                "table_footer_divider": {
+                    "type": "divider"
+                },
                 "no_participants": {
                     "type": "section",
                     "text": {
