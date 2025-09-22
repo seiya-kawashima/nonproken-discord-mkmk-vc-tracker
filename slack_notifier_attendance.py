@@ -661,7 +661,7 @@ class DailyAggregator:
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*累計 / 連続*"
+                            "text": "*合計 / 連続*"
                         }
                     ]
                 })
