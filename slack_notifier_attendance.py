@@ -653,68 +653,34 @@ class DailyAggregator:
 
                 blocks.append({"type": "divider"})
 
-                # 表形式のヘッダー（コードブロックを使用）
-                table_lines = []
-                table_lines.append("```")
+                # フィールド形式で表示（Slackのfields機能を使用）
+                fields = []
 
-                # カラム幅の計算
-                name_width = 20  # 名前の幅
-                total_width = 12  # 合計日数の幅
-                consecutive_width = 15  # 連続日数の幅
-
-                # ヘッダー行
-                header = f"{'名前':<{name_width}} │ {'合計日数':<{total_width}} │ {'連続日数':<{consecutive_width}}"
-                table_lines.append(header)
-                table_lines.append("─" * (name_width + 1) + "┼" + "─" * (total_width + 2) + "┼" + "─" * (consecutive_width + 1))
-
-                # データ行を準備
+                # 各ユーザーのデータをフィールドとして追加
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # ユーザー名を取得（表形式ではメンションではなく名前を使用）
+                    # ユーザー名を取得
                     user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
-                    # 名前を適切な長さに調整（日本語文字を考慮）
-                    def get_display_width(text):
-                        """日本語文字幅を考慮した表示幅を取得"""
-                        width = 0
-                        for char in text:
-                            if ord(char) > 127:  # 非ASCII文字
-                                width += 2
-                            else:
-                                width += 1
-                        return width
-
-                    def pad_text(text, target_width):
-                        """日本語文字幅を考慮してパディング"""
-                        current_width = get_display_width(text)
-                        padding = target_width - current_width
-                        return text + " " * max(0, padding)
-
-                    # データ行を作成
-                    padded_name = pad_text(user_display[:20], name_width)  # 名前は最大20文字
-                    total_str = pad_text(f"{total}日", total_width)
-
+                    # フィールドを追加（名前と統計を1つのフィールドに）
                     if consecutive == 1:
-                        consecutive_str = pad_text("今日から", consecutive_width)
+                        stat_text = f"合計 {total}日目"
                     else:
-                        consecutive_str = pad_text(f"{consecutive}日連続", consecutive_width)
+                        stat_text = f"合計 {total}日 / 連続 {consecutive}日"
 
-                    row = f"{padded_name} │ {total_str} │ {consecutive_str}"
-                    table_lines.append(row)
+                    fields.append({
+                        "type": "mrkdwn",
+                        "text": f"*{user_display}*\n{stat_text}"
+                    })
 
-                table_lines.append("```")
-
-                # 表をブロックに追加
+                # 2列表示のセクションを作成
                 blocks.append({
                     "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "\n".join(table_lines)
-                    }
+                    "fields": fields
                 })
 
                 # ユーザーメンションセクション（オプション）
