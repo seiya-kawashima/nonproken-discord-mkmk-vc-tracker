@@ -654,7 +654,7 @@ class DailyAggregator:
             if user_data:
                 # 挨拶＋参加者数セクション
                 greeting = fmt.get('greeting', fallback_messages.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:'))
-                intro_fmt = fmt.get('intro', fallback_messages.get('intro', '本日の参加者は{count}名です。'))
+                intro_fmt = fmt.get('intro', fallback_messages.get('intro', '本日の参加者は*{count}名*です。'))
                 intro_msg = intro_fmt.format(count=len(user_data))
 
                 greeting_template = templates.get('greeting_and_intro', {})
