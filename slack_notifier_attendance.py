@@ -86,6 +86,94 @@ class DailyAggregator:
         # 初期化処理
         self._initialize_services()
 
+    def _load_block_kit_templates(self):
+        """Block Kitテンプレートファイルを読み込み"""
+        try:
+            # テンプレートファイルのパス
+            template_file_path = os.path.join(
+                os.path.dirname(__file__),
+                'config',
+                'slack_block_kit_templates.json'
+            )
+
+            if os.path.exists(template_file_path):
+                with open(template_file_path, 'r', encoding='utf-8') as f:
+                    self.block_kit_templates = json.load(f)
+                logger.info("Block Kitテンプレートファイルを読み込みました")
+            else:
+                logger.warning(f"Block Kitテンプレートファイルが見つかりません: {template_file_path}")
+                # デフォルトテンプレートを設定
+                self._set_default_block_kit_templates()
+        except Exception as e:
+            logger.error(f"Block Kitテンプレートの読み込みエラー: {e}")
+            # デフォルトテンプレートを設定
+            self._set_default_block_kit_templates()
+
+    def _set_default_block_kit_templates(self):
+        """デフォルトのBlock Kitテンプレートを設定"""
+        self.block_kit_templates = {
+            "attendance_report": {
+                "header": {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "📅 {date} の参加レポート",
+                        "emoji": True
+                    }
+                },
+                "greeting": {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "{greeting_message}"
+                    }
+                },
+                "participant_intro": {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "✨ {intro_message}"
+                    }
+                },
+                "divider": {
+                    "type": "divider"
+                },
+                "table_header": {
+                    "type": "section",
+                    "fields": [
+                        {
+                            "type": "mrkdwn",
+                            "text": "*参加者*"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*合計 / 連続*"
+                        }
+                    ]
+                },
+                "no_participants": {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "{no_participants_message}"
+                    }
+                },
+                "summary": {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "{summary_message}"
+                    }
+                }
+            },
+            "fallback_messages": {
+                "greeting": "もくもく、おつかれさまでした！ :stmp_fight:",
+                "intro": "本日の参加者は{count}名です。",
+                "no_participants": "本日のVCログイン者はいませんでした。",
+                "summary": ""
+            }
+        }
+        logger.info("デフォルトのBlock Kitテンプレートを設定しました")
 
     def _initialize_services(self):
         """Google API サービスを初期化"""
