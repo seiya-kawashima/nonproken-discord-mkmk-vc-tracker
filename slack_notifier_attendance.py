@@ -638,57 +638,42 @@ class DailyAggregator:
 
             # フォーマット設定を取得（デフォルト値付き）
             fmt = self.slack_message_format
+            templates = self.block_kit_templates.get('attendance_report', {})
+            fallback_messages = self.block_kit_templates.get('fallback_messages', {})
 
             # Block Kit用のブロックを構築
             blocks = []
 
-            # ヘッダーセクション
-            greeting = fmt.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:')
-            blocks.append({
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": f"📅 {date_str} の参加レポート",
-                    "emoji": True
-                }
-            })
-
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": greeting
-                }
-            })
+            # ヘッダー＋挨拶セクション（統合）
+            greeting = fmt.get('greeting', fallback_messages.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:'))
+            header_template = templates.get('header_with_greeting', {})
+            if header_template:
+                header_block = header_template.copy()
+                header_block['text']['text'] = header_block['text']['text'].format(
+                    date=date_str,
+                    greeting_message=greeting
+                )
+                blocks.append(header_block)
 
             if user_data:
                 # 参加者数セクション
-                intro_fmt = fmt.get('intro', '本日の参加者は{count}名です。')
+                intro_fmt = fmt.get('intro', fallback_messages.get('intro', '本日の参加者は{count}名です。'))
                 intro_msg = intro_fmt.format(count=len(user_data))
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"✨ {intro_msg}"
-                    }
-                })
+                intro_template = templates.get('participant_intro', {})
+                if intro_template:
+                    intro_block = intro_template.copy()
+                    intro_block['text']['text'] = intro_block['text']['text'].format(intro_message=intro_msg)
+                    blocks.append(intro_block)
 
-                blocks.append({"type": "divider"})
+                # 区切り線
+                divider_template = templates.get('divider', {})
+                if divider_template:
+                    blocks.append(divider_template)
 
-                # テーブルヘッダーを追加
-                blocks.append({
-                    "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": "*参加者*"
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*合計 / 連続*"
-                        }
-                    ]
-                })
+                # テーブルヘッダー
+                table_header_template = templates.get('table_header', {})
+                if table_header_template:
+                    blocks.append(table_header_template)
 
                 # フィールド形式で表示（Slackのfields機能を使用）
                 fields = []
@@ -724,33 +709,29 @@ class DailyAggregator:
                     "fields": fields
                 })
 
-                # 最後に区切り線を追加
-                blocks.append({"type": "divider"})
-
-                # メンションセクションは削除（フィールドに統合済み）
+                # テーブル終了の区切り線
+                table_footer_divider_template = templates.get('table_footer_divider', {})
+                if table_footer_divider_template:
+                    blocks.append(table_footer_divider_template)
 
                 # サマリーメッセージ
-                summary_fmt = fmt.get('summary', '')
+                summary_fmt = fmt.get('summary', fallback_messages.get('summary', ''))
                 if summary_fmt:
                     summary_msg = summary_fmt.format(count=len(user_data))
-                    blocks.append({"type": "divider"})
-                    blocks.append({
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": summary_msg
-                        }
-                    })
+                    summary_template = templates.get('summary', {})
+                    if summary_template:
+                        blocks.append({"type": "divider"})
+                        summary_block = summary_template.copy()
+                        summary_block['text']['text'] = summary_block['text']['text'].format(summary_message=summary_msg)
+                        blocks.append(summary_block)
             else:
                 # 参加者なしメッセージ
-                no_participants_msg = fmt.get('no_participants', '本日のVCログイン者はいませんでした。')
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": no_participants_msg
-                    }
-                })
+                no_participants_msg = fmt.get('no_participants', fallback_messages.get('no_participants', '本日のVCログイン者はいませんでした。'))
+                no_participants_template = templates.get('no_participants', {})
+                if no_participants_template:
+                    no_participants_block = no_participants_template.copy()
+                    no_participants_block['text']['text'] = no_participants_block['text']['text'].format(no_participants_message=no_participants_msg)
+                    blocks.append(no_participants_block)
 
             # テキストメッセージも生成（フォールバック用）
             message_lines = []
