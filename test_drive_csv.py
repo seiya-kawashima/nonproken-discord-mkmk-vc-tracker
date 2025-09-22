@@ -1,8 +1,8 @@
-from slack_notifier_attendance import VCDataAggregator
+from slack_notifier_attendance import DailyAggregator
 import datetime
 
 # 集約クラスのインスタンスを作成
-aggregator = VCDataAggregator(env=1, target_date=datetime.date(2025, 9, 22))
+aggregator = DailyAggregator(env=1, target_date=datetime.date(2025, 9, 22))
 
 # CSVファイルを取得
 csv_files = aggregator.get_csv_files_from_drive()
