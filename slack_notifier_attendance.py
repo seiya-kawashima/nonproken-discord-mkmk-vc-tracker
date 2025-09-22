@@ -619,7 +619,7 @@ class DailyAggregator:
             blocks = []
 
             # ヘッダーセクション
-            greeting = fmt.get('greeting', '皆さん、もくもく、おつかれさまでした！ :stmp_fight:')
+            greeting = fmt.get('greeting', 'もくもく、おつかれさまでした！ :stmp_fight:')
             blocks.append({
                 "type": "header",
                 "text": {
