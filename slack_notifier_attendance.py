@@ -734,14 +734,12 @@ class DailyAggregator:
 
                 for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
                     stats = stats_dict.get(user_id, {})
-                    consecutive = stats.get('consecutive_days', 1)
+                    consecutive = stats.get('consecutive_days', 1)  # 内部的に計算は継続
                     total = stats.get('total_days', 1)
                     user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
-                    if consecutive == 1:
-                        message_lines.append(f"{user_display} さん　合計{total}日目")
-                    else:
-                        message_lines.append(f"{user_display} さん　合計{total}日目（{consecutive}日連続）")
+                    # 連続日数は表示しない
+                    message_lines.append(f"{user_display} さん　合計{total}日目")
             else:
                 message_lines.append(fmt.get('no_participants', '本日のVCログイン者はいませんでした。'))
 
