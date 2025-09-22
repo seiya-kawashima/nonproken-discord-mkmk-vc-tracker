@@ -4,21 +4,21 @@ on:
   schedule:
     # JST 4:00 (UTC 19:00 前日) から JST 7:30 (UTC 22:30 前日) まで15分ごとに実行
     # cron式: 分 時 日 月 曜日（0:日曜、1:月曜...6:土曜）
-    - cron: '0 19 * * 0-4'    # JST 4:00（月曜〜金曜）
-    - cron: '15 19 * * 0-4'   # JST 4:15（月曜〜金曜）
-    - cron: '30 19 * * 0-4'   # JST 4:30（月曜〜金曜）
-    - cron: '45 19 * * 0-4'   # JST 4:45（月曜〜金曜）
-    - cron: '0 20 * * 0-4'    # JST 5:00（月曜〜金曜）
-    - cron: '15 20 * * 0-4'   # JST 5:15（月曜〜金曜）
-    - cron: '30 20 * * 0-4'   # JST 5:30（月曜〜金曜）
-    - cron: '45 20 * * 0-4'   # JST 5:45（月曜〜金曜）
-    - cron: '0 21 * * 0-4'    # JST 6:00（月曜〜金曜）
-    - cron: '15 21 * * 0-4'   # JST 6:15（月曜〜金曜）
-    - cron: '30 21 * * 0-4'   # JST 6:30（月曜〜金曜）
-    - cron: '45 21 * * 0-4'   # JST 6:45（月曜〜金曜）
-    - cron: '0 22 * * 0-4'    # JST 7:00（月曜〜金曜）
-    - cron: '15 22 * * 0-4'   # JST 7:15（月曜〜金曜）
-    - cron: '30 22 * * 0-4'   # JST 7:30（月曜〜金曜）
+    - cron: '0 19 * * 1-6'    # JST 4:00（月曜〜土曜、祝日含む）
+    - cron: '15 19 * * 1-6'   # JST 4:15（月曜〜土曜、祝日含む）
+    - cron: '30 19 * * 1-6'   # JST 4:30（月曜〜土曜、祝日含む）
+    - cron: '45 19 * * 1-6'   # JST 4:45（月曜〜土曜、祝日含む）
+    - cron: '0 20 * * 1-6'    # JST 5:00（月曜〜土曜、祝日含む）
+    - cron: '15 20 * * 1-6'   # JST 5:15（月曜〜土曜、祝日含む）
+    - cron: '30 20 * * 1-6'   # JST 5:30（月曜〜土曜、祝日含む）
+    - cron: '45 20 * * 1-6'   # JST 5:45（月曜〜土曜、祝日含む）
+    - cron: '0 21 * * 1-6'    # JST 6:00（月曜〜土曜、祝日含む）
+    - cron: '15 21 * * 1-6'   # JST 6:15（月曜〜土曜、祝日含む）
+    - cron: '30 21 * * 1-6'   # JST 6:30（月曜〜土曜、祝日含む）
+    - cron: '45 21 * * 1-6'   # JST 6:45（月曜〜土曜、祝日含む）
+    - cron: '0 22 * * 1-6'    # JST 7:00（月曜〜土曜、祝日含む）
+    - cron: '15 22 * * 1-6'   # JST 7:15（月曜〜土曜、祝日含む）
+    - cron: '30 22 * * 1-6'   # JST 7:30（月曜〜土曜、祝日含む）
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
@@ -49,22 +49,33 @@ jobs:
         from datetime import datetime
         import jpholiday
         import pytz
+        import os
 
         # JSTで現在の日付を取得
         jst = pytz.timezone('Asia/Tokyo')
         today = datetime.now(jst).date()
 
-        # 祝日かどうかをチェック
+        # 祝日かどうかをチェック（祝日も稼働日として扱う）
         is_holiday = jpholiday.is_holiday(today)
         holiday_name = jpholiday.is_holiday_name(today)
 
-        if is_holiday:
-            print(f"今日は祝日です: {holiday_name}")
-            print("::set-output name=skip::true")
-            sys.exit(0)  # 祝日の場合はスキップ
+        # 日曜日かどうかをチェック（日曜日のみスキップ）
+        is_sunday = today.weekday() == 6  # 6:日曜
+
+        if is_sunday:
+            weekday_names = ['月', '火', '水', '木', '金', '土', '日']
+            print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                f.write("skip=true\n")
+            sys.exit(0)
         else:
-            print(f"今日（{today}）は平日です")
-            print("::set-output name=skip::false")
+            if is_holiday:
+                print(f"今日は祝日（{holiday_name}）ですが、処理を実行します")
+            else:
+                weekday_names = ['月', '火', '水', '木', '金', '土', '日']
+                print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
+            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                f.write("skip=false\n")
         EOF
 
     - name: Discord VC出席記録収集（本番環境）

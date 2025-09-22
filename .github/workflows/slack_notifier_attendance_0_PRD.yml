@@ -4,7 +4,7 @@ on:
   schedule:
     # JST 19:00 (UTC 10:00) に実行
     # cron式: 分 時 日 月 曜日（0:日曜、1:月曜...6:土曜）
-    - cron: '0 10 * * 0-4'    # JST 19:00（月曜〜金曜）
+    - cron: '0 10 * * 1-6'    # JST 19:00（月曜〜土曜、祝日含む）
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
@@ -41,28 +41,27 @@ jobs:
         jst = pytz.timezone('Asia/Tokyo')
         today = datetime.now(jst).date()
 
-        # 祝日かどうかをチェック
+        # 祝日かどうかをチェック（祝日も稼働日として扱う）
         is_holiday = jpholiday.is_holiday(today)
         holiday_name = jpholiday.is_holiday_name(today)
 
-        # 土日かどうかをチェック
-        is_weekend = today.weekday() >= 5  # 5:土曜, 6:日曜
+        # 日曜かどうかをチェック（日曜日のみスキップ）
+        is_sunday = today.weekday() == 6  # 6:日曜
 
         import os
 
-        if is_holiday:
-            print(f"今日は祝日です: {holiday_name}")
-            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-                f.write("skip=true\n")
-            sys.exit(0)
-        elif is_weekend:
+        if is_sunday:
             weekday_names = ['月', '火', '水', '木', '金', '土', '日']
-            print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日（週末）です")
+            print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("skip=true\n")
             sys.exit(0)
         else:
-            print(f"今日（{today}）は平日です")
+            if is_holiday:
+                print(f"今日は祝日（{holiday_name}）ですが、処理を実行します")
+            else:
+                weekday_names = ['月', '火', '水', '木', '金', '土', '日']
+                print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("skip=false\n")
         EOF

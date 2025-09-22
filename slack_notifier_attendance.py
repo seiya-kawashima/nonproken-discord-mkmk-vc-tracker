@@ -274,11 +274,12 @@ class DailyAggregator:
         if target_date.weekday() == 6:  # 日曜のみ
             return False
 
-        # 祝日の判定
-        if jpholiday.is_holiday(target_date):  # 祝日
-            return False
+        # 祝日の判定（祝日も稼働日として扱う）
+        # 注: 祝日判定機能は残すが、現在は祝日も稼働日として扱う
+        # if jpholiday.is_holiday(target_date):  # 祝日
+        #     return False
 
-        return True  # 営業日（土曜日含む）
+        return True  # 営業日（土曜日、祝日含む）
 
     def get_previous_business_day(self, target_date: date) -> date:
         """
