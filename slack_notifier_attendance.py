@@ -637,8 +637,6 @@ class DailyAggregator:
                 }
             })
 
-            blocks.append({"type": "divider"})
-
             if user_data:
                 # 参加者数セクション
                 intro_fmt = fmt.get('intro', '本日の参加者は{count}名です。')
