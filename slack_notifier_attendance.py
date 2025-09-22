@@ -663,8 +663,11 @@ class DailyAggregator:
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
 
-                    # ユーザー名を取得
-                    user_display = data.get('display_name', data.get('user_name', 'Unknown'))
+                    # ユーザー名を取得（Slackモードならメンションを使用）
+                    if self.output_pattern == 'slack' and user_id in self.user_mapping:
+                        user_display = f"<@{self.user_mapping[user_id]}>"
+                    else:
+                        user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
                     # フィールドを追加（名前と統計を1つのフィールドに）
                     # 連続日数は内部的に計算するが表示しない
@@ -672,7 +675,7 @@ class DailyAggregator:
 
                     fields.append({
                         "type": "mrkdwn",
-                        "text": f"*{user_display}*\n{stat_text}"
+                        "text": f"{user_display}\n{stat_text}"
                     })
 
                 # 2列表示のセクションを作成
