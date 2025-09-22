@@ -676,16 +676,23 @@ class DailyAggregator:
                 if divider_template:
                     blocks.append(divider_template)
 
-                # 参加者リストをまとめて作成
-                participants_list = []
-                stats_list = []
-
-                for user_id, data in sorted(user_data.items(), key=lambda x: x[1]['user_name']):
+                # 各ユーザーの統計情報を計算して保存（total_days順にソートするため）
+                user_with_stats = []
+                for user_id, data in user_data.items():
                     # 統計情報を取得
                     stats = stats_dict.get(user_id, {})
                     consecutive = stats.get('consecutive_days', 1)
                     total = stats.get('total_days', 1)
+                    user_with_stats.append((user_id, data, total, consecutive))
 
+                # 合計日数の降順でソート
+                user_with_stats = sorted(user_with_stats, key=lambda x: x[2], reverse=True)
+
+                # 参加者リストをまとめて作成
+                participants_list = []
+                stats_list = []
+
+                for user_id, data, total, consecutive in user_with_stats:
                     # ユーザー名（Slackモードならメンションを使用）
                     if self.output_pattern == 'slack' and user_id in self.user_mapping:
                         user_display = f"<@{self.user_mapping[user_id]}>"
