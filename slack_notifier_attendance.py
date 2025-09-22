@@ -479,7 +479,9 @@ class DailyAggregator:
                         records.append(record)
                         # マッチログは削除（不要）  # マッチしたレコード
 
-            logger.info(f"{file_name}から{target_date_str}の{len(records)}件のデータを読み込みました")  # 読み込み結果ログ
+            # 総行数を計算（ヘッダー行を除く）
+            total_rows = len(lines) - 1
+            logger.info(f"{file_name}から{target_date_str}の{len(records)}件のデータを読み込みました（総行数: {total_rows}行）")  # 読み込み結果ログ
             return records
 
         except Exception as e:
