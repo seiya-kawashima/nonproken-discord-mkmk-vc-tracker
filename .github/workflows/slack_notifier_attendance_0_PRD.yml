@@ -6,15 +6,6 @@ on:
     # cron式: 分 時 日 月 曜日（0:日曜、1:月曜...6:土曜）
     - cron: '0 10 * * 0-4'    # JST 19:00（月曜〜金曜）
   workflow_dispatch:  # 手動実行も可能
-    inputs:
-      skip_holiday_check:
-        description: '祝日チェックをスキップ'
-        required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'true'
-          - 'false'
 
 jobs:
   daily-aggregate:
