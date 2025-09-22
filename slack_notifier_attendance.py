@@ -63,6 +63,7 @@ class DailyAggregator:
         self.slack_client = None  # Slack APIクライアント
         self.config = None  # 設定情報
         self.mapping_sheet_id = None  # マッピングシートのID（キャッシュ用）
+        self.block_kit_templates = {}  # Block Kitテンプレート
 
         # config.pyから設定を取得
         self.config = get_config(env)  # すべての設定を取得
@@ -78,6 +79,9 @@ class DailyAggregator:
         self.slack_token = self.config.get('slack_token')  # Slack Botトークン
         self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
         self.slack_message_format = self.config.get('slack_message_format', {})  # Slackメッセージフォーマット設定
+
+        # Block Kitテンプレートを読み込み
+        self._load_block_kit_templates()
 
         # 初期化処理
         self._initialize_services()
