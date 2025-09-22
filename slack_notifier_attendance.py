@@ -651,7 +651,7 @@ class DailyAggregator:
 
                 blocks.append({"type": "divider"})
 
-                # テーブルヘッダーを追加
+                # テーブルヘッダーを追加（3列）
                 blocks.append({
                     "type": "section",
                     "fields": [
@@ -662,6 +662,10 @@ class DailyAggregator:
                         {
                             "type": "mrkdwn",
                             "text": "*累計日数*"
+                        },
+                        {
+                            "type": "mrkdwn",
+                            "text": "*連続日数*"
                         }
                     ]
                 })
