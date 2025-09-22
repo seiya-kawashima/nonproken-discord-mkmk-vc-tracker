@@ -1,17 +1,10 @@
 {
   "attendance_report": {
-    "header_with_greeting": {
+    "header_with_greeting_and_intro": {
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "# 📅 {date} の参加レポート\n{greeting_message}"
-      }
-    },
-    "participant_intro": {
-      "type": "section",
-      "text": {
-        "type": "mrkdwn",
-        "text": "✨ {intro_message}"
+        "text": "# 📅 {date} の参加レポート\n{greeting_message}\n:ピカピカ: {intro_message}"
       }
     },
     "divider": {
