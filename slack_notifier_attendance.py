@@ -636,10 +636,11 @@ class DailyAggregator:
             # メッセージを構築
             date_str = self.target_date.strftime('%Y年%m月%d日')
 
-            # フォーマット設定を取得（デフォルト値付き）
-            fmt = self.slack_message_format
+            # テンプレート設定を取得
             templates = self.block_kit_templates.get('attendance_report', {})
-            fallback_messages = self.block_kit_templates.get('fallback_messages', {})
+            messages = self.block_kit_templates.get('fallback_messages', {})
+            # config.pyの設定も並列で参照（後方互換性のため）
+            fmt = self.slack_message_format if hasattr(self, 'slack_message_format') else {}
 
             # Block Kit用のブロックを構築
             blocks = []
