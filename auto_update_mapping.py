@@ -17,8 +17,6 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from config import get_config, Environment
 from loguru import logger
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
 import discord  # Discord API用（Python 3.12環境で使用）
 import asyncio
 
@@ -40,20 +38,18 @@ logger.add(log_filename, level=log_level, encoding="utf-8", format="{time:YYYY-M
 class MappingUpdater:
     """Discord-Slackマッピング更新クラス"""
 
-    def __init__(self, env: Environment, enable_slack_notify: bool = True):
+    def __init__(self, env: Environment):
         """初期化"""
         self.env = env  # 環境
-        self.enable_slack_notify = enable_slack_notify  # Slack通知の有効/無効
         self.config = get_config(env)  # 設定取得
         self.drive_service = None  # Drive APIサービス
         self.sheets_service = None  # Sheets APIサービス
-        self.slack_client = None  # Slack APIクライアント
         self.discord_members = {}  # Discordメンバー情報キャッシュ {user_id: display_name}
         self.excluded_users = self.config.get('discord_excluded_users', [])  # 除外ユーザーリスト
         self.initialize_services()  # サービス初期化
 
     def initialize_services(self):
-        """Google APIとSlack APIサービスを初期化"""
+        """Google APIサービスを初期化"""
         service_account_json = self.config['google_drive_service_account_json']  # 認証ファイルパス
         credentials = service_account.Credentials.from_service_account_file(
             service_account_json,
@@ -65,11 +61,6 @@ class MappingUpdater:
 
         self.drive_service = build('drive', 'v3', credentials=credentials)  # Drive API初期化
         self.sheets_service = build('sheets', 'v4', credentials=credentials)  # Sheets API初期化
-
-        # Slack APIクライアントの初期化
-        slack_token = self.config.get('slack_token')  # Slackトークン取得
-        if slack_token:  # トークンがある場合
-            self.slack_client = WebClient(token=slack_token)  # Slackクライアント作成
 
     def get_users_from_csv(self) -> Dict[str, Tuple[str, str, str]]:
         """CSVファイルからユーザー情報を取得
@@ -438,47 +429,6 @@ class MappingUpdater:
 
         return parent_id  # 最終フォルダIDを返す
 
-    def get_slack_users(self) -> List[Dict[str, str]]:
-        """Slackワークスペースのユーザー一覧を取得
-
-        Returns:
-            List[Dict]: ユーザー情報のリスト [{id, name, display_name, real_name}, ...]
-        """
-        if not self.slack_client:  # Slackクライアントがない場合
-            logger.warning("Slack APIが設定されていません")  # 警告出力
-            return []  # 空のリストを返す
-
-        try:
-            # ユーザー一覧を取得
-            response = self.slack_client.users_list()  # APIコール
-
-            if not response['ok']:  # エラーの場合
-                logger.error(f"Slackユーザー取得エラー: {response.get('error')}")  # エラー出力
-                return []  # 空のリストを返す
-
-            users = []  # ユーザーリスト
-            for member in response['members']:  # 各メンバーに対して
-                # botやdeactivatedユーザーを除外
-                if member.get('is_bot') or member.get('deleted'):  # botまたは削除済みの場合
-                    continue  # スキップ
-
-                user_info = {
-                    'id': member['id'],  # ユーザーID
-                    'name': member.get('name', ''),  # ユーザー名
-                    'display_name': member.get('profile', {}).get('display_name', ''),  # 表示名
-                    'real_name': member.get('profile', {}).get('real_name', ''),  # 実名
-                }  # ユーザー情報辞書
-                users.append(user_info)  # リストに追加
-
-            logger.info(f"Slackから {len(users)}人のユーザー情報を取得")  # 取得数ログ
-            return users  # ユーザーリストを返す
-
-        except SlackApiError as e:  # Slack APIエラー
-            logger.error(f"Slack API呼び出しエラー: {e.response['error']}")  # エラー出力
-            return []  # 空のリストを返す
-        except Exception as e:  # その他のエラー
-            logger.error(f"予期しないエラー: {e}")  # エラー出力
-            return []  # 空のリストを返す
 
     async def get_discord_display_names(self, user_ids: Set[str]) -> Dict[str, str]:
         """Discord APIを使用してサーバーニックネームを取得
@@ -552,114 +502,6 @@ class MappingUpdater:
         logger.info(f"Discord表示名を {len(display_names)} 件取得")  # 取得数ログ
         return display_names  # 表示名辞書を返す
 
-    def write_slack_users_to_sheet(self, users: List[Dict[str, str]]):
-        """Slackユーザー一覧をマッピングシートのslack_usersタブに書き込み
-
-        Args:
-            users: Slackユーザー情報のリスト
-        """
-        if not users:  # ユーザーがない場合
-            logger.info("書き込むSlackユーザーがありません")  # ログ出力
-            return  # 処理終了
-
-        # マッピングシートのパスを取得
-        mapping_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')  # パス取得
-        if not mapping_path:  # パスがない場合
-            logger.error("マッピングシートパスが設定されていません")  # エラー出力
-            return  # 処理終了
-
-        # ファイル名を抽出
-        sheet_name = mapping_path.split('/')[-1]  # ファイル名取得
-
-        # シートを検索
-        query = f"name='{sheet_name}' and mimeType='application/vnd.google-apps.spreadsheet'"  # 検索クエリ
-        results = self.drive_service.files().list(
-            q=query,
-            fields="files(id, name)",
-            supportsAllDrives=True,
-            includeItemsFromAllDrives=True,
-            corpora='allDrives'
-        ).execute()  # ファイル検索
-
-        sheets = results.get('files', [])  # シートリスト取得
-        if not sheets:  # シートが見つからない場合
-            logger.error(f"マッピングシートが見つかりません: {sheet_name}")  # エラー出力
-            return  # 処理終了
-
-        sheet_id = sheets[0]['id']  # シートID取得
-        logger.info(f"マッピングシート発見: {sheet_name}")  # 発見ログ
-
-        # slack_usersタブが存在するか確認
-        tab_name = 'slack_users'  # タブ名
-        try:
-            # 既存のタブ一覧を取得
-            spreadsheet = self.sheets_service.spreadsheets().get(
-                spreadsheetId=sheet_id
-            ).execute()  # スプレッドシート情報取得
-
-            # タブが存在するか確認
-            tab_exists = False  # タブ存在フラグ
-            for sheet in spreadsheet.get('sheets', []):  # 各シートをチェック
-                if sheet['properties']['title'] == tab_name:  # タブ名が一致
-                    tab_exists = True  # 存在フラグを立てる
-                    break  # ループ終了
-
-            if not tab_exists:  # タブが存在しない場合
-                # 新しいタブを追加
-                request = {
-                    'addSheet': {
-                        'properties': {
-                            'title': tab_name  # タブ名設定
-                        }
-                    }
-                }  # リクエストボディ
-                self.sheets_service.spreadsheets().batchUpdate(
-                    spreadsheetId=sheet_id,
-                    body={'requests': [request]}
-                ).execute()  # タブ追加
-                logger.info(f"新しいタブを作成: {tab_name}")  # ログ出力
-            else:  # タブが存在する場合
-                logger.info(f"既存のタブを更新: {tab_name}")  # ログ出力
-
-        except Exception as e:  # エラー時
-            logger.error(f"タブ確認エラー: {e}")  # エラー出力
-            return  # 処理終了
-
-        # データを準備
-        header = [['Slack ID', 'User Name', 'Display Name', 'Real Name']]  # ヘッダー行
-        rows = []  # データ行リスト
-        for user in users:  # 各ユーザーに対して
-            rows.append([
-                user['id'],  # Slack ID
-                user['name'],  # ユーザー名
-                user['display_name'],  # 表示名
-                user['real_name']  # 実名
-            ])  # 行データ追加
-
-        # 全データを結合
-        all_data = header + rows  # ヘッダー＋データ
-
-        # シートをクリアして新しいデータを書き込み
-        try:
-            # 既存データをクリア
-            self.sheets_service.spreadsheets().values().clear(
-                spreadsheetId=sheet_id,
-                range=f'{tab_name}!A:D'
-            ).execute()  # データクリア
-
-            # 新しいデータを書き込み
-            body = {'values': all_data}  # リクエストボディ
-            self.sheets_service.spreadsheets().values().update(
-                spreadsheetId=sheet_id,
-                range=f'{tab_name}!A1',
-                valueInputOption='USER_ENTERED',
-                body=body
-            ).execute()  # データ書き込み
-
-            logger.info(f"✅ {len(users)}人のSlackユーザー情報を{tab_name}タブに書き込み完了")  # 成功ログ
-
-        except Exception as e:  # エラー時
-            logger.error(f"シート書き込みエラー: {e}")  # エラー出力
 
     def check_unmapped_users(self) -> List[Tuple[str, str]]:
         """マッピングシートでSlack IDが未設定のユーザーを確認
@@ -725,65 +567,6 @@ class MappingUpdater:
         logger.info(f"未マッピングユーザー数: {len(unmapped_users)}")  # 未マッピング数ログ
         return unmapped_users, sheet_url  # 未マッピングユーザーとシートURLを返す
 
-    def notify_unmapped_users(self, unmapped_users: List[Tuple[str, str]], sheet_url: str):
-        """未マッピングユーザーについてSlackに通知
-
-        Args:
-            unmapped_users: 未マッピングユーザーのリスト
-            sheet_url: マッピングシートのURL
-        """
-        if not unmapped_users:  # 未マッピングユーザーがいない場合
-            logger.info("すべてのユーザーがマッピング済みです")  # ログ出力
-            return  # 処理終了
-
-        if not self.enable_slack_notify:  # Slack通知が無効の場合
-            logger.info("⚠️ ドライランモード：Slack通知をスキップ")  # 情報ログ
-            logger.info(f"  未マッピングユーザー数: {len(unmapped_users)}名")  # 未マッピング数表示
-            for discord_id, name in unmapped_users[:5]:  # 最初の5件を表示
-                logger.info(f"    - {name} (Discord表示名) / ID: {discord_id}")  # ユーザー情報
-            if len(unmapped_users) > 5:  # 5件以上の場合
-                logger.info(f"    ... 他 {len(unmapped_users) - 5}名")  # 残りの人数
-            return  # 処理終了
-
-        if not self.slack_client:  # Slackクライアントがない場合
-            logger.warning("Slack APIが設定されていないため、通知をスキップ")  # 警告出力
-            return  # 処理終了
-
-        # 通知メッセージを作成
-        user_list = '\n'.join([f"• {name} (Discord表示名) / ID: {discord_id}" for discord_id, name in unmapped_users])  # ユーザーリスト作成
-
-        message = f""":warning: **Discord-Slackマッピング未設定のユーザーがいます**
-
-以下のユーザーのSlack IDが設定されていません：
-
-{user_list}
-
-:link: マッピングシートで紐付けを行ってください：
-{sheet_url}
-"""
-
-        # Slackチャンネルに通知
-        slack_channel = self.config.get('slack_channel')  # チャンネルID取得
-        if not slack_channel:  # チャンネルIDがない場合
-            logger.warning("Slack通知先チャンネルが設定されていません")  # 警告出力
-            return  # 処理終了
-
-        try:
-            response = self.slack_client.chat_postMessage(
-                channel=slack_channel,
-                text=message,
-                mrkdwn=True
-            )  # メッセージ送信
-
-            if response['ok']:  # 送信成功の場合
-                logger.info(f"✅ Slackに未マッピングユーザーの通知を送信しました")  # 成功ログ
-            else:  # 送信失敗の場合
-                logger.error(f"Slack通知送信エラー: {response.get('error')}")  # エラー出力
-
-        except SlackApiError as e:  # Slack APIエラー
-            logger.error(f"Slack通知エラー: {e.response['error']}")  # エラー出力
-        except Exception as e:  # その他のエラー
-            logger.error(f"予期しないエラー: {e}")  # エラー出力
 
     def run(self):
         """メイン処理を実行"""
@@ -851,20 +634,17 @@ class MappingUpdater:
         else:  # 新規ユーザーがない場合
             logger.info("\n✅ 新規ユーザーの追加はありません")  # 完了ログ
 
-        # Slackユーザー一覧を取得してシートに書き込み
-        logger.info("\n👥 Slackユーザー一覧を取得中...")  # 処理開始ログ
-        slack_users = self.get_slack_users()  # Slackユーザー取得
-        if slack_users:  # ユーザーが取得できた場合
-            logger.info("\n📝 Slackユーザー一覧をスプレッドシートに書き込み中...")  # 処理開始ログ
-            self.write_slack_users_to_sheet(slack_users)  # シートに書き込み
-
-        # 未マッピングユーザーをチェックして通知
+# 未マッピングユーザーをチェック
         logger.info("\n🔍 未マッピングユーザーをチェック中...")  # 処理開始ログ
         unmapped_users, sheet_url = self.check_unmapped_users()  # 未マッピングチェック
         if unmapped_users:  # 未マッピングユーザーがいる場合
-            if self.enable_slack_notify:  # Slack通知が有効の場合
-                logger.info("\n📢 Slackに未マッピングユーザーの通知を送信中...")  # 処理開始ログ
-            self.notify_unmapped_users(unmapped_users, sheet_url)  # Slack通知（フラグに応じて処理）
+            logger.info(f"  未マッピングユーザー数: {len(unmapped_users)}名")  # 未マッピング数表示
+            for discord_id, name in unmapped_users[:10]:  # 最初の10件を表示
+                logger.info(f"    - {name} (Discord表示名) / ID: {discord_id}")  # ユーザー情報
+            if len(unmapped_users) > 10:  # 10件以上の場合
+                logger.info(f"    ... 他 {len(unmapped_users) - 10}名")  # 残りの人数
+        else:
+            logger.info("  すべてのユーザーがマッピング済みです")  # ログ出力
 
         logger.info("\n" + "=" * 60)  # 区切り線
         logger.info("処理完了")  # 完了ログ
@@ -883,16 +663,10 @@ def main():
         choices=[0, 1, 2],
         help='環境 (0=本番, 1=テスト, 2=開発)'
     )  # 環境引数追加
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Slack通知を無効化 (デフォルト: 有効)'
-    )  # ドライランモード
     args = parser.parse_args()  # 引数パース
 
     env = Environment(args.env)  # 環境設定
-    enable_slack = not args.dry_run  # Slack通知の有効/無効を設定（dry-run時は無効）
-    updater = MappingUpdater(env, enable_slack_notify=enable_slack)  # 更新クラス作成
+    updater = MappingUpdater(env)  # 更新クラス作成
     updater.run()  # 実行
 
 
