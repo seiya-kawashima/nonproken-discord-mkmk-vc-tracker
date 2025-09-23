@@ -77,7 +77,15 @@ class DailyAggregator:
         self.google_drive_discord_slack_mapping_sheet_path = self.config.get('google_drive_discord_slack_mapping_sheet_path')  # Discord-Slackユーザーマッピングシートパス
         self.google_drive_discord_slack_mapping_sheet_tab_name = self.config.get('google_drive_discord_slack_mapping_sheet_tab_name', 'Sheet1')  # マッピングシート内のタブ名（デフォルト: Sheet1）
         self.slack_token = self.config.get('slack_token')  # Slack Botトークン
-        self.slack_channel = self.config.get('slack_channel')  # SlackチャンネルID
+
+        # Slackチャンネルの設定（環境変数でオーバーライド可能）
+        # SLACK_CHANNEL_ID_1_TSTが設定されている場合は、PRD環境でもテストチャンネルを使用
+        override_channel = os.getenv('SLACK_CHANNEL_ID_1_TST')  # テストチャンネルのオーバーライド
+        if override_channel and env == Environment.PRD:  # PRD環境でテストチャンネルを使う場合
+            self.slack_channel = override_channel  # テストチャンネルを使用
+            logger.info(f"⚠️ PRD環境でテストSlackチャンネルを使用: {override_channel}")  # 警告ログ
+        else:
+            self.slack_channel = self.config.get('slack_channel')  # 通常のチャンネルID
         self.slack_message_format = self.config.get('slack_message_format', {})  # Slackメッセージフォーマット設定
 
         # Block Kitテンプレートを読み込み
@@ -85,6 +93,9 @@ class DailyAggregator:
 
         # 初期化処理
         self._initialize_services()
+
+        # 最終出席確認時刻を保持する変数
+        self.last_attendance_time = None  # 最終出席確認時刻
 
     def _load_block_kit_templates(self):
         """Block Kitテンプレートファイルを読み込み"""
@@ -238,7 +249,7 @@ class DailyAggregator:
                 logger.warning(f"タブ一覧の取得に失敗しました: {e}")
                 # タブ確認に失敗してもconfigの設定を信じて続行
 
-            range_name = f'{tab_name}!A2:C1000'  # config設定または代替タブを使用
+            range_name = f'{tab_name}!A2:D1000'  # D列まで読み込む（SlackユーザーIDが4列目）
 
             # シートからデータを読み込み
             result = self.sheets_service.spreadsheets().values().get(
@@ -248,11 +259,24 @@ class DailyAggregator:
 
             rows = result.get('values', [])  # データ行
             for row in rows:
-                if len(row) >= 3:
+                if len(row) >= 4:  # 4列以上ある場合
+                    discord_user_id = row[0]  # DiscordユーザーID（A列）
+                    discord_display_name = row[2] if len(row) > 2 else ''  # Discord表示名（C列）
+                    slack_user_id = row[3]  # SlackユーザーID（D列）
+                    if discord_user_id and slack_user_id:
+                        # SlackユーザーIDと表示名の両方を保存
+                        self.user_mapping[discord_user_id] = {
+                            'slack_id': slack_user_id,  # SlackユーザーID
+                            'display_name': discord_display_name  # Discord表示名
+                        }
+                elif len(row) >= 3:  # 後方互換性のため、3列の場合も処理
                     discord_user_id = row[0]  # DiscordユーザーID
-                    slack_mention_id = row[2]  # SlackメンションID
+                    slack_mention_id = row[2]  # Slack表示名（旧形式）
                     if discord_user_id and slack_mention_id:
-                        self.user_mapping[discord_user_id] = slack_mention_id  # マッピング登録
+                        self.user_mapping[discord_user_id] = {
+                            'slack_id': slack_mention_id,  # Slack表示名を仮のIDとして使用
+                            'display_name': slack_mention_id  # 表示名も同じ
+                        }
 
             logger.info(f"{len(self.user_mapping)}件のユーザーマッピングを読み込みました")  # 読み込み完了
 
@@ -480,6 +504,42 @@ class DailyAggregator:
                         records.append(record)
                         # マッチログは削除（不要）  # マッチしたレコード
 
+            # 対象日付のデータから最も遅い時刻を取得
+            if records and len(lines) > 1:
+                # 対象日の全データから最も遅い時刻を見つける
+                last_time_for_target_date = None
+                if 'datetime_jst' in headers:
+                    datetime_idx = headers.index('datetime_jst')
+                    # すべての行を確認して、対象日付の最も遅い時刻を見つける
+                    for line in lines[1:]:
+                        values = line.split(',')
+                        if len(values) > datetime_idx:
+                            datetime_value = values[datetime_idx].strip()
+                            if datetime_value.startswith(target_date_str) or datetime_value.startswith(target_date_str_no_pad):
+                                # 時刻部分を抽出（例: "2025/9/22 07:04" から "07:04" を抽出）
+                                if ' ' in datetime_value:
+                                    time_part = datetime_value.split(' ')[1]
+                                    if ':' in time_part:
+                                        if not last_time_for_target_date:
+                                            last_time_for_target_date = time_part
+                                        else:
+                                            # 時刻を比較して、より遅い時刻を保持
+                                            current_hour, current_min = map(int, last_time_for_target_date.split(':'))
+                                            new_hour, new_min = map(int, time_part.split(':'))
+                                            if new_hour > current_hour or (new_hour == current_hour and new_min > current_min):
+                                                last_time_for_target_date = time_part
+
+                    # 複数のCSVファイルがある場合、最も遅い時刻を保持
+                    if last_time_for_target_date:
+                        if not self.last_attendance_time:
+                            self.last_attendance_time = last_time_for_target_date
+                        else:
+                            # 時刻を比較（HH:MM形式）
+                            current_hour, current_min = map(int, self.last_attendance_time.split(':'))
+                            new_hour, new_min = map(int, last_time_for_target_date.split(':'))
+                            if new_hour > current_hour or (new_hour == current_hour and new_min > current_min):
+                                self.last_attendance_time = last_time_for_target_date
+
             # 総行数を計算（ヘッダー行を除く）
             total_rows = len(lines) - 1
             logger.info(f"{file_name}から{target_date_str}の{len(records)}件のデータを読み込みました（総行数: {total_rows}行）")  # 読み込み結果ログ
@@ -695,12 +755,24 @@ class DailyAggregator:
                 for user_id, data, total, consecutive in user_with_stats:
                     # ユーザー名（Slackモードならメンションを使用）
                     if self.output_pattern == 'slack' and user_id in self.user_mapping:
-                        user_display = f"<@{self.user_mapping[user_id]}>"
+                        mapping = self.user_mapping[user_id]
+                        if isinstance(mapping, dict):
+                            # 新形式: dictでslack_idを持つ
+                            slack_id = mapping.get('slack_id', '')
+                        else:
+                            # 旧形式: 文字列として直接保存
+                            slack_id = mapping
+
+                        # SlackユーザーIDがUで始まる場合はメンション形式
+                        if slack_id.startswith('U'):
+                            user_display = f"<@{slack_id}>"  # SlackユーザーID形式でメンション
+                        else:
+                            user_display = f"@{slack_id}"  # Slack表示名形式
                     else:
                         user_display = data.get('display_name', data.get('user_name', 'Unknown'))
 
                     participants_list.append(user_display)
-                    stats_list.append(f"{total}日目 / {consecutive}日連続")
+                    stats_list.append(f"{total}日目")  # 合計日数のみ表示
 
                 # 参加者と統計情報を1つのフィールドにまとめる
                 blocks.append({
@@ -712,15 +784,25 @@ class DailyAggregator:
                         },
                         {
                             "type": "mrkdwn",
-                            "text": "*合計 / 連続*\n" + "\n".join(stats_list)
+                            "text": "*合計*\n" + "\n".join(stats_list)  # ヘッダーも「合計」のみに変更
                         }
                     ]
                 })
 
-                # テーブル終了の区切り線
-                table_footer_divider_template = templates.get('table_footer_divider', {})
-                if table_footer_divider_template:
-                    blocks.append(table_footer_divider_template)
+                # テーブル終了の区切り線を先に追加
+                blocks.append({"type": "divider"})
+
+                # 最終出席確認時刻を追加
+                if self.last_attendance_time:
+                    blocks.append({
+                        "type": "context",
+                        "elements": [
+                            {
+                                "type": "mrkdwn",
+                                "text": f"最終出席確認時刻: {self.last_attendance_time}"
+                            }
+                        ]
+                    })
 
                 # サマリーメッセージ
                 summary_fmt = fmt.get('summary') or messages.get('summary', '')
@@ -760,6 +842,11 @@ class DailyAggregator:
 
                     # 連続日数は表示しない
                     message_lines.append(f"{user_display} さん　合計{total}日目")
+
+                # 最終出席確認時刻を追加
+                if self.last_attendance_time:
+                    message_lines.append("")
+                    message_lines.append(f"（最終出席確認時刻: {self.last_attendance_time}）")
             else:
                 message_lines.append(messages.get('no_participants', '本日のVCログイン者はいませんでした。'))
 
@@ -779,6 +866,10 @@ class DailyAggregator:
                     channel_name = channel_info['channel']['name']
                 except:
                     pass
+
+                # テストチャンネル使用時の警告表示
+                if os.getenv('SLACK_CHANNEL_ID_1_TST') and self.env == Environment.PRD:  # PRD環境でテストチャンネル使用時
+                    logger.info(f"⚠️ 注意: PRD環境ですが、テストSlackチャンネルに投稿します")  # 警告
 
                 if self.dry_run:
                     # ドライランモード
@@ -1176,12 +1267,14 @@ class DailyAggregator:
                 else:  # Slackメンションで出力（本番用）
                     # Slackメンションを取得
                     slack_mention = self.get_slack_mention(user_id, user_name)  # Slackメンション取得
-                    if streak_days == 1:
-                        message = f"{slack_mention} さん　合計{total_days}日目のログイン"  # 連続1日は表示しない
-                    else:
-                        message = f"{slack_mention} さん　合計{total_days}日目のログイン（連続{streak_days}日）"  # 連続2日以上は表示
+                    message = f"{slack_mention} さん　合計{total_days}日目"  # 合計日数のみ表示
 
                 lines.append(f"  {message}")  # メッセージ追加
+
+            # 最終出席確認時刻を追加
+            if self.last_attendance_time:
+                lines.append("")  # 空行
+                lines.append(f"（最終出席確認時刻: {self.last_attendance_time}）")  # 最終出席確認時刻
 
             lines.append("")  # 空行
             lines.append("="*60)  # 区切り線
@@ -1267,12 +1360,19 @@ class DailyAggregator:
         """
         # IDでマッチングを検索
         if discord_id in self.user_mapping:
-            return self.user_mapping[discord_id]['slack_mention']  # Slackメンション返す
-
-        # Discord名でマッチングを検索（フォールバック）
-        for user_id, mapping in self.user_mapping.items():
-            if mapping['discord_name'] == discord_name:
-                return mapping['slack_mention']  # Slackメンション返す
+            mapping = self.user_mapping[discord_id]
+            if isinstance(mapping, dict):
+                # 新形式: dictでslack_idを持つ
+                slack_id = mapping.get('slack_id', '')
+                if slack_id.startswith('U'):
+                    return f"<@{slack_id}>"  # SlackユーザーID形式でメンション
+                elif 'slack_mention' in mapping:
+                    return mapping['slack_mention']  # 旧形式のslack_mentionがある場合
+                else:
+                    return mapping.get('display_name', discord_name)  # 表示名を返す
+            else:
+                # 旧形式: 文字列として直接保存
+                return mapping
 
         # マッピングがない場合はDiscord名を返す
         return discord_name  # Discord名をそのまま返す
