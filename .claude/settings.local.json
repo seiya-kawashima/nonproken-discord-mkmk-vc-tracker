@@ -55,7 +55,10 @@
       "Read(//g/共有ドライブ/DEV/discord_mokumoku_tracker/csv/**)",
       "Bash(set LOGLEVEL=DEBUG)",
       "Bash(set ENV=PRD)",
-      "Bash(pwsh:*)"
+      "Bash(pwsh:*)",
+      "Bash(git config:*)",
+      "Bash(curl:*)",
+      "Bash(sudo dd:*)"
     ],
     "deny": [],
     "ask": []
