@@ -11,7 +11,7 @@ import sys
 import json
 import base64
 import argparse
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone as dt_timezone
 from typing import Dict, List, Optional, Any, Union
 from collections import defaultdict
 import io
@@ -52,7 +52,10 @@ class DailyAggregator:
             output_pattern: 出力パターン ('discord' or 'slack')
             dry_run: ドライラン（Slack投稿をスキップ）
         """
-        self.target_date = target_date or date.today()  # 集計対象日
+        # JSTで今日の日付を取得（GitHub ActionsのUTC環境対応）
+        jst = dt_timezone(timedelta(hours=9))  # JST (UTC+9)
+        now_jst = datetime.now(jst)  # JST現在時刻
+        self.target_date = target_date or now_jst.date()  # 集計対象日（JSTベース）
         self.env = env  # 実行環境
         self.output_pattern = output_pattern  # 出力パターン
         self.dry_run = dry_run  # ドライラン設定

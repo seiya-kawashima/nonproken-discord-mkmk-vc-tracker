@@ -58,7 +58,12 @@
       "Bash(pwsh:*)",
       "Bash(git config:*)",
       "Bash(curl:*)",
-      "Bash(sudo dd:*)"
+      "Bash(sudo dd:*)",
+      "Bash(python3.12:*)",
+      "Bash(python3:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)",
+      "Bash(source:*)"
     ],
     "deny": [],
     "ask": []
