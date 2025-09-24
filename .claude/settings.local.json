@@ -63,7 +63,10 @@
       "Bash(python3:*)",
       "Bash(sudo apt:*)",
       "Bash(sudo apt install:*)",
-      "Bash(source:*)"
+      "Bash(source:*)",
+      "Bash(awk:*)",
+      "Bash(mv:*)",
+      "Bash(python.exe:*)"
     ],
     "deny": [],
     "ask": []
