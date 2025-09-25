@@ -64,6 +64,16 @@ jobs:
                 f.write("skip=false\n")
         EOF
 
+    - name: ユーザー名マッピングの自動更新
+      if: steps.holiday_check.outputs.skip != 'true'
+      env:
+        DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
+        GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
+        GOOGLE_SHARED_DRIVE_ID_0_PRD: ${{ secrets.GOOGLE_SHARED_DRIVE_ID_0_PRD }}
+      run: |
+        echo "ユーザー名マッピングを自動更新します"
+        python auto_update_mapping.py --env 0
+
     - name: Discord VC出席記録収集（本番環境）
       if: steps.holiday_check.outputs.skip != 'true'
       env:
