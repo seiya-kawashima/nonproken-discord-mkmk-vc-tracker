@@ -751,9 +751,9 @@ class DailyAggregator:
                 # 合計日数の降順でソート
                 user_with_stats = sorted(user_with_stats, key=lambda x: x[2], reverse=True)
 
-                # 参加者リストをまとめて作成
-                participants_list = []
-                stats_list = []
+                # 参加者リストを1列形式で作成（ヘッダー付き）
+                participants_lines = []
+                participants_lines.append("*参加者 / 合計*")  # ヘッダー
 
                 for user_id, data, total, consecutive in user_with_stats:
                     # ユーザー名（Slackモードならメンションを使用）
@@ -768,28 +768,22 @@ class DailyAggregator:
 
                         # SlackユーザーIDがUで始まる場合はメンション形式
                         if slack_id.startswith('U'):
-                            user_display = f"<@{slack_id}>　さん"  # SlackユーザーID形式でメンション
+                            user_display = f"<@{slack_id}>さん"  # SlackユーザーID形式でメンション
                         else:
-                            user_display = f"@{slack_id}　さん"  # Slack表示名形式
+                            user_display = f"@{slack_id}さん"  # Slack表示名形式
                     else:
-                        user_display = f"{data.get('display_name', data.get('user_name', 'Unknown'))}　さん"
+                        user_display = f"{data.get('display_name', data.get('user_name', 'Unknown'))}さん"
 
-                    participants_list.append(user_display)
-                    stats_list.append(f"{total}日目")  # 合計日数のみ表示
+                    # 1行にユーザー名と日数を表示
+                    participants_lines.append(f"{user_display}　{total}日")
 
-                # 参加者と統計情報を2つのフィールドにまとめる
+                # 参加者リストを1つのセクションにまとめる
                 blocks.append({
                     "type": "section",
-                    "fields": [
-                        {
-                            "type": "mrkdwn",
-                            "text": "*参加者*\n" + "\n".join(participants_list)
-                        },
-                        {
-                            "type": "mrkdwn",
-                            "text": "*合計*\n" + "\n".join(stats_list)
-                        }
-                    ]
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "\n".join(participants_lines)
+                    }
                 })
 
                 # テーブル終了の区切り線を先に追加
