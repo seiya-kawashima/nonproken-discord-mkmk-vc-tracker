@@ -50,14 +50,35 @@ class MappingUpdater:
 
     def initialize_services(self):
         """Google APIサービスを初期化"""
-        service_account_json = self.config['google_drive_service_account_json']  # 認証ファイルパス
-        credentials = service_account.Credentials.from_service_account_file(
-            service_account_json,
-            scopes=[
-                'https://www.googleapis.com/auth/drive',
-                'https://www.googleapis.com/auth/spreadsheets'
-            ]
-        )  # 認証情報作成
+        # Base64エンコードされた認証情報を優先的に使用
+        google_drive_service_account_json_base64 = self.config.get('google_drive_service_account_json_base64', self.config.get('service_account_json_base64'))
+        service_account_file = self.config.get('google_drive_service_account_json', self.config.get('service_account_json'))
+
+        if google_drive_service_account_json_base64:
+            # Base64デコード
+            import base64
+            import json
+            service_account_json = base64.b64decode(google_drive_service_account_json_base64).decode('utf-8')
+            service_account_info = json.loads(service_account_json)
+            logger.info("環境変数から認証情報を取得しました（Base64形式）")
+            credentials = service_account.Credentials.from_service_account_info(
+                service_account_info,
+                scopes=[
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/spreadsheets'
+                ]
+            )
+        else:
+            # ファイルパスから読み込み
+            service_account_json = service_account_file  # 認証ファイルパス
+            credentials = service_account.Credentials.from_service_account_file(
+                service_account_json,
+                scopes=[
+                    'https://www.googleapis.com/auth/drive',
+                    'https://www.googleapis.com/auth/spreadsheets'
+                ]
+            )  # 認証情報作成
+            logger.info(f"認証ファイルから認証情報を取得しました: {service_account_json}")
 
         self.drive_service = build('drive', 'v3', credentials=credentials)  # Drive API初期化
         self.sheets_service = build('sheets', 'v4', credentials=credentials)  # Sheets API初期化
