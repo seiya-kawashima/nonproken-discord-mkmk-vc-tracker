@@ -775,7 +775,7 @@ class DailyAggregator:
                         user_display = f"{data.get('display_name', data.get('user_name', 'Unknown'))}さん"
 
                     # 1行にユーザー名と日数を表示
-                    participants_lines.append(f"{user_display}　{total}日")
+                    participants_lines.append(f"{user_display}　{total}日目")
 
                 # 参加者リストを1つのセクションにまとめる
                 blocks.append({
