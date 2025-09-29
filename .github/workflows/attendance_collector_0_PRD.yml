@@ -4,12 +4,12 @@ on:
   schedule:
     # JST 4:00 (UTC 19:00 前日) から JST 6:55 (UTC 21:55 前日) まで5分ごとに実行
     # cron式: 分 時 日 月 曜日（0:日曜、1:月曜...6:土曜）
-    - cron: '*/5 19-21 * * 1-6'   # JST 4:00-6:55（月曜〜土曜、祝日含む）、5分間隔
+    - cron: '*/5 19-21 * * *'   # JST 4:00-6:55（毎日実行、Python側で日曜判定）、5分間隔
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
   check-and-run:
-    name: 祝日チェックと出席記録収集
+    name: 出席記録収集
     runs-on: ubuntu-latest
 
     steps:
@@ -25,47 +25,39 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install jpholiday  # 日本の祝日判定用ライブラリ
 
-    - name: 祝日チェック
-      id: holiday_check
+    - name: 曜日チェック（日曜日のみスキップ）
+      id: weekday_check
       run: |
         python << 'EOF'
         import sys
         from datetime import datetime
-        import jpholiday
         import pytz
         import os
 
         # JSTで現在の日付を取得
         jst = pytz.timezone('Asia/Tokyo')
-        today = datetime.now(jst).date()
-
-        # 祝日かどうかをチェック（祝日も稼働日として扱う）
-        is_holiday = jpholiday.is_holiday(today)
-        holiday_name = jpholiday.is_holiday_name(today)
+        today = datetime.now(jst)
+        weekday_names = ['月', '火', '水', '木', '金', '土', '日']
 
         # 日曜日かどうかをチェック（日曜日のみスキップ）
         is_sunday = today.weekday() == 6  # 6:日曜
 
+        print(f"JST現在時刻: {today.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"今日は{weekday_names[today.weekday()]}曜日です")
+
         if is_sunday:
-            weekday_names = ['月', '火', '水', '木', '金', '土', '日']
-            print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
+            print("日曜日のため処理をスキップします")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("skip=true\n")
-            sys.exit(0)
         else:
-            if is_holiday:
-                print(f"今日は祝日（{holiday_name}）ですが、処理を実行します")
-            else:
-                weekday_names = ['月', '火', '水', '木', '金', '土', '日']
-                print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
+            print("出席記録収集を実行します")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("skip=false\n")
         EOF
 
     - name: Discord VC出席記録収集（本番環境）
-      if: steps.holiday_check.outputs.skip != 'true'
+      if: steps.weekday_check.outputs.skip != 'true'
       env:
         DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
@@ -76,7 +68,7 @@ jobs:
         python discord_attendance_collector.py --env 0
 
     - name: 実行結果の通知（成功）
-      if: success() && steps.holiday_check.outputs.skip != 'true'
+      if: success() && steps.weekday_check.outputs.skip != 'true'
       run: |
         echo "✅ 出席記録の収集が正常に完了しました（本番環境）"
 
@@ -86,7 +78,7 @@ jobs:
         echo "❌ 出席記録の収集中にエラーが発生しました（本番環境）"
         echo "エラーログを確認してください"
 
-    - name: 祝日によるスキップ通知
-      if: steps.holiday_check.outputs.skip == 'true'
+    - name: 日曜日によるスキップ通知
+      if: steps.weekday_check.outputs.skip == 'true'
       run: |
-        echo "🎌 本日は祝日のため、出席記録収集をスキップしました"
+        echo "📅 本日は日曜日のため、出席記録収集をスキップしました"
