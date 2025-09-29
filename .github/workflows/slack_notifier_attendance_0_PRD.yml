@@ -2,9 +2,10 @@ name: 日次集計処理（本番環境）
 
 on:
   schedule:
-    # JST 7:30 (UTC 22:30 前日) に実行
+    # JST 月〜土 7:00に実行（日曜除外）
+    # UTC 日〜金 22:00 = JST 月〜土 7:00
     # cron式: 分 時 日 月 曜日（0:日曜、1:月曜...6:土曜）
-    - cron: '30 22 * * *'    # JST 7:30（毎日実行、Python側で曜日判定）
+    - cron: '0 22 * * 0-5'    # UTC日〜金22:00 = JST月〜土7:00
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
@@ -27,37 +28,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 曜日チェック（日曜日のみスキップ）
-      id: weekday_check
+    - name: 実行日時の確認
       run: |
         python << 'EOF'
-        import sys
         from datetime import datetime
         import pytz
-        import os
 
         # JSTで現在の日付を取得
         jst = pytz.timezone('Asia/Tokyo')
-        today = datetime.now(jst).date()
-
-        # 日曜かどうかをチェック（日曜日のみスキップ）
-        is_sunday = today.weekday() == 6  # 6:日曜
+        today = datetime.now(jst)
         weekday_names = ['月', '火', '水', '木', '金', '土', '日']
 
-        print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
-
-        if is_sunday:
-            print("日曜日のため処理をスキップします")
-            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-                f.write("skip=true\n")
-        else:
-            print("処理を実行します")
-            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-                f.write("skip=false\n")
+        print(f"JST現在時刻: {today.strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"今日は{weekday_names[today.weekday()]}曜日です")
+        print("日次集計処理を開始します")
         EOF
 
     - name: ユーザー名マッピングの自動更新
-      if: steps.weekday_check.outputs.skip != 'true'
       env:
         DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
@@ -67,7 +54,6 @@ jobs:
         python auto_update_mapping.py --env 0
 
     - name: 日次集計処理（本番環境）
-      if: steps.weekday_check.outputs.skip != 'true'
       env:
         DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
@@ -80,7 +66,7 @@ jobs:
         python slack_notifier_attendance.py --env 0
 
     - name: 実行結果の通知（成功）
-      if: success() && (steps.weekday_check.outputs.skip != 'true')
+      if: success()
       run: |
         echo "✅ 日次集計処理が正常に完了しました（本番環境）"
         echo "Slackに通知が送信されました"
@@ -91,10 +77,6 @@ jobs:
         echo "❌ 日次集計処理中にエラーが発生しました（本番環境）"
         echo "エラーログを確認してください"
 
-    - name: 日曜日によるスキップ通知
-      if: steps.weekday_check.outputs.skip == 'true'
-      run: |
-        echo "📅 本日は日曜日のため、日次集計処理をスキップしました"
 
     - name: ログファイルのアップロード（エラー時）
       if: failure()
