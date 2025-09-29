@@ -4,12 +4,12 @@ on:
   schedule:
     # JST 7:30 (UTC 22:30 前日) に実行
     # cron式: 分 時 日 月 曜日（0:日曜、1:月曜...6:土曜）
-    - cron: '30 22 * * 1-6'    # JST 7:30（月曜〜土曜、祝日含む）
+    - cron: '30 22 * * *'    # JST 7:30（毎日実行、Python側で曜日判定）
   workflow_dispatch:  # 手動実行も可能
 
 jobs:
   daily-aggregate:
-    name: 祝日チェックと日次集計処理
+    name: 日次集計処理
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -26,48 +26,38 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install jpholiday  # 日本の祝日判定用ライブラリ
 
-    - name: 祝日チェック
-      id: holiday_check
+    - name: 曜日チェック（日曜日のみスキップ）
+      id: weekday_check
       run: |
         python << 'EOF'
         import sys
         from datetime import datetime
-        import jpholiday
         import pytz
+        import os
 
         # JSTで現在の日付を取得
         jst = pytz.timezone('Asia/Tokyo')
         today = datetime.now(jst).date()
 
-        # 祝日かどうかをチェック（祝日も稼働日として扱う）
-        is_holiday = jpholiday.is_holiday(today)
-        holiday_name = jpholiday.is_holiday_name(today)
-
         # 日曜かどうかをチェック（日曜日のみスキップ）
         is_sunday = today.weekday() == 6  # 6:日曜
+        weekday_names = ['月', '火', '水', '木', '金', '土', '日']
 
-        import os
+        print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
 
         if is_sunday:
-            weekday_names = ['月', '火', '水', '木', '金', '土', '日']
-            print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
+            print("日曜日のため処理をスキップします")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("skip=true\n")
-            sys.exit(0)
         else:
-            if is_holiday:
-                print(f"今日は祝日（{holiday_name}）ですが、処理を実行します")
-            else:
-                weekday_names = ['月', '火', '水', '木', '金', '土', '日']
-                print(f"今日（{today}）は{weekday_names[today.weekday()]}曜日です")
+            print("処理を実行します")
             with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
                 f.write("skip=false\n")
         EOF
 
     - name: ユーザー名マッピングの自動更新
-      if: steps.holiday_check.outputs.skip != 'true'
+      if: steps.weekday_check.outputs.skip != 'true'
       env:
         DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
@@ -77,7 +67,7 @@ jobs:
         python auto_update_mapping.py --env 0
 
     - name: 日次集計処理（本番環境）
-      if: steps.holiday_check.outputs.skip != 'true'
+      if: steps.weekday_check.outputs.skip != 'true'
       env:
         DISCORD_BOT_TOKEN_0_PRD: ${{ secrets.DISCORD_BOT_TOKEN_0_PRD }}
         GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64_0_PRD }}
@@ -90,7 +80,7 @@ jobs:
         python slack_notifier_attendance.py --env 0
 
     - name: 実行結果の通知（成功）
-      if: success() && (steps.holiday_check.outputs.skip != 'true')
+      if: success() && (steps.weekday_check.outputs.skip != 'true')
       run: |
         echo "✅ 日次集計処理が正常に完了しました（本番環境）"
         echo "Slackに通知が送信されました"
@@ -101,10 +91,10 @@ jobs:
         echo "❌ 日次集計処理中にエラーが発生しました（本番環境）"
         echo "エラーログを確認してください"
 
-    - name: 休日によるスキップ通知
-      if: steps.holiday_check.outputs.skip == 'true'
+    - name: 日曜日によるスキップ通知
+      if: steps.weekday_check.outputs.skip == 'true'
       run: |
-        echo "🎌 本日は休日のため、日次集計処理をスキップしました"
+        echo "📅 本日は日曜日のため、日次集計処理をスキップしました"
 
     - name: ログファイルのアップロード（エラー時）
       if: failure()
